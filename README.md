@@ -12,7 +12,7 @@ Please check a [change log](https://github.com/delphix/dxm/blob/master/CHANGELOG
 ## How to get started
 ### Compiled version
 
-Download a compiled version of Dxm for required platform from a [releases  page](https://github.com/delphix/dxtoolkit/releases).
+Download a compiled version of Dxm for required platform from a [releases  page](https://github.com/delphix/dxm-toolkit/releases).
 Dxm keep a configuration using SQLLite database and it's creating a configuration file when a first engine is added.
 When dxm is started it will execute an action against Masking engine specified in option or against engine configured as default one.
 
@@ -20,7 +20,7 @@ Configure a masking engine using the following steps:
 
 * add engine
 ```
-dxm engine engine add --engine testeng --ip testeng.foo.com --username delphix_admin --default Y
+dxmc engine engine add --engine testeng --ip testeng.foo.com --username delphix_admin --default Y
 Password:
 Repeat for confirmation:
 Engine added to configuration
@@ -28,27 +28,36 @@ Engine added to configuration
 
 * list all engines from configuration
 ```
- dxm engine list
+dxmc engine list
 
- Engine name                     IP                              username                        protocol  port   default
- ==============================  ==============================  ==============================  ========  =====  =======
- testeng                         testeng.foo.com                 delphix_admin                   http      8282   Y       
+Engine name                     IP                              username                        protocol  port   default
+==============================  ==============================  ==============================  ========  =====  =======
+testeng                         testeng.foo.com                 delphix_admin                   http      8282   Y       
 
 ```
 
-Check a [documentation](https://github.com/delphix/dxtoolkit/wiki) for more details
+* check if configuration is OK and list all applications from Masking Engine
+```
+dxmc application list
+
+Engine name                     Application name
+==============================  ==============================
+testeng                         test app 2
+```
+
+Check a [documentation](https://github.com/delphix/dxm-toolkit/wiki) for more details
 
 ### Known issues
 
-No paging support
+- No pagination support
 
 ### Source version
 
 Python 2.7.X
 
 **Required packages**
-Delphix Masking API libraries are required.
-Check setup.py for list of packages
+- Delphix Masking API libraries are required.
+- Check setup.py for list standard Python packages
 
 ## Legalness
 ```
@@ -64,4 +73,4 @@ Check setup.py for list of packages
  See the License for the specific language governing permissions and
  limitations under the License.
 ```
-Copyright (c) 2014, 2016 by Delphix. All rights reserved.
+Copyright (c) 2018 by Delphix. All rights reserved.
