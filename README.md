@@ -7,14 +7,18 @@ Dxmc script is a single command with parameters and arguments delivered as execu
 
 ## What's new
 
-Please check a [change log](https://github.com/delphix/dxm/blob/master/CHANGELOG.md) for list of changes.
+Please check a [change log](https://github.com/delphix/dxm-toolkit/blob/master/CHANGELOG.md) for list of changes.
 
 ## How to get started
 ### Compiled version
 
 Download a compiled version of Dxm for required platform from a [releases  page](https://github.com/delphix/dxm-toolkit/releases).
 Dxm keep a configuration using SQLLite database and it's creating a configuration file when a first engine is added.
-When dxm is started it will execute an action against Masking engine specified in option or against engine configured as default one.
+When Dxm is started it will execute an action against Masking engine specified in option or against engine configured as default one.
+
+Compiled version is distributed as single command on Linux and OSX and a zipped folder on Windows platform.
+Single command distribution on Windows is limited by PyInstaller issue which require to disable some security features on Windows 10.
+To start a DXM on the Linux or OSX, please run dxmc command from place where it was downloaded. On Windows please run dxmc.exe from unzipped folder.
 
 Configure a masking engine using the following steps:
 
@@ -50,6 +54,7 @@ Check a [documentation](https://github.com/delphix/dxm-toolkit/wiki) for more de
 ### Known issues
 
 - No pagination support
+- No password encryption in configuration database - it will be addressed in next release
 
 ### Source version
 

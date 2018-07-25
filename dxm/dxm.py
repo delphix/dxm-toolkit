@@ -204,9 +204,9 @@ def ruleset(dxm_state):
 
 @dxm.group()
 @pass_state
-def jobs(dxm_state):
+def job(dxm_state):
     """
-    Jobs group allow to control job
+    Job group allow to control job
     """
 
 
@@ -817,7 +817,7 @@ def deletemeta(dxm_state, metaname, rulesetname, envname):
     exit(ruleset_deletemeta(dxm_state.engine, rulesetname, metaname, envname))
 
 
-@jobs.command()
+@job.command()
 @click.option('--jobname', help="Filter jobs using jobname")
 @click.option('--envname', help='Filter jobs belongs to one environment')
 @common_options
@@ -834,7 +834,7 @@ def list(dxm_state, jobname, envname):
     exit(jobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
 
 
-@jobs.command()
+@job.command()
 @click.option(
     '--jobname', required=True, help="Name of job to add")
 @click.option(
@@ -947,7 +947,7 @@ def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     exit(job_add(dxm_state.engine, params))
 
 
-@jobs.command()
+@job.command()
 @click.option('--jobname', required=True, help="Name of job to update")
 @click.option(
     '--envname', help="Name of environment where job will be updated")
@@ -1047,7 +1047,7 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     exit(job_update(dxm_state.engine, jobname, envname, params))
 
 
-@jobs.command()
+@job.command()
 @click.option(
     '--jobname', required=True, help="Name of job to update")
 @click.option(
@@ -1071,7 +1071,7 @@ def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
                    tgt_connector_env, nowait))
 
 
-@jobs.command()
+@job.command()
 @click.option(
     '--jobname', required=True, help="Name of job to be deleted")
 @click.option(
@@ -1086,7 +1086,7 @@ def delete(dxm_state, jobname, envname):
     exit(job_delete(dxm_state.engine, jobname, envname))
 
 
-@jobs.command()
+@job.command()
 @click.option(
     '--jobname', required=True, help="Name of job to be canceled")
 @click.option(
@@ -1101,7 +1101,7 @@ def cancel(dxm_state, jobname, envname):
     exit(job_cancel(dxm_state.engine, jobname, envname))
 
 
-@jobs.command()
+@job.command()
 @click.option(
     '--jobname', required=True, help="Name of source job")
 @click.option(
