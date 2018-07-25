@@ -1,0 +1,419 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Copyright (c) 2018 by Delphix. All rights reserved.
+#
+# Author  : Marcin Przepiorowski
+# Date    : April 2018
+
+
+from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
+import logging
+from datetime import datetime
+from dxm.lib.DxLogging import print_error
+from dxm.lib.DxLogging import print_message
+from dxm.lib.Output.DataFormatter import DataFormatter
+from dxm.lib.DxTools.DxTools import get_list_of_engines
+
+from dxm.lib.DxEnvironment.DxEnvironment import DxEnvironment
+from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
+
+from dxm.lib.DxJobs.DxJobsList import DxJobsList
+from dxm.lib.DxJobs.DxJob import DxJob
+from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
+from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
+from masking_apis.models.database_masking_options import DatabaseMaskingOptions
+from masking_apis.models.masking_job_script import MaskingJobScript
+
+
+optional_params_list = ("email",
+                        "feedback_size",
+                        "max_memory",
+                        "min_memory",
+                        "job_description",
+                        "num_input_streams",
+                        "on_the_fly_masking",
+                        "multi_tenant")
+
+optional_options_list = ("commit_size",
+                         "num_output_threads_per_stream",
+                         "batch_update",
+                         "bulk_data",
+                         "disable_constraints",
+                         "drop_indexes",
+                         "disable_triggers",
+                         "truncate_tables")
+
+
+def job_add(p_engine, params):
+    """
+    Add application to Masking engine
+    param1: p_engine: engine name from configuration
+    param2: params: job parameters
+    return 0 if added, non 0 for error
+    """
+
+    ret = 0
+
+    enginelist = get_list_of_engines(p_engine)
+
+    logger = logging.getLogger()
+
+    envname = params['envname']
+    jobname = params['jobname']
+    rulesetname = params['rulesetname']
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+
+        if engine_obj.get_session():
+            continue
+
+        joblist = DxJobsList()
+        envlist = DxEnvironmentList()
+        rulesetlist = DxRulesetList()
+        envlist.LoadEnvironments()
+        logger.debug("Envname is %s, job name is %s" % (envname, jobname))
+        rulesetlist.LoadRulesets(envname)
+
+        rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
+
+        job = DxJob(engine_obj, None)
+        job.ruleset_id = rulesetref
+        job.job_name = jobname
+
+        for p in optional_params_list:
+            if params[p] is not None:
+                if params[p] == 'Y':
+                    value = True
+                elif params[p] == 'N':
+                    value = False
+                else:
+                    value = params[p]
+                setattr(job, p, value)
+
+        dmo = DatabaseMaskingOptions()
+
+        for p in optional_options_list:
+            if params[p] is not None:
+                if params[p] == 'Y':
+                    value = True
+                elif params[p] == 'N':
+                    value = False
+                else:
+                    value = params[p]
+                setattr(job, p, value)
+
+        if params["prescript"]:
+            prescript = MaskingJobScript()
+            prescript.contents = ''.join(params["prescript"].readlines())
+            prescript.name = params["prescript"].name
+            dmo.prescript = prescript
+
+        if params["postscript"]:
+            postscript = MaskingJobScript()
+            postscript.contents = ''.join(params["postscript"].readlines())
+            postscript.name = params["postscript"].name
+            dmo.postscript = postscript
+
+        job.database_masking_options = dmo
+
+        if joblist.add(job):
+            ret = ret + 1
+
+    return ret
+
+def job_copy(p_engine, jobname, envname, newjobname):
+    """
+    Copy job in Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: newjobname: new job name
+    return 0 if deleted, non 0 for error
+    """
+    return job_selector(p_engine, jobname, envname, 'do_copy',
+                        newjobname=newjobname)
+
+def job_update(p_engine, jobname, envname, params):
+    """
+    Update a job in Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: params: dict with job parameters
+    return 0 if updated, non 0 for error
+    """
+    return job_selector(p_engine, jobname, envname, 'do_update',
+                        params=params)
+
+def do_update(**kwargs):
+    jobref = kwargs.get('jobref')
+    joblist = kwargs.get('joblist')
+    params = kwargs.get('params')
+    jobobj = joblist.get_by_ref(jobref)
+
+    update = False
+
+    for p in optional_params_list:
+        if params[p] is not None:
+            update = True
+            if params[p] == 'Y':
+                value = True
+            elif params[p] == 'N':
+                value = False
+            else:
+                value = params[p]
+            setattr(jobobj, p, value)
+
+    dmo = jobobj.database_masking_options
+
+    for p in optional_options_list:
+        if params[p] is not None:
+            update = True
+            if params[p] == 'Y':
+                value = True
+            elif params[p] == 'N':
+                value = False
+            else:
+                value = params[p]
+            setattr(dmo, p, value)
+
+    if update:
+        return jobobj.update()
+    else:
+        print_message('Nothing to update')
+        return 1
+
+
+def do_copy(**kwargs):
+    jobref = kwargs.get('jobref')
+    joblist = kwargs.get('joblist')
+    newjobname = kwargs.get('newjobname')
+    jobobj = joblist.get_by_ref(jobref)
+    jobobj.job_name = newjobname
+    return joblist.add(jobobj)
+
+
+def do_delete(**kwargs):
+    jobref = kwargs.get('jobref')
+    joblist = kwargs.get('joblist')
+    return joblist.delete(jobref)
+
+def do_cancel(**kwargs):
+    jobref = kwargs.get('jobref')
+    joblist = kwargs.get('joblist')
+    jobobj = joblist.get_by_ref(jobref)
+    return jobobj.cancel()
+
+def job_cancel(p_engine, jobname, envname):
+    """
+    Delete job from Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    return 0 if deleted, non 0 for error
+    """
+    return job_selector(p_engine, jobname, envname, 'do_cancel')
+
+def job_delete(p_engine, jobname, envname):
+    """
+    Delete job from Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    return 0 if deleted, non 0 for error
+    """
+    return job_selector(p_engine, jobname, envname, 'do_delete')
+
+def job_selector(p_engine, jobname, envname, function_to_call, **kwargs):
+    """
+    Select unique job from Masking engine and run function on it
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: function_to_call: name of function to call on connector
+    return 0 if added, non 0 for error
+    """
+
+    ret = 0
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+        if engine_obj.get_session():
+            continue
+
+        envlist = DxEnvironmentList()
+        envlist.LoadEnvironments()
+
+        joblist = DxJobsList()
+        joblist.LoadJobs(envname)
+
+        jobref = joblist.get_jobId_by_name(jobname)
+
+        if jobref:
+            dynfunc = globals()[function_to_call]
+            ret = ret + dynfunc(
+                jobref=jobref,
+                engine_obj=engine_obj,
+                joblist=joblist, **kwargs)
+        else:
+            ret = ret + 1
+            continue
+
+    return ret
+
+def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
+              nowait):
+    """
+    Start job
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environment name
+    param4: tgt_connector: target connector for multi tenant
+    param5: tgt_connector_env: target connector environment for multi tenant
+    param6: nowait: no wait for job to complete
+    return 0 if environment found
+    """
+    return job_selector(p_engine, jobname, envname, 'do_start',
+                        tgt_connector=tgt_connector,
+                        tgt_connector_env=tgt_connector_env,
+                        nowait=nowait)
+
+def do_start(**kwargs):
+    """
+    Start job
+    """
+    jobref = kwargs.get('jobref')
+    joblist = kwargs.get('joblist')
+    tgt_connector = kwargs.get('tgt_connector')
+    tgt_connector_env = kwargs.get('tgt_connector_env')
+    nowait = kwargs.get('nowait')
+
+    jobobj = joblist.get_by_ref(jobref)
+
+    targetconnector = None
+
+    if jobobj.multi_tenant:
+        envlist = DxEnvironmentList()
+        envlist.LoadEnvironments()
+        connectorlist = DxConnectorsList()
+        connectorlist.LoadConnectors(tgt_connector_env)
+        targetconnector = DxConnectorsList.get_connectorId_by_name(tgt_connector)
+
+    #staring job
+    return jobobj.start(targetconnector, None, nowait)
+
+
+def jobs_list(p_engine, jobname, envname, p_format):
+    """
+    Print list of jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    return 0 if environment found
+    """
+
+    ret = 0
+
+    logger = logging.getLogger()
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    data = DataFormatter()
+    data_header = [
+                    ("Engine name", 30),
+                    ("Job name", 30),
+                    ("Ruleset name", 30),
+                    ("Connector name", 30),
+                    ("Environment name", 30),
+                    ("Completed", 20),
+                    ("Status", 20),
+                    ("Runtime", 20)
+                  ]
+    data.create_header(data_header)
+    data.format_type = p_format
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+        if engine_obj.get_session():
+            continue
+
+        # load all objects
+        envlist = DxEnvironmentList()
+        envlist.LoadEnvironments()
+        rulesetlist = DxRulesetList()
+        connectorlist = DxConnectorsList()
+        joblist = DxJobsList()
+
+        logger.debug("Envname is %s, job name is %s" % (envname, jobname))
+
+        joblist.LoadJobs(envname)
+        rulesetlist.LoadRulesets(envname)
+        connectorlist.LoadConnectors(envname)
+
+        if jobname is None:
+            jobs = joblist.get_allref()
+        else:
+            jobs = joblist.get_all_jobId_by_name(jobname)
+            if jobs is None:
+                ret = ret + 1
+                continue
+
+        for jobref in jobs:
+            jobobj = joblist.get_by_ref(jobref)
+            rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
+            connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
+            envobj = envlist.get_by_ref(connectorobj.environment_id)
+
+            if jobobj.lastExec is not None:
+                status = jobobj.lastExec.status
+                endtime = jobobj.lastExec.end_time \
+                    .strftime("%Y-%m-%d %H:%M:%S")
+                runtimetemp = jobobj.lastExec.end_time \
+                    - jobobj.lastExec.start_time
+                runtime = str(runtimetemp)
+            else:
+                status = 'N/A'
+                endtime = 'N/A'
+                runtime = 'N/A'
+
+            data.data_insert(
+                              engine_tuple[0],
+                              jobobj.job_name,
+                              rulesetobj.ruleset_name,
+                              connectorobj.connector_name,
+                              envobj.environment_name,
+                              endtime,
+                              status,
+                              runtime
+                            )
+        print("")
+        print (data.data_output(False))
+        print("")
+        return ret
