@@ -18,7 +18,6 @@
 
 
 import logging
-from dxm.lib.ResponseCode import ResponseCode
 from masking_apis.models.environment import Environment
 from masking_apis.apis.environment_api import EnvironmentApi
 from masking_apis.rest import ApiException
