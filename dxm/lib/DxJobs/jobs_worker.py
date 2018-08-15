@@ -35,6 +35,15 @@ from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from masking_apis.models.database_masking_options import DatabaseMaskingOptions
 from masking_apis.models.masking_job_script import MaskingJobScript
 
+from threading import Thread
+from threading import active_count
+import time
+import click
+from threading import RLock
+import dxm.lib.DxJobs.DxJobCounter
+
+lock = RLock()
+
 
 optional_params_list = ("email",
                         "feedback_size",
@@ -146,8 +155,12 @@ def job_copy(p_engine, jobname, envname, newjobname):
     param4: newjobname: new job name
     return 0 if deleted, non 0 for error
     """
-    return job_selector(p_engine, jobname, envname, 'do_copy',
-                        newjobname=newjobname)
+    return job_selector(
+        p_engine=p_engine,
+        jobname=jobname,
+        envname=envname,
+        function_to_call='do_copy',
+        newjobname=newjobname)
 
 def job_update(p_engine, jobname, envname, params):
     """
@@ -158,8 +171,12 @@ def job_update(p_engine, jobname, envname, params):
     param4: params: dict with job parameters
     return 0 if updated, non 0 for error
     """
-    return job_selector(p_engine, jobname, envname, 'do_update',
-                        params=params)
+    return job_selector(
+        p_engine=p_engine,
+        jobname=jobname,
+        envname=envname,
+        function_to_call='do_update',
+        params=params)
 
 def do_update(**kwargs):
     jobref = kwargs.get('jobref')
@@ -228,7 +245,11 @@ def job_cancel(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
-    return job_selector(p_engine, jobname, envname, 'do_cancel')
+    return job_selector(
+        p_engine=p_engine,
+        jobname=jobname,
+        envname=envname,
+        function_to_call='do_cancel')
 
 def job_delete(p_engine, jobname, envname):
     """
@@ -238,9 +259,13 @@ def job_delete(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
-    return job_selector(p_engine, jobname, envname, 'do_delete')
+    return job_selector(
+        p_engine=p_engine,
+        jobname=jobname,
+        envname=envname,
+        function_to_call='do_delete')
 
-def job_selector(p_engine, jobname, envname, function_to_call, **kwargs):
+def job_selector(**kwargs):
     """
     Select unique job from Masking engine and run function on it
     param1: p_engine: engine name from configuration
@@ -249,6 +274,11 @@ def job_selector(p_engine, jobname, envname, function_to_call, **kwargs):
     param4: function_to_call: name of function to call on connector
     return 0 if added, non 0 for error
     """
+
+    p_engine = kwargs.get('p_engine')
+    jobname = kwargs.get('jobname')
+    envname = kwargs.get('envname')
+    function_to_call = kwargs.get('function_to_call')
 
     ret = 0
 
@@ -295,10 +325,84 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
     param6: nowait: no wait for job to complete
     return 0 if environment found
     """
-    return job_selector(p_engine, jobname, envname, 'do_start',
-                        tgt_connector=tgt_connector,
-                        tgt_connector_env=tgt_connector_env,
-                        nowait=nowait)
+
+    job_list = [x for x in jobname]
+
+
+    # bar = click.progressbar(show_eta=False,
+    #                         length=100)
+
+    percent = 0
+    old = 0
+
+    while len(job_list) > 0:
+
+        try:
+            for i in range(1, 2):
+                try:
+                    single_jobname = job_list.pop()
+                    t = Thread(
+                        target=job_selector,
+                        kwargs={'p_engine': p_engine, 'jobname': single_jobname,
+                                'envname': envname, 'function_to_call': 'do_start',
+                                'tgt_connector': tgt_connector,
+                                'tgt_connector_env': tgt_connector_env,
+                                'nowait': nowait, 'lock': lock})
+                    t.start()
+                except IndexError:
+                    pass
+
+
+        except:
+            print "Error: unable to start thread"
+
+
+        if dxm.lib.DxJobs.DxJobCounter.rows_total != 0:
+
+            percent = float(dxm.lib.DxJobs.DxJobCounter.rows_masked) / float(dxm.lib.DxJobs.DxJobCounter.rows_total) * 100
+            # print "q %s m %s " % (q, m)
+            print "rows_masked %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_masked)
+            print "rows_total %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_total)
+            print "percent %s old %s " % (percent, old)
+            if percent != old:
+                #bar.pos = percent
+                old = percent
+                #bar.update(0)
+
+        time.sleep(1)
+
+
+    # Wait for all threads to complete
+
+    while (active_count() > 1):
+        if dxm.lib.DxJobs.DxJobCounter.rows_total != 0:
+            percent = float(dxm.lib.DxJobs.DxJobCounter.rows_masked) / float(dxm.lib.DxJobs.DxJobCounter.rows_total) * 100
+            print "rows_masked %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_masked)
+            print "rows_total %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_total)
+            print "percent %s old %s " % (percent, old)
+            if percent != old:
+                #bar.pos = percent
+                old = percent
+                #bar.update(0)
+        time.sleep(1)
+
+
+    if dxm.lib.DxJobs.DxJobCounter.rows_total != 0:
+        percent = float(dxm.lib.DxJobs.DxJobCounter.rows_masked) / float(dxm.lib.DxJobs.DxJobCounter.rows_total) * 100
+        print "rows_masked %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_masked)
+        print "rows_total %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_total)
+        print "percent %s old %s " % (percent, old)
+        if percent != old:
+            #bar.pos = percent
+            old = percent
+            #bar.update(0)
+
+    return 0
+
+    # return job_selector(p_engine, jobname, envname, 'do_start',
+    #                     tgt_connector=tgt_connector,
+    #                     tgt_connector_env=tgt_connector_env,
+    #                     nowait=nowait, lock=lock)
 
 def do_start(**kwargs):
     """
@@ -309,6 +413,7 @@ def do_start(**kwargs):
     tgt_connector = kwargs.get('tgt_connector')
     tgt_connector_env = kwargs.get('tgt_connector_env')
     nowait = kwargs.get('nowait')
+    lock = kwargs.get('lock')
 
     jobobj = joblist.get_by_ref(jobref)
 
@@ -322,7 +427,9 @@ def do_start(**kwargs):
         targetconnector = DxConnectorsList.get_connectorId_by_name(tgt_connector)
 
     #staring job
-    return jobobj.start(targetconnector, None, nowait)
+    return jobobj.start(targetconnector, None, nowait, lock)
+
+
 
 
 def jobs_list(p_engine, jobname, envname, p_format):

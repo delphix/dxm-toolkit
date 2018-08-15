@@ -27,6 +27,7 @@ from masking_apis.models.execution import Execution
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+import dxm.lib.DxJobs.DxJobCounter
 
 
 class DxJob(MaskingJob):
@@ -155,7 +156,7 @@ class DxJob(MaskingJob):
 
 
 
-    def start(self, target_connector_id, source_connector_id, nowait):
+    def start(self, target_connector_id, source_connector_id, nowait, lock):
         """
         Start masking job
         :param1 target_connector_id: target connector id for multinentant
@@ -195,14 +196,14 @@ class DxJob(MaskingJob):
             if nowait:
                 return 0
             else:
-                return self.wait_for_job(response)
+                return self.wait_for_job(response, lock)
 
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
 
-    def wait_for_job(self, execjob):
+    def wait_for_job(self, execjob, lock):
         """
         Wait for job to finish execution
         :param1 execjob: Execution job response
@@ -211,7 +212,7 @@ class DxJob(MaskingJob):
         """
 
         execid = execjob.execution_id
-        bar = None
+        first = True
 
         exec_api = ExecutionApi(self.__engine.api_client)
         last = 0
@@ -220,20 +221,34 @@ class DxJob(MaskingJob):
         while execjob.status == 'RUNNING':
             time.sleep(10)
             execjob = exec_api.get_execution_by_id(execid)
-            if execjob.rows_total is not None:
-                if bar is None:
-                    bar = click.progressbar(show_eta=False,
-                                            length=execjob.rows_total)
+            if first and (execjob.rows_total is not None):
+                lock.acquire()
+                dxm.lib.DxJobs.DxJobCounter.rows_total = dxm.lib.DxJobs.DxJobCounter.rows_total + execjob.rows_total
+                lock.release()
+                first = False
+                # if bar is None:
+                #     bar = click.progressbar(show_eta=False,
+                #                             length=execjob.rows_total)
             if execjob.rows_masked is not None:
-                if bar is not None:
-                    self.__logger.debug(execjob.rows_masked)
-                    self.__logger.debug(last)
-                    step = execjob.rows_masked-last
-                    if step == 0:
-                        step = 1
-                    self.__logger.debug(step)
-                    bar.update(step)
-                    last = execjob.rows_masked
+                self.__logger.debug(execjob.rows_masked)
+                self.__logger.debug(last)
+                step = execjob.rows_masked-last
+                # if step == 0:
+                #     step = 1
+                self.__logger.debug(step)
+                lock.acquire()
+                dxm.lib.DxJobs.DxJobCounter.rows_masked = dxm.lib.DxJobs.DxJobCounter.rows_masked + step
+                lock.release()
+                last = execjob.rows_masked
+                # if bar is not None:
+                #     self.__logger.debug(execjob.rows_masked)
+                #     self.__logger.debug(last)
+                #     step = execjob.rows_masked-last
+                #     if step == 0:
+                #         step = 1
+                #     self.__logger.debug(step)
+                #     bar.update(step)
+                #     last = execjob.rows_masked
 
         if execjob.status == 'SUCCEEDED':
             print_message('')
