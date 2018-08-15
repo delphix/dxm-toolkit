@@ -32,7 +32,6 @@ class DxConfig(object):
     __cursor = None
     __logger = None
 
-    @classmethod
     def __init__(self):
         """
         Constructor
@@ -47,22 +46,22 @@ class DxConfig(object):
             msg = "Error %s:" % e.args[0]
             self.__logger.debug(msg)
 
-    @classmethod
+
     def close(self):
         if self.__conn:
             self.__conn.commit()
             self.__cursor.close()
             self.__conn.close()
 
-    @classmethod
+
     def __enter__(self):
         return self
 
-    @classmethod
+
     def __exit__(self):
         self.close()
 
-    @classmethod
+
     def init_metadata(self):
         if self.__conn:
             self.__logger.debug("Creating table in config")
@@ -86,7 +85,7 @@ class DxConfig(object):
                 print_error("Error %s" % e.args[0])
                 sys.exit(-1)
 
-    @classmethod
+
     def insert_engine_info(self, data):
         """
         insert engine data into sqllite database
@@ -128,7 +127,7 @@ class DxConfig(object):
             self.__logger.debug("No connection open")
             return -1
 
-    @classmethod
+
     def get_engine_info(self, engine_name, user_name):
         """
         Get engine data from sqllist database for database name
@@ -171,7 +170,7 @@ class DxConfig(object):
             print_error("No connection to local sqllist database")
             sys.exit(-1)
 
-    @classmethod
+
     def delete_engine_info(self, engine_name, user_name):
         """
         Delete engine data from sqllist database for database name
@@ -221,7 +220,7 @@ class DxConfig(object):
             print_error("No connection to local sqllist database")
             sys.exit(-1)
 
-    @classmethod
+
     def update_engine(self, engine_name,
                       ip_address,
                       username,
@@ -312,7 +311,7 @@ class DxConfig(object):
             print "No connection"
             sys.exit(-1)
 
-    @classmethod
+
     def set_key(self, engine_name, user_name, auth_key):
         """
         set auth key for engine and user
@@ -364,7 +363,7 @@ class DxConfig(object):
             print "No connection"
             sys.exit(-1)
 
-    @classmethod
+
     def get_key(self, engine_name, user_name):
         """
         Get engine auth key for engine name and user

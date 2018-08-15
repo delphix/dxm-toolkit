@@ -1049,7 +1049,7 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
 
 @job.command()
 @click.option(
-    '--jobname', required=True, help="Name of job to update")
+    '--jobname', required=True, help="Name of job to update", multiple=True)
 @click.option(
     '--envname', help="Name of environment where job will be started")
 @click.option(
@@ -1058,17 +1058,22 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     '--tgt_connector_env', help="Name of target connector environment "
     "for multi tenant job")
 @click.option('--nowait', is_flag=True, help="No wait for job to finish")
+@click.option(
+    '--parallel', type=int, help="Number of parallel jobs",
+    default=1
+)
+@click.option('--monitor', is_flag=True, help="Display progress bars")
 @common_options
 @pass_state
 def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
-          nowait):
+          nowait, parallel, monitor):
     """
     Start masking job. By default control is returned when job is finished.
     If --nowait flag is specified script doesn't monitor job and release
     control after job is started.
     """
     exit(job_start(dxm_state.engine, jobname, envname, tgt_connector,
-                   tgt_connector_env, nowait))
+                   tgt_connector_env, nowait, parallel, monitor))
 
 
 @job.command()

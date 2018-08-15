@@ -38,7 +38,7 @@ from masking_apis.models.masking_job_script import MaskingJobScript
 from threading import Thread
 from threading import active_count
 import time
-import click
+from tqdm import tqdm
 from threading import RLock
 import dxm.lib.DxJobs.DxJobCounter
 
@@ -314,7 +314,7 @@ def job_selector(**kwargs):
     return ret
 
 def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
-              nowait):
+              nowait, parallel, monitor):
     """
     Start job
     param1: p_engine: engine name from configuration
@@ -323,32 +323,57 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
     param4: tgt_connector: target connector for multi tenant
     param5: tgt_connector_env: target connector environment for multi tenant
     param6: nowait: no wait for job to complete
+    param7: parallel: number of concurrent masking jobs
+    param8: monitor: enable progress bar
     return 0 if environment found
     """
 
     job_list = [x for x in jobname]
+    jobsno = len(job_list)
 
+    posno = 1
+    no_of_active_threads = 1
 
-    # bar = click.progressbar(show_eta=False,
-    #                         length=100)
+    logger = logging.getLogger()
 
-    percent = 0
-    old = 0
+    logger.debug("parallel % s active count %s"
+                 % (parallel, active_count()))
+
+    if monitor:
+        no_of_active_threads = 2
+        jobsbar = tqdm(
+            total=jobsno,
+            desc="No of jobs",
+            bar_format="{desc}: |{bar}| {n_fmt}/{total_fmt}")
+        time.sleep(1)
 
     while len(job_list) > 0:
 
+        ac = parallel - active_count() + no_of_active_threads
+
+        logger.debug("parallel % s ac %s active count %s"
+                     % (parallel, ac, active_count()))
+
         try:
-            for i in range(1, 2):
+            for i in range(1, ac+1):
                 try:
                     single_jobname = job_list.pop()
+                    logger.debug("starting job %s" % single_jobname)
                     t = Thread(
                         target=job_selector,
                         kwargs={'p_engine': p_engine, 'jobname': single_jobname,
                                 'envname': envname, 'function_to_call': 'do_start',
                                 'tgt_connector': tgt_connector,
                                 'tgt_connector_env': tgt_connector_env,
-                                'nowait': nowait, 'lock': lock})
+                                'nowait': nowait, 'posno': posno,
+                                'lock': lock, 'monitor': monitor})
                     t.start()
+                    posno = posno + 1
+                    logger.debug("before update")
+                    if monitor:
+                        jobsbar.update(1)
+                        logger.debug("after update ")
+
                 except IndexError:
                     pass
 
@@ -357,47 +382,25 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
             print "Error: unable to start thread"
 
 
-        if dxm.lib.DxJobs.DxJobCounter.rows_total != 0:
-
-            percent = float(dxm.lib.DxJobs.DxJobCounter.rows_masked) / float(dxm.lib.DxJobs.DxJobCounter.rows_total) * 100
-            # print "q %s m %s " % (q, m)
-            print "rows_masked %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_masked)
-            print "rows_total %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_total)
-            print "percent %s old %s " % (percent, old)
-            if percent != old:
-                #bar.pos = percent
-                old = percent
-                #bar.update(0)
-
         time.sleep(1)
 
 
     # Wait for all threads to complete
 
-    while (active_count() > 1):
-        if dxm.lib.DxJobs.DxJobCounter.rows_total != 0:
-            percent = float(dxm.lib.DxJobs.DxJobCounter.rows_masked) / float(dxm.lib.DxJobs.DxJobCounter.rows_total) * 100
-            print "rows_masked %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_masked)
-            print "rows_total %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_total)
-            print "percent %s old %s " % (percent, old)
-            if percent != old:
-                #bar.pos = percent
-                old = percent
-                #bar.update(0)
+    while (active_count() > no_of_active_threads):
+        logger.debug("waiting for threads - active count %s"
+                     % active_count())
         time.sleep(1)
 
+    logger.debug("all threds finished %s" % active_count())
 
-    if dxm.lib.DxJobs.DxJobCounter.rows_total != 0:
-        percent = float(dxm.lib.DxJobs.DxJobCounter.rows_masked) / float(dxm.lib.DxJobs.DxJobCounter.rows_total) * 100
-        print "rows_masked %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_masked)
-        print "rows_total %s" % float(dxm.lib.DxJobs.DxJobCounter.rows_total)
-        print "percent %s old %s " % (percent, old)
-        if percent != old:
-            #bar.pos = percent
-            old = percent
-            #bar.update(0)
+    if monitor:
+        jobsbar.close()
 
-    return 0
+    logger.debug("After close")
+    print "\n" * posno
+
+    return dxm.lib.DxJobs.DxJobCounter.ret
 
     # return job_selector(p_engine, jobname, envname, 'do_start',
     #                     tgt_connector=tgt_connector,
@@ -413,7 +416,9 @@ def do_start(**kwargs):
     tgt_connector = kwargs.get('tgt_connector')
     tgt_connector_env = kwargs.get('tgt_connector_env')
     nowait = kwargs.get('nowait')
+    posno = kwargs.get('posno')
     lock = kwargs.get('lock')
+    monitor = kwargs.get('monitor')
 
     jobobj = joblist.get_by_ref(jobref)
 
@@ -427,7 +432,8 @@ def do_start(**kwargs):
         targetconnector = DxConnectorsList.get_connectorId_by_name(tgt_connector)
 
     #staring job
-    return jobobj.start(targetconnector, None, nowait, lock)
+    jobobj.monitor = monitor
+    return jobobj.start(targetconnector, None, nowait, posno, lock)
 
 
 

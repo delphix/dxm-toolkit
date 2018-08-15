@@ -19,7 +19,7 @@
 
 import logging
 import time
-import click
+from tqdm import tqdm
 from masking_apis.models.masking_job import MaskingJob
 from masking_apis.apis.masking_job_api import MaskingJobApi
 from masking_apis.apis.execution_api import ExecutionApi
@@ -43,6 +43,15 @@ class DxJob(MaskingJob):
         self.__lastExec = lastExec
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJob object")
+        self.__monitor = False
+
+    @property
+    def monitor(self):
+        return self.__monitor
+
+    @monitor.setter
+    def monitor(self, value):
+        self.__monitor = value
 
     @property
     def lastExec(self):
@@ -156,7 +165,8 @@ class DxJob(MaskingJob):
 
 
 
-    def start(self, target_connector_id, source_connector_id, nowait, lock):
+    def start(self, target_connector_id, source_connector_id, nowait, posno,
+              lock):
         """
         Start masking job
         :param1 target_connector_id: target connector id for multinentant
@@ -196,14 +206,20 @@ class DxJob(MaskingJob):
             if nowait:
                 return 0
             else:
-                return self.wait_for_job(response, lock)
+                return self.wait_for_job(response, posno, lock)
 
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
+            lock.acquire()
+            dxm.lib.DxJobs.DxJobCounter.ret = \
+                dxm.lib.DxJobs.DxJobCounter.ret + 1
+            lock.release()
+            self.__logger.error('return value %s'
+                                % dxm.lib.DxJobs.DxJobCounter.ret)
             return 1
 
-    def wait_for_job(self, execjob, lock):
+    def wait_for_job(self, execjob, posno, lock):
         """
         Wait for job to finish execution
         :param1 execjob: Execution job response
@@ -213,54 +229,68 @@ class DxJob(MaskingJob):
 
         execid = execjob.execution_id
         first = True
+        bar = None
 
         exec_api = ExecutionApi(self.__engine.api_client)
         last = 0
-        print_message('Waiting for job %s to start processing rows'
-                      % self.job_name)
+
+        self.__logger.debug('Waiting for job %s to start processing rows'
+                            % self.job_name)
+
+        if not self.monitor:
+            print_message('Waiting for job %s to start processing rows'
+                          % self.job_name)
+
         while execjob.status == 'RUNNING':
             time.sleep(10)
             execjob = exec_api.get_execution_by_id(execid)
             if first and (execjob.rows_total is not None):
-                lock.acquire()
-                dxm.lib.DxJobs.DxJobCounter.rows_total = dxm.lib.DxJobs.DxJobCounter.rows_total + execjob.rows_total
-                lock.release()
                 first = False
-                # if bar is None:
-                #     bar = click.progressbar(show_eta=False,
-                #                             length=execjob.rows_total)
+                if self.monitor and (bar is None):
+                    bar = tqdm(
+                        total=execjob.rows_total,
+                        desc=self.job_name,
+                        position=posno,
+                        bar_format="{desc}: {percentage:3.0f}%|{bar}|"
+                                   " {n_fmt}/{total_fmt}")
+                else:
+                    print_message('Job %s is processing rows'
+                                  % self.job_name)
+
             if execjob.rows_masked is not None:
-                self.__logger.debug(execjob.rows_masked)
-                self.__logger.debug(last)
-                step = execjob.rows_masked-last
-                # if step == 0:
-                #     step = 1
-                self.__logger.debug(step)
-                lock.acquire()
-                dxm.lib.DxJobs.DxJobCounter.rows_masked = dxm.lib.DxJobs.DxJobCounter.rows_masked + step
-                lock.release()
-                last = execjob.rows_masked
-                # if bar is not None:
-                #     self.__logger.debug(execjob.rows_masked)
-                #     self.__logger.debug(last)
-                #     step = execjob.rows_masked-last
-                #     if step == 0:
-                #         step = 1
-                #     self.__logger.debug(step)
-                #     bar.update(step)
-                #     last = execjob.rows_masked
+                if self.monitor and (bar is not None):
+                    self.__logger.debug(execjob.rows_masked)
+                    self.__logger.debug(last)
+                    step = execjob.rows_masked-last
+                    # if step == 0:
+                    #     step = 1
+                    self.__logger.debug(step)
+                    bar.update(step)
+                    last = execjob.rows_masked
 
         if execjob.status == 'SUCCEEDED':
-            print_message('')
-            print_message('Masking job %s finished.' % self.job_name)
-            print_message('%s rows masked' % (execjob.rows_masked or 0))
-            self.__logger.debug('Masking job %s finished' % self.job_name)
-            self.__logger.debug('%s rows masked' % execjob.rows_masked)
+            if not self.monitor:
+                print_message('Masking job %s finished.' % self.job_name)
+                print_message('%s rows masked' % (execjob.rows_masked or 0))
+            else:
+                if bar:
+                    bar.close()
+                self.__logger.debug('Masking job %s finished' % self.job_name)
+                self.__logger.debug('%s rows masked' % execjob.rows_masked)
             return 0
         else:
-            print_message('')
-            self.__logger.error('Problem with masking job %s' % self.job_name)
-            self.__logger.error('%s rows masked' % execjob.rows_masked)
-            print_error('Problem with masking job %s' % self.job_name)
-            print_error('%s rows masked' % (execjob.rows_masked or 0))
-            return 1
+            if not self.monitor:
+                print_error('Problem with masking job %s' % self.job_name)
+                print_error('%s rows masked' % (execjob.rows_masked or 0))
+            else:
+                if bar:
+                    bar.close()
+                self.__logger.error('Problem with masking job %s' % self.job_name)
+                self.__logger.error('%s rows masked' % execjob.rows_masked)
+                lock.acquire()
+                dxm.lib.DxJobs.DxJobCounter.ret = \
+                    dxm.lib.DxJobs.DxJobCounter.ret + 1
+                lock.release()
+                self.__logger.error('return value %s'
+                                    % dxm.lib.DxJobs.DxJobCounter.ret)
+                return 1
