@@ -343,7 +343,7 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
         no_of_active_threads = 2
         jobsbar = tqdm(
             total=jobsno,
-            desc="No of jobs",
+            desc="No of started jobs",
             bar_format="{desc}: |{bar}| {n_fmt}/{total_fmt}")
         time.sleep(1)
 
@@ -370,6 +370,7 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
                     t.start()
                     posno = posno + 1
                     logger.debug("before update")
+                    time.sleep(1)
                     if monitor:
                         jobsbar.update(1)
                         logger.debug("after update ")
@@ -506,11 +507,17 @@ def jobs_list(p_engine, jobname, envname, p_format):
 
             if jobobj.lastExec is not None:
                 status = jobobj.lastExec.status
-                endtime = jobobj.lastExec.end_time \
-                    .strftime("%Y-%m-%d %H:%M:%S")
-                runtimetemp = jobobj.lastExec.end_time \
-                    - jobobj.lastExec.start_time
-                runtime = str(runtimetemp)
+                if (jobobj.lastExec.end_time is not None) and \
+                   (jobobj.lastExec.end_time is not None):
+                    endtime = jobobj.lastExec.end_time \
+                        .strftime("%Y-%m-%d %H:%M:%S")
+                    runtimetemp = jobobj.lastExec.end_time \
+                        - jobobj.lastExec.start_time
+                    runtime = str(runtimetemp)
+                else:
+                    status = 'N/A'
+                    endtime = 'N/A'
+                    runtime = 'N/A'
             else:
                 status = 'N/A'
                 endtime = 'N/A'

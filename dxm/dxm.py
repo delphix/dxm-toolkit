@@ -242,7 +242,7 @@ def algorithms(dxm_state):
 @pass_state
 def meta(dxm_state):
     """
-    Algorithm group allow to control Algorithm
+    Meta group allow to control tables and files metadata
     """
 
 
@@ -697,7 +697,7 @@ def clone(dxm_state, rulesetname, envname, newrulesetname):
 @click.option(
     '--envname', help="Environment name where ruleset exist")
 @click.option(
-    '--metaname', required=True,
+    '--metaname',
     help="Name of table or file to add to ruleset")
 @click.option('--custom_sql', help="Custom SQL specified for table")
 @click.option('--where_clause', help="Where clause specified for table")
@@ -1425,7 +1425,7 @@ def update(dxm_state, rulesetname, metaname, custom_sql, where_clause,
            file_delimiter, file_eor, file_enclosure, file_name_regex,
            file_eor_custom, envname):
     """
-    Add table or file to ruleset
+    Update table or file in ruleset
     Return non-zero code if there was a problem with adding table or file
     """
     params = {
