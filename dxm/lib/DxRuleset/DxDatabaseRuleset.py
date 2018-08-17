@@ -158,7 +158,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
                 continue
             columns = line.strip().split(',')
             params = {
-                "tablename": columns[0],
+                "metaname": columns[0],
                 "custom_sql": columns[1],
                 "where_clause": columns[2],
                 "having_clause": columns[3],
