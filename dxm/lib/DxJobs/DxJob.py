@@ -189,11 +189,12 @@ class DxJob(MaskingJob):
                 return 1
 
         if (self.on_the_fly_masking):
-            if source_connector_id:
-                execjob.source_connector_id = source_connector_id
-            else:
-                print_error("Source connector is required for on the fly job")
-                return 1
+            if not self.on_the_fly_masking_source:
+                if source_connector_id:
+                    execjob.source_connector_id = source_connector_id
+                else:
+                    print_error("Source connector is required for on the fly job")
+                    return 1
 
         try:
             self.__logger.debug("start job input %s" % str(execjob))
@@ -287,10 +288,11 @@ class DxJob(MaskingJob):
                     bar.close()
                 self.__logger.error('Problem with masking job %s' % self.job_name)
                 self.__logger.error('%s rows masked' % execjob.rows_masked)
-                lock.acquire()
-                dxm.lib.DxJobs.DxJobCounter.ret = \
-                    dxm.lib.DxJobs.DxJobCounter.ret + 1
-                lock.release()
-                self.__logger.error('return value %s'
-                                    % dxm.lib.DxJobs.DxJobCounter.ret)
-                return 1
+
+            lock.acquire()
+            dxm.lib.DxJobs.DxJobCounter.ret = \
+                dxm.lib.DxJobs.DxJobCounter.ret + 1
+            lock.release()
+            self.__logger.error('return value %s'
+                                % dxm.lib.DxJobs.DxJobCounter.ret)
+            return 1
