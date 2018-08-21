@@ -1,4 +1,13 @@
-### Version 0.1
+## Version 0.2
+
+### Added:
+ - jobs queue added - multiple jobs can be run in parallel or serial
+
+### Changed:
+ - bug fixed for on the fly job
+ - bug fixed for listing jobs
+
+## Version 0.1
 
 Initial release of DXM toolkit.
 It's supporting the following operations:
