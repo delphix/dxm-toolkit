@@ -65,7 +65,7 @@ from lib.DxTable.tab_worker import tab_update_meta
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.2
+__version__ = 0.21
 
 class dxm_state(object):
 
@@ -167,7 +167,6 @@ def engine(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def application(dxm_state):
     """
@@ -176,7 +175,6 @@ def application(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def environment(dxm_state):
     """
@@ -185,7 +183,6 @@ def environment(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def connector(dxm_state):
     """
@@ -194,7 +191,6 @@ def connector(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def ruleset(dxm_state):
     """
@@ -211,7 +207,6 @@ def job(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def fileformat(dxm_state):
     """
@@ -220,7 +215,6 @@ def fileformat(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def column(dxm_state):
     """
@@ -229,7 +223,6 @@ def column(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def algorithms(dxm_state):
     """
@@ -238,7 +231,6 @@ def algorithms(dxm_state):
 
 
 @dxm.group()
-@common_options
 @pass_state
 def meta(dxm_state):
     """
