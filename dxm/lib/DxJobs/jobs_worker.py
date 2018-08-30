@@ -515,7 +515,6 @@ def jobs_list(p_engine, jobname, envname, p_format):
                         - jobobj.lastExec.start_time
                     runtime = str(runtimetemp)
                 else:
-                    status = 'N/A'
                     endtime = 'N/A'
                     runtime = 'N/A'
             else:

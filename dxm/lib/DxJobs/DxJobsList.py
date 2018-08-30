@@ -98,7 +98,7 @@ class DxJobsList(object):
             self.__logger.debug("All jobs loaded")
 
         except ApiException as e:
-            print_error("Can't load environment %s" % e.body)
+            print_error("Can't load job list %s" % e.body)
             return 1
 
     @classmethod
