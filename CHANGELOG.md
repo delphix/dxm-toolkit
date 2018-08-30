@@ -1,3 +1,9 @@
+## Version 0.1
+
+### Changed:
+ - bug fixed for status in job list
+ - bug fixed for same connector id for file and database connectors
+
 ## Version 0.2
 
 ### Added:
