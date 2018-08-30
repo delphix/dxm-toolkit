@@ -49,7 +49,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
 
     @property
     def connectorId(self):
-        return self.database_connector_id
+        return 'd' + str(self.database_connector_id)
 
     def from_ruleset(self, ruleset):
         """

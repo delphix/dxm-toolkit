@@ -85,7 +85,8 @@ class DxConnectorsList(object):
 
                     connector.from_connector(c)
                     connector.is_database = True
-                    self.__connectorsList[c.database_connector_id] = connector
+                    self.__connectorsList['d' + str(c.database_connector_id)] \
+                        = connector
             else:
                 self.__logger.debug("No database connectors found")
 
@@ -104,7 +105,8 @@ class DxConnectorsList(object):
                     connector = DxFileConnector(self.__engine)
                     connector.from_connector(f)
                     connector.is_database = False
-                    self.__connectorsList[f.file_connector_id] = connector
+                    self.__connectorsList['f' + str(f.file_connector_id)] \
+                        = connector
             else:
                 self.__logger.debug("No file connectors found")
 
@@ -132,7 +134,7 @@ class DxConnectorsList(object):
             self.__logger.debug("can't find Connector object"
                                 " for reference %s" % reference)
             self.__logger.debug(e)
-            sys.exit(1)
+            #sys.exit(1)
 
     @classmethod
     def get_allref(self):

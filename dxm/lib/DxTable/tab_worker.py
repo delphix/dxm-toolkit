@@ -157,7 +157,12 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
         for ruleref in rulesetref_list:
             ruleobj = rulelist.get_by_ref(ruleref)
             connobj = connlist.get_by_ref(ruleobj.connectorId)
-            envobj = envlist.get_by_ref(connobj.environment_id)
+            if connobj:
+                envobj = envlist.get_by_ref(connobj.environment_id)
+                environment_name = envobj.environment_name
+            else:
+                environment_name = 'N/A'
+
             metalist.LoadMeta(ruleobj.ruleset_id)
 
             if metaname:
@@ -176,7 +181,7 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
                 if what == 'Database':
                     data.data_insert(
                                       engine_tuple[0],
-                                      envobj.environment_name,
+                                      environment_name,
                                       ruleobj.ruleset_name,
                                       metaobj.meta_name,
                                       metaobj.key_column,
@@ -193,7 +198,7 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
 
                     data.data_insert(
                                       engine_tuple[0],
-                                      envobj.environment_name,
+                                      environment_name,
                                       ruleobj.ruleset_name,
                                       metaobj.meta_name,
                                       metaobj.file_type,

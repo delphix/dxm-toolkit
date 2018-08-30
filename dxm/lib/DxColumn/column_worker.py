@@ -218,9 +218,15 @@ def do_print(**kwargs):
         print_algname = ''
         print_domain = ''
 
+
+    if envobj:
+        environment_name = envobj.environment_name
+    else:
+        environment_name = 'N/A'
+
     data.data_insert(
                       engine[0],
-                      envobj.environment_name,
+                      environment_name,
                       ruleobj.ruleset_name,
                       metaobj.meta_name,
                       colobj.cf_meta_name,
@@ -319,7 +325,11 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
         for ruleref in rulesetref_list:
             ruleobj = rulelist.get_by_ref(ruleref)
             connobj = connlist.get_by_ref(ruleobj.connectorId)
-            envobj = envlist.get_by_ref(connobj.environment_id)
+
+            if connobj:
+                envobj = envlist.get_by_ref(connobj.environment_id)
+            else:
+                envobj = None
 
             metalist.LoadMeta(ruleobj.ruleset_id)
 

@@ -90,7 +90,12 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
         for ruleref in rulesetref_list:
             ruleobj = rulelist.get_by_ref(ruleref)
             connobj = connlist.get_by_ref(ruleobj.connectorId)
-            envobj = envlist.get_by_ref(connobj.environment_id)
+            if connobj:
+                envobj = envlist.get_by_ref(connobj.environment_id)
+                environment_name = envobj.environment_name
+            else:
+                environment_name = 'N/A'
+
             metalist.LoadMeta(ruleobj.ruleset_id)
 
             if metaname:
@@ -108,7 +113,7 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
                 metaobj = metalist.get_by_ref(metaid)
                 data.data_insert(
                                   engine_tuple[0],
-                                  envobj.environment_name,
+                                  environment_name,
                                   ruleobj.ruleset_name,
                                   ruleobj.type,
                                   metaobj.meta_name
@@ -434,14 +439,24 @@ def ruleset_list(p_engine, format, rulesetName, envname):
         for ruleid in rulesets:
             ruleobj = rulelist.get_by_ref(ruleid)
             connobj = connlist.get_by_ref(ruleobj.connectorId)
-            envobj = envlist.get_by_ref(connobj.environment_id)
+
+            if connobj:
+                envobj = envlist.get_by_ref(connobj.environment_id)
+                connector_name = connobj.connector_name
+                environment_name = envobj.environment_name
+                connector_type = connobj.connector_type
+            else:
+                connector_name = 'N/A'
+                environment_name = 'N/A'
+                connector_type = 'N/A'
+
             data.data_insert(
                               engine_tuple[0],
                               ruleobj.ruleset_name,
-                              connobj.connector_name,
+                              connector_name,
                               ruleobj.type,
-                              connobj.connector_type,
-                              envobj.environment_name
+                              connector_type,
+                              environment_name
                             )
 
     print("")

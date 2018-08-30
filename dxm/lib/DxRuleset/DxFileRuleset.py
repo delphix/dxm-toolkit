@@ -51,7 +51,7 @@ class DxFileRuleset(FileRuleset):
 
     @property
     def connectorId(self):
-        return self.file_connector_id
+        return 'f' + str(self.file_connector_id)
 
     def from_ruleset(self, ruleset):
         """
