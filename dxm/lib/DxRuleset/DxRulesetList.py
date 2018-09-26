@@ -21,6 +21,7 @@ import logging
 from dxm.lib.DxRuleset.DxDatabaseRuleset import DxDatabaseRuleset
 from dxm.lib.DxRuleset.DxFileRuleset import DxFileRuleset
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
@@ -60,7 +61,9 @@ class DxRulesetList(object):
                                  environment_name)
 
                 if environment_id:
-                    api_response = api_instance.get_all_database_rulesets(
+                    database_rulesets = paginator(
+                            api_instance,
+                            "get_all_database_rulesets",
                             environment_id=environment_id,
                             _request_timeout=self.__engine.get_timeout())
                 else:
@@ -68,10 +71,12 @@ class DxRulesetList(object):
 
             else:
                 environment_id = None
-                api_response = api_instance.get_all_database_rulesets()
+                database_rulesets = paginator(
+                                        api_instance,
+                                        "get_all_database_rulesets")
 
-            if api_response.response_list:
-                for c in api_response.response_list:
+            if database_rulesets.response_list:
+                for c in database_rulesets.response_list:
                     ruleset = DxDatabaseRuleset(self.__engine)
                     ruleset.from_ruleset(c)
                     self.__rulesetList[c.database_ruleset_id] = ruleset
@@ -86,13 +91,17 @@ class DxRulesetList(object):
             api_instance = FileRulesetApi(self.__engine.api_client)
 
             if environment_id:
-                api_response = api_instance.get_all_file_rulesets(
+                file_rulesets = paginator(
+                        api_instance,
+                        "get_all_file_rulesets",
                         environment_id=environment_id)
             else:
-                api_response = api_instance.get_all_file_rulesets()
+                file_rulesets = paginator(
+                        api_instance,
+                        "get_all_file_rulesets")
 
-            if api_response.response_list:
-                for c in api_response.response_list:
+            if file_rulesets.response_list:
+                for c in file_rulesets.response_list:
                     ruleset = DxFileRuleset(self.__engine)
                     ruleset.from_ruleset(c)
                     self.__rulesetList[c.file_ruleset_id] = ruleset

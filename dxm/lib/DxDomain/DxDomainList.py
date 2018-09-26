@@ -25,6 +25,7 @@ from dxm.lib.DxDomain.DxDomain import DxDomain
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
+from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_message
 
 
@@ -52,10 +53,12 @@ class DxDomainList(object):
 
         try:
             api_instance = DomainApi(self.__engine.api_client)
-            api_response = api_instance.get_all_domains()
+            domain_list = paginator(
+                            api_instance,
+                            "get_all_domains")
 
-            if api_response.response_list:
-                for c in api_response.response_list:
+            if domain_list.response_list:
+                for c in domain_list.response_list:
                     dom = DxDomain(self.__engine)
                     dom.from_domain(c)
                     self.__domainList[c.domain_name] = dom
@@ -63,7 +66,7 @@ class DxDomainList(object):
                 print_error("No domain found")
                 self.__logger.error("No domain found")
                 return 1
-                
+
             return None
 
         except ApiException as e:
@@ -96,7 +99,7 @@ class DxDomainList(object):
     @classmethod
     def get_domain_by_name(self, name):
         """
-        Domain name is a ref 
+        Domain name is a ref
         """
         return self.get_by_ref(name)
 

@@ -22,6 +22,7 @@ import logging
 import sys
 from dxm.lib.DxEnvironment.DxEnvironment import DxEnvironment
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from masking_apis.apis.environment_api import EnvironmentApi
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from masking_apis.rest import ApiException
@@ -56,11 +57,13 @@ class DxEnvironmentList(object):
         self.__environmentList.clear()
         try:
             api_instance = EnvironmentApi(self.__engine.api_client)
-            a = api_instance.get_all_environments(
-                _request_timeout=self.__engine.get_timeout())
+            envlist = paginator(
+                        api_instance,
+                        "get_all_environments",
+                        _request_timeout=self.__engine.get_timeout())
 
-            if a.response_list:
-                for c in a.response_list:
+            if envlist.response_list:
+                for c in envlist.response_list:
                     environment = DxEnvironment(self.__engine)
                     environment.from_environment(c)
                     self.__environmentList[c.environment_id] = environment

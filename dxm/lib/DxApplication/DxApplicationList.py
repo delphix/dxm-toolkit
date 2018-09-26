@@ -23,6 +23,7 @@ import sys
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxApplication.DxApplication import DxApplication
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from masking_apis.apis.application_api import ApplicationApi
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
@@ -55,8 +56,10 @@ class DxApplicationList(object):
         self.__applicationList.clear()
         try:
             api_instance = ApplicationApi(self.__engine.api_client)
-            a = api_instance.get_all_applications(
-                _request_timeout=self.__engine.get_timeout())
+            a = paginator(
+                    api_instance,
+                    "get_all_applications",
+                    _request_timeout=self.__engine.get_timeout())
 
             if a.response_list:
                 for c in a.response_list:

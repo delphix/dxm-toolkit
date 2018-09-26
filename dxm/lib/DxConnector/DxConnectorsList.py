@@ -26,10 +26,12 @@ from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
 from masking_apis.apis.database_connector_api import DatabaseConnectorApi
 from masking_apis.apis.file_connector_api import FileConnectorApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
+
 
 class DxConnectorsList(object):
 
@@ -63,7 +65,9 @@ class DxConnectorsList(object):
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
                                  environment_name)
                 if environment_id:
-                    api_response = api_instance.get_all_database_connectors(
+                    dbconnectors = paginator(
+                        api_instance,
+                        "get_all_database_connectors",
                         environment_id=environment_id,
                         _request_timeout=self.__engine.get_timeout())
                 else:
@@ -71,11 +75,13 @@ class DxConnectorsList(object):
 
             else:
                 environment_id = None
-                api_response = api_instance.get_all_database_connectors(
+                dbconnectors = paginator(
+                    api_instance,
+                    "get_all_database_connectors",
                     _request_timeout=self.__engine.get_timeout())
 
-            if api_response.response_list:
-                for c in api_response.response_list:
+            if dbconnectors.response_list:
+                for c in dbconnectors.response_list:
                     if (c.database_type == 'ORACLE'):
                         connector = OracleConnector(self.__engine)
                     elif (c.database_type == 'MSSQL'):
@@ -93,15 +99,19 @@ class DxConnectorsList(object):
             api_instance = FileConnectorApi(self.__engine.api_client)
 
             if environment_id:
-                api_response = api_instance.get_all_file_connectors(
+                file_connectors = paginator(
+                    api_instance,
+                    "get_all_file_connectors",
                     environment_id=environment_id,
                     _request_timeout=self.__engine.get_timeout())
             else:
-                api_response = api_instance.get_all_file_connectors(
+                file_connectors = paginator(
+                    api_instance,
+                    "get_all_file_connectors",
                     _request_timeout=self.__engine.get_timeout())
 
-            if api_response.response_list:
-                for f in api_response.response_list:
+            if file_connectors.response_list:
+                for f in file_connectors.response_list:
                     connector = DxFileConnector(self.__engine)
                     connector.from_connector(f)
                     connector.is_database = False
@@ -134,7 +144,6 @@ class DxConnectorsList(object):
             self.__logger.debug("can't find Connector object"
                                 " for reference %s" % reference)
             self.__logger.debug(e)
-            #sys.exit(1)
 
     @classmethod
     def get_allref(self):

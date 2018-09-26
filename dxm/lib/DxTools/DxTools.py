@@ -20,10 +20,34 @@
 import re
 import pytz
 import logging
+import sys
 from datetime import datetime, timedelta
 from dxm.lib.DxEngine.DxConfig import DxConfig
 from dxm.lib.DxLogging import print_error
 
+
+def paginator(object, function_to_call, **kwargs):
+    dynfunc = getattr(object, function_to_call)
+
+    allentries = []
+    more = True
+    sofar = 0
+    pagenumber = 1
+
+    while (more):
+        ret = dynfunc(page_size=100, page_number=pagenumber, **kwargs)
+        sofar = sofar + ret.page_info.number_on_page
+        allentries.extend(ret.response_list)
+        pagenumber = pagenumber + 1
+        if ret.page_info.total == 0:
+            more = False
+        elif sofar >= ret.page_info.total:
+            more = False
+
+    ret.response_list = allentries
+    ret.page_info.number_on_page = sofar
+
+    return ret
 
 def get_list_of_engines(p_engine):
     logger = logging.getLogger()

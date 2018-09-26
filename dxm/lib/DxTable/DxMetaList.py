@@ -23,11 +23,12 @@ from dxm.lib.DxTable.DxTable import DxTable
 from dxm.lib.DxTable.DxFile import DxFile
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from masking_apis.apis.table_metadata_api import TableMetadataApi
 from masking_apis.apis.file_metadata_api import FileMetadataApi
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
-from dxm.lib.DxLogging import print_message
+
 
 class DxMetaList(object):
 
@@ -60,14 +61,17 @@ class DxMetaList(object):
             api_instance = TableMetadataApi(self.__engine.api_client)
 
             if ruleset_id:
-                a = api_instance.get_all_table_metadata(
-                        ruleset_id=ruleset_id
-                    )
+                table_metadata = paginator(
+                                    api_instance,
+                                    "get_all_table_metadata",
+                                    ruleset_id=ruleset_id)
             else:
-                a = api_instance.get_all_table_metadata()
+                table_metadata = paginator(
+                                    api_instance,
+                                    "get_all_table_metadata")
 
-            if a.response_list:
-                for c in a.response_list:
+            if table_metadata.response_list:
+                for c in table_metadata.response_list:
                     table = DxTable(self.__engine)
                     table.from_table(c)
                     self.__tableList[c.table_metadata_id] = table
@@ -82,19 +86,21 @@ class DxMetaList(object):
                 self.__logger.error(e.body)
                 return 1
 
-
         try:
             api_instance = FileMetadataApi(self.__engine.api_client)
 
             if ruleset_id:
-                a = api_instance.get_all_file_metadata(
-                        ruleset_id=ruleset_id
-                    )
+                file_metadata = paginator(
+                                    api_instance,
+                                    "get_all_file_metadata",
+                                    ruleset_id=ruleset_id)
             else:
-                a = api_instance.get_all_file_metadata()
+                file_metadata = paginator(
+                                    api_instance,
+                                    "get_all_file_metadata")
 
-            if a.response_list:
-                for c in a.response_list:
+            if file_metadata.response_list:
+                for c in file_metadata.response_list:
                     file = DxFile(self.__engine)
                     file.from_file(c)
                     self.__tableList[c.file_metadata_id] = file

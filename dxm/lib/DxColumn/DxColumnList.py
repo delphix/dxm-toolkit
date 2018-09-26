@@ -28,6 +28,7 @@ from dxm.lib.DxColumn.DxFileField import DxFileField
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTable.DxMetaList import DxMetaList
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -60,24 +61,29 @@ class DxColumnList(object):
 
                 if is_masked:
                     if metadata_id:
-                        a = api_instance.get_all_column_metadata(
+                        columns = paginator(
+                                api_instance,
+                                "get_all_column_metadata",
                                 table_metadata_id=metadata_id,
-                                is_masked=is_masked
-                            )
+                                is_masked=is_masked)
                     else:
-                        a = api_instance.get_all_column_metadata(
-                                is_masked=is_masked
-                            )
+                        columns = paginator(
+                                api_instance,
+                                "get_all_column_metadata",
+                                is_masked=is_masked)
                 else:
                     if metadata_id:
-                        a = api_instance.get_all_column_metadata(
-                                table_metadata_id=metadata_id
-                            )
+                        columns = paginator(
+                                api_instance,
+                                "get_all_column_metadata",
+                                table_metadata_id=metadata_id)
                     else:
-                        a = api_instance.get_all_column_metadata()
+                        columns = paginator(
+                                api_instance,
+                                "get_all_column_metadata")
 
-                if a.response_list:
-                    for c in a.response_list:
+                if columns.response_list:
+                    for c in columns.response_list:
                         column = DxDBColumn(self.__engine)
                         column.from_column(c)
                         self.__columnList[column.cf_metadata_id] = column
@@ -103,24 +109,29 @@ class DxColumnList(object):
 
                 if is_masked:
                     if metadata_id:
-                        a = api_instance.get_all_file_field_metadata(
+                        fields = paginator(
+                                api_instance,
+                                "get_all_file_field_metadata",
                                 file_format_id=metaobj.file_format_id,
-                                is_masked=is_masked
-                            )
+                                is_masked=is_masked)
                     else:
-                        a = api_instance.get_all_file_field_metadata(
-                                is_masked=is_masked
-                            )
+                        fields = paginator(
+                                api_instance,
+                                "get_all_file_field_metadata",
+                                is_masked=is_masked)
                 else:
                     if metadata_id:
-                        a = api_instance.get_all_file_field_metadata(
-                                file_format_id=metaobj.file_format_id
-                            )
+                        fields = paginator(
+                                api_instance,
+                                "get_all_file_field_metadata",
+                                file_format_id=metaobj.file_format_id)
                     else:
-                        a = api_instance.get_all_file_field_metadata()
+                        fields = paginator(
+                                api_instance,
+                                "get_all_file_field_metadata")
 
-                if a.response_list:
-                    for c in a.response_list:
+                if fields.response_list:
+                    for c in fields.response_list:
                         column = DxFileField(self.__engine)
                         column.from_file(c)
                         self.__columnList[column.cf_metadata_id] = column

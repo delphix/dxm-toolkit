@@ -23,6 +23,7 @@ from masking_apis.apis.file_format_api import FileFormatApi
 from dxm.lib.DxFileFormat.DxFileFormat import DxFileFormat
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
+from dxm.lib.DxTools.DxTools import paginator
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 
@@ -55,7 +56,9 @@ class DxFileFormatList(object):
         try:
             api_instance = FileFormatApi(self.__engine.api_client)
 
-            fileformats = api_instance.get_all_file_formats()
+            fileformats = paginator(
+                            api_instance,
+                            "get_all_file_formats")
 
             if fileformats.response_list:
                 for c in fileformats.response_list:

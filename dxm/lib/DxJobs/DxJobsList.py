@@ -27,6 +27,7 @@ from masking_apis.apis.execution_api import ExecutionApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
+from dxm.lib.DxTools.DxTools import paginator
 
 
 class DxJobsList(object):
@@ -60,7 +61,9 @@ class DxJobsList(object):
             api_instance = MaskingJobApi(self.__engine.api_client)
 
             execapi = ExecutionApi(self.__engine.api_client)
-            execList = execapi.get_all_executions()
+            execList = paginator(
+                        execapi,
+                        "get_all_executions")
 
             if execList.response_list:
                 for e in execList.response_list:
@@ -71,14 +74,22 @@ class DxJobsList(object):
                                  environment_name)
 
                 if environment_id:
-                    jobs = api_instance.get_all_masking_jobs(
+                    jobs = paginator(
+                            api_instance,
+                            "get_all_masking_jobs",
                             environment_id=environment_id,
                             _request_timeout=self.__engine.get_timeout())
                 else:
                     return 1
             else:
-                jobs = api_instance.get_all_masking_jobs(
+                # jobs = api_instance.get_all_masking_jobs(
+                #     _request_timeout=self.__engine.get_timeout())
+
+                jobs = paginator(
+                    api_instance,
+                    "get_all_masking_jobs",
                     _request_timeout=self.__engine.get_timeout())
+
 
             if jobs.response_list:
                 for c in jobs.response_list:
