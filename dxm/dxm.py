@@ -62,6 +62,15 @@ from lib.DxAlgorithm.alg_worker import algorithm_list
 from lib.DxTable.tab_worker import tab_listtable_details
 from lib.DxTable.tab_worker import tab_listfile_details
 from lib.DxTable.tab_worker import tab_update_meta
+from lib.DxProfile.profile_worker import profile_list
+from lib.DxProfile.profile_worker import expression_list
+from lib.DxProfile.profile_worker import expression_add
+from lib.DxProfile.profile_worker import expression_delete
+from lib.DxProfile.profile_worker import expression_update
+from lib.DxProfile.profile_worker import profile_add
+from lib.DxProfile.profile_worker import profile_export
+from lib.DxProfile.profile_worker import profile_addexpression
+from lib.DxProfile.profile_worker import profile_deleteexpression
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
@@ -237,6 +246,19 @@ def meta(dxm_state):
     Meta group allow to control tables and files metadata
     """
 
+@dxm.group()
+@pass_state
+def profileset(dxm_state):
+    """
+    Profileset group allow to control Profile Sets
+    """
+
+@dxm.group()
+@pass_state
+def expression(dxm_state):
+    """
+    Expression group allow to control Profile expressions
+    """
 
 @engine.command()
 @click.option('--engine', help='Engine name (or alias)', required=True)
@@ -1436,3 +1458,144 @@ def update(dxm_state, rulesetname, metaname, custom_sql, where_clause,
         "envname": envname
     }
     exit(tab_update_meta(dxm_state.engine, params))
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name")
+@common_options
+@pass_state
+def list(dxm_state, profilename):
+    exit(profile_list(dxm_state.engine, profilename, None, dxm_state.format, None))
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name")
+@click.option(
+    '--exportfile', type=click.File('wt'), required=True,
+    help="Name with path of export file")
+@common_options
+@pass_state
+def export(dxm_state, profilename, exportfile):
+    exit(profile_export(dxm_state.engine, profilename, exportfile))
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name")
+@click.option(
+    '--expressionname', help="Expression name")
+@common_options
+@pass_state
+def listmapping(dxm_state, profilename, expressionname):
+    exit(profile_list(
+            dxm_state.engine,
+            profilename,
+            expressionname,
+            dxm_state.format,
+            True))
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name", multiple=True, required=True)
+@click.option(
+    '--description', help="Profile set description")
+@common_options
+@pass_state
+def add(dxm_state, profilename, expressionname, description):
+    exit(profile_add(
+            dxm_state.engine,
+            profilename,
+            expressionname,
+            description))
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name", multiple=True, required=True)
+@common_options
+@pass_state
+def addexpression(dxm_state, profilename, expressionname):
+    exit(profile_addexpression(
+            dxm_state.engine,
+            profilename,
+            expressionname))
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name", multiple=True, required=True)
+@common_options
+@pass_state
+def deleteexpression(dxm_state, profilename, expressionname):
+    exit(profile_deleteexpression(
+            dxm_state.engine,
+            profilename,
+            expressionname))
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name")
+@common_options
+@pass_state
+def list(dxm_state, expressionname):
+    exit(expression_list(
+            dxm_state.engine,
+            expressionname,
+            dxm_state.format))
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name", required=True)
+@click.option(
+    '--domainname', required=True,
+    help="Name of domain to set for column")
+@click.option(
+    '--level', type=click.Choice(['column', 'data']), default="column",
+    help="Set level expression of expression. Default - column")
+@click.option(
+    '--regex', required=True,
+    help="Regular expression to set")
+@common_options
+@pass_state
+def add(dxm_state, expressionname, domainname, level, regex):
+    exit(expression_add(
+            dxm_state.engine,
+            expressionname,
+            domainname,
+            level,
+            regex))
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name", required=True)
+@common_options
+@pass_state
+def delete(dxm_state, expressionname):
+    exit(expression_delete(
+            dxm_state.engine,
+            expressionname))
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name", required=True)
+@click.option(
+    '--domainname',
+    help="Name of domain to set for column")
+@click.option(
+    '--level', type=click.Choice(['column', 'data']), default="column",
+    help="Set level expression of expression. Default - column")
+@click.option(
+    '--regex',
+    help="Regular expression to set")
+@common_options
+@pass_state
+def update(dxm_state, expressionname, domainname, level, regex):
+    exit(expression_update(
+            dxm_state.engine,
+            expressionname,
+            domainname,
+            level,
+            regex))
