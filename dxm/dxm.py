@@ -68,6 +68,7 @@ from lib.DxProfile.profile_worker import expression_add
 from lib.DxProfile.profile_worker import expression_delete
 from lib.DxProfile.profile_worker import expression_update
 from lib.DxProfile.profile_worker import profile_add
+from lib.DxProfile.profile_worker import profile_delete
 from lib.DxProfile.profile_worker import profile_export
 from lib.DxProfile.profile_worker import profile_addexpression
 from lib.DxProfile.profile_worker import profile_deleteexpression
@@ -1459,13 +1460,21 @@ def update(dxm_state, rulesetname, metaname, custom_sql, where_clause,
     }
     exit(tab_update_meta(dxm_state.engine, params))
 
+
 @profileset.command()
 @click.option(
     '--profilename', help="Profile set name")
 @common_options
 @pass_state
 def list(dxm_state, profilename):
-    exit(profile_list(dxm_state.engine, profilename, None, dxm_state.format, None))
+    """
+    Display profile list.
+    Output list will be limited by value of --profilename options if set
+    and return non-zero return code if profilename is not found.
+    """
+    exit(profile_list(
+            dxm_state.engine, profilename, None, dxm_state.format, None))
+
 
 @profileset.command()
 @click.option(
@@ -1476,7 +1485,15 @@ def list(dxm_state, profilename):
 @common_options
 @pass_state
 def export(dxm_state, profilename, exportfile):
+    """
+    Export profile with expression list into csv file with the following format
+    profile_name,expression_name
+    File name has to be provided using exportfile option.
+    Output list will be limited by value of --profilename options if set
+    and return non-zero return code if profilename is not found.
+    """
     exit(profile_export(dxm_state.engine, profilename, exportfile))
+
 
 @profileset.command()
 @click.option(
@@ -1486,12 +1503,19 @@ def export(dxm_state, profilename, exportfile):
 @common_options
 @pass_state
 def listmapping(dxm_state, profilename, expressionname):
+    """
+    Display profile with expression used by it.
+    Output list will be limited by value of --profilename or expressionname
+    options if set and return non-zero return code if profilename or
+    expressionname is not found.
+    """
     exit(profile_list(
             dxm_state.engine,
             profilename,
             expressionname,
             dxm_state.format,
             True))
+
 
 @profileset.command()
 @click.option(
@@ -1503,33 +1527,60 @@ def listmapping(dxm_state, profilename, expressionname):
 @common_options
 @pass_state
 def add(dxm_state, profilename, expressionname, description):
+    """
+    Add new profile. At least one expressionname is required.
+    """
     exit(profile_add(
             dxm_state.engine,
             profilename,
             expressionname,
             description))
 
+
 @profileset.command()
 @click.option(
     '--profilename', help="Profile set name", required=True)
-@click.option(
-    '--expressionname', help="Expression name", multiple=True, required=True)
 @common_options
 @pass_state
-def addexpression(dxm_state, profilename, expressionname):
-    exit(profile_addexpression(
+def delete(dxm_state, profilename):
+    """
+    Delete an existing profile.
+    """
+    exit(profile_delete(
             dxm_state.engine,
-            profilename,
-            expressionname))
+            profilename))
+
 
 @profileset.command()
 @click.option(
     '--profilename', help="Profile set name", required=True)
 @click.option(
-    '--expressionname', help="Expression name", multiple=True, required=True)
+    '--expressionname', help="Expression name [can be use multiple times]",
+    multiple=True, required=True)
+@common_options
+@pass_state
+def addexpression(dxm_state, profilename, expressionname):
+    """
+    Add expression to an existing profile.
+    """
+    exit(profile_addexpression(
+            dxm_state.engine,
+            profilename,
+            expressionname))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name [can be use multiple times]",
+    multiple=True, required=True)
 @common_options
 @pass_state
 def deleteexpression(dxm_state, profilename, expressionname):
+    """
+    Delete expression from an existing profile.
+    """
     exit(profile_deleteexpression(
             dxm_state.engine,
             profilename,
@@ -1541,10 +1592,17 @@ def deleteexpression(dxm_state, profilename, expressionname):
 @common_options
 @pass_state
 def list(dxm_state, expressionname):
+    """
+    Display expressions
+    Output list will be limited by value of expressionname
+    options if set and return non-zero return code if expressionname
+    is not found.
+    """
     exit(expression_list(
             dxm_state.engine,
             expressionname,
             dxm_state.format))
+
 
 @expression.command()
 @click.option(
@@ -1561,6 +1619,9 @@ def list(dxm_state, expressionname):
 @common_options
 @pass_state
 def add(dxm_state, expressionname, domainname, level, regex):
+    """
+    Add new expresson to engine
+    """
     exit(expression_add(
             dxm_state.engine,
             expressionname,
@@ -1568,15 +1629,20 @@ def add(dxm_state, expressionname, domainname, level, regex):
             level,
             regex))
 
+
 @expression.command()
 @click.option(
     '--expressionname', help="Expression name", required=True)
 @common_options
 @pass_state
 def delete(dxm_state, expressionname):
+    """
+    Delete expresson from engine
+    """
     exit(expression_delete(
             dxm_state.engine,
             expressionname))
+
 
 @expression.command()
 @click.option(
@@ -1593,6 +1659,9 @@ def delete(dxm_state, expressionname):
 @common_options
 @pass_state
 def update(dxm_state, expressionname, domainname, level, regex):
+    """
+    Update an existing expresson on engine
+    """
     exit(expression_update(
             dxm_state.engine,
             expressionname,

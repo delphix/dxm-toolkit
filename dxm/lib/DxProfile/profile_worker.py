@@ -368,6 +368,17 @@ def profile_list(p_engine, profilename, expname, p_format, mapping):
     return ret
 
 
+def profile_delete(p_engine, profilename):
+    """
+    Print list of Profile sets
+    param1: p_engine: engine name from configuration
+    param2: profilename: profile name to list
+    return 0 if profile deleted
+    """
+    exit(profile_worker(p_engine=p_engine, profilename=profilename,
+                        function_to_call='do_deleteprofile'))
+
+
 def profile_export(p_engine, profilename, exportfile):
     """
     Export list of Profile sets into csv
@@ -493,6 +504,22 @@ def do_deleteexpression(**kwargs):
         return 0
 
 
+def do_deleteprofile(**kwargs):
+    """
+    Worker to delete profile
+    profobj_list: profile list object
+    profobj: profile object
+    return 0 if profile deleted
+    """
+    profobj = kwargs.get('profobj')
+    profilesetlist = kwargs.get('profilesetlist')
+
+    if profilesetlist.delete(profobj.profile_set_id):
+        return 1
+    else:
+        return 0
+
+
 def do_profileexport(**kwargs):
     """
     Worker to export profile to dataobject using the follwing format
@@ -598,7 +625,10 @@ def profile_worker(**kwargs):
 
             if not mapping:
                 dynfunc = globals()[function_to_call]
-                dynfunc(profobj=profobj, engine_obj=engine_obj, **kwargs)
+                dynfunc(profobj=profobj,
+                        engine_obj=engine_obj,
+                        profilesetlist=profilesetlist,
+                        **kwargs)
 
             else:
                 expression_list = []
