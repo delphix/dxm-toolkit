@@ -14,14 +14,15 @@
 # Copyright (c) 2018 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
-# Date    : April 2018
+# Date    : September 2018
+
 
 
 import logging
 import time
 from tqdm import tqdm
-from masking_apis.models.masking_job import MaskingJob
-from masking_apis.apis.masking_job_api import MaskingJobApi
+from masking_apis.models.profile_job import ProfileJob
+from masking_apis.apis.profile_job_api import ProfileJobApi
 from masking_apis.apis.execution_api import ExecutionApi
 from masking_apis.models.execution import Execution
 from masking_apis.rest import ApiException
@@ -30,7 +31,7 @@ from dxm.lib.DxLogging import print_message
 import dxm.lib.DxJobs.DxJobCounter
 
 
-class DxJob(MaskingJob):
+class DxProfileJob(ProfileJob):
 
     def __init__(self, engine, lastExec):
         """
@@ -38,11 +39,11 @@ class DxJob(MaskingJob):
         :param1 engine: DxMaskingEngine object
         :param2 execList: list of job executions
         """
-        MaskingJob.__init__(self)
+        ProfileJob.__init__(self)
         self.__engine = engine
         self.__lastExec = lastExec
         self.__logger = logging.getLogger()
-        self.__logger.debug("creating DxJob object")
+        self.__logger.debug("creating DxDxProfileJobJob object")
         self.__monitor = False
 
     @property
@@ -59,22 +60,21 @@ class DxJob(MaskingJob):
 
     def from_job(self, job):
         """
-        Copy properties from MaskingJob object into DxJob
-        :param con: MaskingJob object
+        Copy properties from ProfileJob object into DxProfileJob
+        :param con: ProfileJob object
         """
         self.__dict__.update(job.__dict__)
 
-
     def add(self):
         """
-        Add job to Masking engine and print status message
+        Add profile job to Masking engine and print status message
         return a None if non error
         return 1 in case of error
         """
 
         if (self.job_name is None):
             print_error("Job name is required")
-            self.__logger.error("Job name is required")
+            self.__logger.error("Profile job name is required")
             return 1
 
         if (self.ruleset_id is None):
@@ -83,17 +83,17 @@ class DxJob(MaskingJob):
             return 1
 
         try:
-            self.__logger.debug("create job input %s" % str(self))
-            api_instance = MaskingJobApi(self.__engine.api_client)
-            self.__logger.debug("API instance created")
-            response = api_instance.create_masking_job(self)
+            self.__logger.debug("create profile job input %s" % str(self))
+            api_instance = ProfileJobApi(self.__engine.api_client)
+            response = api_instance.create_profile_job(
+                        self, _request_timeout=self.__engine.get_timeout())
             self.from_job(response)
 
-            self.__logger.debug("job response %s"
+            self.__logger.debug("profile job response %s"
                                 % str(response))
 
-            print_message("Job %s added" % self.job_name)
-            return 0
+            print_message("Profile job %s added" % self.job_name)
+            return None
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -101,19 +101,19 @@ class DxJob(MaskingJob):
 
     def delete(self):
         """
-        Delete job from Engine
+        Delete profile job from Engine
         return a 0 if non error
         return 1 in case of error
         """
 
         try:
-            api_instance = MaskingJobApi(self.__engine.api_client)
-            response = api_instance.delete_masking_job(
-                self.masking_job_id,
+            api_instance = ProfileJobApi(self.__engine.api_client)
+            response = api_instance.delete_profile_job(
+                self.profile_job_id,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("job response %s"
                                 % str(response))
-            print_message("Job %s deleted" % self.job_name)
+            print_message("Profile job %s deleted" % self.job_name)
             return 0
         except ApiException as e:
             print_error(e.body)
@@ -122,22 +122,22 @@ class DxJob(MaskingJob):
 
     def update(self):
         """
-        Update job in Engine
+        Update profile job in Engine
         return a 0 if non error
         return 1 in case of error
         """
 
         try:
-            api_instance = MaskingJobApi(self.__engine.api_client)
-            self.__logger.debug("update job request %s"
+            api_instance = ProfileJobApi(self.__engine.api_client)
+            self.__logger.debug("update profile job request %s"
                                 % str(self))
-            response = api_instance.update_masking_job(
-                self.masking_job_id,
+            response = api_instance.update_profile_job(
+                self.profile_job_id,
                 self,
                 _request_timeout=self.__engine.get_timeout())
-            self.__logger.debug("job response %s"
+            self.__logger.debug("Profile job response %s"
                                 % str(response))
-            print_message("Job %s updated" % self.job_name)
+            print_message("Profile job %s updated" % self.job_name)
             return 0
         except ApiException as e:
             print_error(e.body)
@@ -146,7 +146,7 @@ class DxJob(MaskingJob):
 
     def cancel(self):
         """
-        Cancel running job in Engine
+        Cancel running profile job in Engine
         return a 0 if non error
         return 1 in case of error
         """
@@ -194,7 +194,8 @@ class DxJob(MaskingJob):
                 if source_connector_id:
                     execjob.source_connector_id = source_connector_id
                 else:
-                    print_error("Source connector is required for on the fly job")
+                    print_error(
+                        "Source connector is required for on the fly job")
                     return 1
 
         try:
@@ -287,7 +288,8 @@ class DxJob(MaskingJob):
             else:
                 if bar:
                     bar.close()
-                self.__logger.error('Problem with masking job %s' % self.job_name)
+                self.__logger.error('Problem with masking job %s'
+                                    % self.job_name)
                 self.__logger.error('%s rows masked' % execjob.rows_masked)
 
             lock.acquire()
