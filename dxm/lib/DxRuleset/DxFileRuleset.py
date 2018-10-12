@@ -18,6 +18,7 @@
 
 
 import logging
+import csv
 from masking_apis.models.file_ruleset import FileRuleset
 from masking_apis.apis.file_ruleset_api import FileRulesetApi
 from dxm.lib.DxTable.DxFile import DxFile
@@ -134,7 +135,8 @@ class DxFileRuleset(FileRuleset):
 
         connlist = DxConnectorsList()
         connlist.LoadConnectors(None)
-        connobj = connlist.get_by_ref(self.file_connector_id)
+
+        connobj = connlist.get_by_ref(self.connectorId)
 
         if filename is None:
             print_error("File name is required")
@@ -156,12 +158,20 @@ class DxFileRuleset(FileRuleset):
         file.ruleset_id = self.file_ruleset_id
         file.file_type = connobj.file_type
         file.file_format_id = file_format
-        file.name_is_regular_expression = regular
+        if len(regular) > 1:
+            file.name_is_regular_expression = regular
+
         file.delimiter = delimiter
         file.end_of_record = eor_string
-        file.enclosure = enclosure
-
+        file.enclosure = enclosure.strip()
         return file.add()
+
+    def skip_comment(self, file):
+        for line in file:
+            if line.startswith('#'):
+                continue
+            if line:
+                yield line
 
     def addmetafromfile(self, inputfile):
         """
@@ -171,10 +181,13 @@ class DxFileRuleset(FileRuleset):
         return 1 in case of error
         """
         ret = 0
-        for line in inputfile:
-            if line.startswith('#'):
-                continue
-            columns = line.strip().split(',')
+        for columns in csv.reader(
+                    self.skip_comment(inputfile),
+                    quotechar='"',
+                    delimiter=',',
+                    escapechar='\\',
+                    skipinitialspace=True):
+
             params = {
                 "metaname": columns[0],
                 "file_name_regex": columns[1],
@@ -183,6 +196,7 @@ class DxFileRuleset(FileRuleset):
                 "file_eor": columns[4],
                 "file_enclosure": columns[5]
             }
+
             ret = ret + self.addmeta(params)
 
         return ret

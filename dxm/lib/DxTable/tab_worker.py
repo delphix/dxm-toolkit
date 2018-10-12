@@ -150,8 +150,8 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
                 rulesetref_list = rulelist.get_all_file_rulesetIds()
                 if rulesetref_list is None:
                     continue
-                filetypelist = DxFileFormatList()
 
+        filetypelist = DxFileFormatList()
         metalist = DxMetaList()
 
         for ruleref in rulesetref_list:
