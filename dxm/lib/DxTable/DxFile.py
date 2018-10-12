@@ -66,12 +66,15 @@ class DxFile(FileMetadata):
     @FileMetadata.end_of_record.setter
     def end_of_record(self, eor):
         eor_string = None
-        if eor == 'linux':
-            eor_string = '\n'
-        elif eor == 'windows':
-            eor_string = '\r\n'
-        elif len(eor) > 0:
-            eor_string = eor
+        if eor is None:
+            eor_string = None
+        else:
+            if eor == 'linux':
+                eor_string = '\n'
+            elif eor == 'windows':
+                eor_string = '\r\n'
+            elif len(eor) > 0:
+                eor_string = eor
 
         if eor_string:
             self._end_of_record = eor_string

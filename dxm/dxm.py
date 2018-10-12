@@ -744,6 +744,11 @@ def addmeta(dxm_state, rulesetname, metaname, custom_sql, where_clause,
 
     For batch load from CSV file use --inputfile option.
 
+    If file_delimiter is comma, it has to be enclosed by double qoute
+    like this ",".
+    If file_enclosure is double quote, it has to be esaped by \ character
+    like this \\".
+
     File format for tables:
     \b
     tablename, custom_sql, where_clause, having_clause, key_column
