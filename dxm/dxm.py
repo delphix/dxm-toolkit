@@ -65,7 +65,7 @@ from lib.DxTable.tab_worker import tab_update_meta
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.21
+__version__ = 0.22
 
 class dxm_state(object):
 
