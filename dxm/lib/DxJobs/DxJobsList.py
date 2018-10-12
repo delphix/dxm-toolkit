@@ -82,14 +82,11 @@ class DxJobsList(object):
                 else:
                     return 1
             else:
-                # jobs = api_instance.get_all_masking_jobs(
-                #     _request_timeout=self.__engine.get_timeout())
 
                 jobs = paginator(
                     api_instance,
                     "get_all_masking_jobs",
                     _request_timeout=self.__engine.get_timeout())
-
 
             if jobs.response_list:
                 for c in jobs.response_list:

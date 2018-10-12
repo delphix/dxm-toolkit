@@ -19,6 +19,7 @@
 
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 import logging
+import sys
 from datetime import datetime
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message

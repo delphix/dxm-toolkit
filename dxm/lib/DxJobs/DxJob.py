@@ -92,7 +92,7 @@ class DxJob(MaskingJob):
                                 % str(response))
 
             print_message("Job %s added" % self.job_name)
-            return 0
+            return None
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -193,7 +193,8 @@ class DxJob(MaskingJob):
                 if source_connector_id:
                     execjob.source_connector_id = source_connector_id
                 else:
-                    print_error("Source connector is required for on the fly job")
+                    print_error(
+                        "Source connector is required for on the fly job")
                     return 1
 
         try:
@@ -286,7 +287,8 @@ class DxJob(MaskingJob):
             else:
                 if bar:
                     bar.close()
-                self.__logger.error('Problem with masking job %s' % self.job_name)
+                self.__logger.error('Problem with masking job %s'
+                                    % self.job_name)
                 self.__logger.error('%s rows masked' % execjob.rows_masked)
 
             lock.acquire()
