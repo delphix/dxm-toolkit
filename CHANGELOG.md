@@ -1,3 +1,9 @@
+## Version 0.22
+
+### Changed:
+ - fix for adding file into files rulesets
+ - other small bug fixs
+
 ## Version 0.21
 
 ### Changed:
