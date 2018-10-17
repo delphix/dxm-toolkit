@@ -52,6 +52,24 @@ class DxRulesetList(object):
         Load list of rule sets
         Return None if OK
         """
+        return self.LoadRulesets_worker(environment_name, None)
+
+    @classmethod
+    def LoadRulesetsbyId(self, env_id):
+        """
+        Load list of rule sets for env_id
+        Return None if OK
+        """
+        return self.LoadRulesets_worker(None, env_id)
+
+    @classmethod
+    def LoadRulesets_worker(self, environment_name, env_id):
+        """
+        Load list of rule sets
+        Return None if OK
+        """
+
+        self.__rulesetList = {}
 
         try:
             api_instance = DatabaseRulesetApi(self.__engine.api_client)
@@ -70,10 +88,18 @@ class DxRulesetList(object):
                     return 1
 
             else:
-                environment_id = None
-                database_rulesets = paginator(
-                                        api_instance,
-                                        "get_all_database_rulesets")
+                if env_id:
+                    environment_id = env_id
+                    database_rulesets = paginator(
+                            api_instance,
+                            "get_all_database_rulesets",
+                            environment_id=environment_id,
+                            _request_timeout=self.__engine.get_timeout())
+                else:
+                    environment_id = None
+                    database_rulesets = paginator(
+                                            api_instance,
+                                            "get_all_database_rulesets")
 
             if database_rulesets.response_list:
                 for c in database_rulesets.response_list:

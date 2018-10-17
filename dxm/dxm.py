@@ -62,6 +62,24 @@ from lib.DxAlgorithm.alg_worker import algorithm_list
 from lib.DxTable.tab_worker import tab_listtable_details
 from lib.DxTable.tab_worker import tab_listfile_details
 from lib.DxTable.tab_worker import tab_update_meta
+from lib.DxProfile.profile_worker import profile_list
+from lib.DxProfile.profile_worker import expression_list
+from lib.DxProfile.profile_worker import expression_add
+from lib.DxProfile.profile_worker import expression_delete
+from lib.DxProfile.profile_worker import expression_update
+from lib.DxProfile.profile_worker import profile_add
+from lib.DxProfile.profile_worker import profile_delete
+from lib.DxProfile.profile_worker import profile_export
+from lib.DxProfile.profile_worker import profile_addexpression
+from lib.DxProfile.profile_worker import profile_deleteexpression
+from lib.DxJobs.jobs_worker import profilejobs_list
+from lib.DxJobs.jobs_worker import profilejob_start
+from lib.DxJobs.jobs_worker import profilejob_copy
+from lib.DxJobs.jobs_worker import profilejob_add
+from lib.DxJobs.jobs_worker import profilejob_update
+from lib.DxJobs.jobs_worker import profilejob_delete
+from lib.DxJobs.jobs_worker import profilejob_cancel
+
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
@@ -237,6 +255,26 @@ def meta(dxm_state):
     Meta group allow to control tables and files metadata
     """
 
+@dxm.group()
+@pass_state
+def profileset(dxm_state):
+    """
+    Profileset group allow to control Profile Sets
+    """
+
+@dxm.group()
+@pass_state
+def expression(dxm_state):
+    """
+    Expression group allow to control Profile expressions
+    """
+
+@dxm.group()
+@pass_state
+def profilejob(dxm_state):
+    """
+    Profile job group allow to control Profile jobs
+    """
 
 @engine.command()
 @click.option('--engine', help='Engine name (or alias)', required=True)
@@ -1087,20 +1125,20 @@ def delete(dxm_state, jobname, envname):
     """
     exit(job_delete(dxm_state.engine, jobname, envname))
 
-
-@job.command()
-@click.option(
-    '--jobname', required=True, help="Name of job to be canceled")
-@click.option(
-    '--envname', help="Name of environment where job will be canceled")
-@common_options
-@pass_state
-def cancel(dxm_state, jobname, envname):
-    """
-    Cancel execution of running job.
-    Return non zero code if there was problem with canceling a job
-    """
-    exit(job_cancel(dxm_state.engine, jobname, envname))
+# clarification with API develeopers needed about canceling job
+# @job.command()
+# @click.option(
+#     '--jobname', required=True, help="Name of job to be canceled")
+# @click.option(
+#     '--envname', help="Name of environment where job will be canceled")
+# @common_options
+# @pass_state
+# def cancel(dxm_state, jobname, envname):
+#     """
+#     Cancel execution of running job.
+#     Return non zero code if there was problem with canceling a job
+#     """
+#     exit(job_cancel(dxm_state.engine, jobname, envname))
 
 
 @job.command()
@@ -1441,3 +1479,415 @@ def update(dxm_state, rulesetname, metaname, custom_sql, where_clause,
         "envname": envname
     }
     exit(tab_update_meta(dxm_state.engine, params))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name")
+@common_options
+@pass_state
+def list(dxm_state, profilename):
+    """
+    Display profile list.
+    Output list will be limited by value of --profilename options if set
+    and return non-zero return code if profilename is not found.
+    """
+    exit(profile_list(
+            dxm_state.engine, profilename, None, dxm_state.format, None))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name")
+@click.option(
+    '--exportfile', type=click.File('wt'), required=True,
+    help="Name with path of export file")
+@common_options
+@pass_state
+def export(dxm_state, profilename, exportfile):
+    """
+    Export profile with expression list into csv file with the following format
+    profile_name,expression_name
+    File name has to be provided using exportfile option.
+    Output list will be limited by value of --profilename options if set
+    and return non-zero return code if profilename is not found.
+    """
+    exit(profile_export(dxm_state.engine, profilename, exportfile))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name")
+@click.option(
+    '--expressionname', help="Expression name")
+@common_options
+@pass_state
+def listmapping(dxm_state, profilename, expressionname):
+    """
+    Display profile with expression used by it.
+    Output list will be limited by value of --profilename or expressionname
+    options if set and return non-zero return code if profilename or
+    expressionname is not found.
+    """
+    exit(profile_list(
+            dxm_state.engine,
+            profilename,
+            expressionname,
+            dxm_state.format,
+            True))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name", multiple=True, required=True)
+@click.option(
+    '--description', help="Profile set description")
+@common_options
+@pass_state
+def add(dxm_state, profilename, expressionname, description):
+    """
+    Add new profile. At least one expressionname is required.
+    """
+    exit(profile_add(
+            dxm_state.engine,
+            profilename,
+            expressionname,
+            description))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@common_options
+@pass_state
+def delete(dxm_state, profilename):
+    """
+    Delete an existing profile.
+    """
+    exit(profile_delete(
+            dxm_state.engine,
+            profilename))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name [can be use multiple times]",
+    multiple=True, required=True)
+@common_options
+@pass_state
+def addexpression(dxm_state, profilename, expressionname):
+    """
+    Add expression to an existing profile.
+    """
+    exit(profile_addexpression(
+            dxm_state.engine,
+            profilename,
+            expressionname))
+
+
+@profileset.command()
+@click.option(
+    '--profilename', help="Profile set name", required=True)
+@click.option(
+    '--expressionname', help="Expression name [can be use multiple times]",
+    multiple=True, required=True)
+@common_options
+@pass_state
+def deleteexpression(dxm_state, profilename, expressionname):
+    """
+    Delete expression from an existing profile.
+    """
+    exit(profile_deleteexpression(
+            dxm_state.engine,
+            profilename,
+            expressionname))
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name")
+@common_options
+@pass_state
+def list(dxm_state, expressionname):
+    """
+    Display expressions
+    Output list will be limited by value of expressionname
+    options if set and return non-zero return code if expressionname
+    is not found.
+    """
+    exit(expression_list(
+            dxm_state.engine,
+            expressionname,
+            dxm_state.format))
+
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name", required=True)
+@click.option(
+    '--domainname', required=True,
+    help="Name of domain to set for column")
+@click.option(
+    '--level', type=click.Choice(['column', 'data']), default="column",
+    help="Set level expression of expression. Default - column")
+@click.option(
+    '--regex', required=True,
+    help="Regular expression to set")
+@common_options
+@pass_state
+def add(dxm_state, expressionname, domainname, level, regex):
+    """
+    Add new expresson to engine
+    """
+    exit(expression_add(
+            dxm_state.engine,
+            expressionname,
+            domainname,
+            level,
+            regex))
+
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name", required=True)
+@common_options
+@pass_state
+def delete(dxm_state, expressionname):
+    """
+    Delete expresson from engine
+    """
+    exit(expression_delete(
+            dxm_state.engine,
+            expressionname))
+
+
+@expression.command()
+@click.option(
+    '--expressionname', help="Expression name", required=True)
+@click.option(
+    '--domainname',
+    help="Name of domain to set for column")
+@click.option(
+    '--level', type=click.Choice(['column', 'data']), default="column",
+    help="Set level expression of expression. Default - column")
+@click.option(
+    '--regex',
+    help="Regular expression to set")
+@common_options
+@pass_state
+def update(dxm_state, expressionname, domainname, level, regex):
+    """
+    Update an existing expresson on engine
+    """
+    exit(expression_update(
+            dxm_state.engine,
+            expressionname,
+            domainname,
+            level,
+            regex))
+
+@profilejob.command()
+@click.option('--jobname', help="Filter jobs using jobname")
+@click.option('--envname', help='Filter jobs belongs to one environment')
+@common_options
+@pass_state
+def list(dxm_state, jobname, envname):
+    """
+    Display list of jobs defined in Masking Engine
+
+    If no filter options are specified, all jobs will be displayed.
+    If --envname or --jobname is set, output list will
+    be limited by value of this option and return non-zero return code
+    if jobname is not found.
+    """
+    exit(profilejobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of job to update", multiple=True)
+@click.option(
+    '--envname', help="Name of environment where job will be started")
+@click.option('--nowait', is_flag=True, help="No wait for job to finish")
+@click.option(
+    '--parallel', type=int, help="Number of parallel jobs",
+    default=1
+)
+@click.option('--monitor', is_flag=True, help="Display progress bars")
+@common_options
+@pass_state
+def start(dxm_state, jobname, envname,
+          nowait, parallel, monitor):
+    """
+    Start masking job. By default control is returned when job is finished.
+    If --nowait flag is specified script doesn't monitor job and release
+    control after job is started.
+    """
+    exit(profilejob_start(dxm_state.engine, jobname, envname,
+                          nowait, parallel, monitor))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of source job")
+@click.option(
+    '--envname', help="Name of environment for source and target job")
+@click.option(
+    '--newjobname', required=True, help="Name of target job")
+@common_options
+@pass_state
+def copy(dxm_state, jobname, envname, newjobname):
+    """
+    Copy an existing job to a new one.
+    Return non zero code if there was problem with canceling a job
+    """
+    exit(profilejob_copy(dxm_state.engine, jobname, envname, newjobname))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of job to add")
+@click.option(
+    '--envname', required=True,
+    help="Name of environment where job will be added")
+@click.option(
+    '--rulesetname', required=True,
+    help="Name of ruleset which will be used for masking job")
+@click.option(
+    '--profilename', required=True,
+    help="Name of profileset to be executed in job")
+@click.option(
+    '--jobdesc', help="Desciption of the job")
+@click.option(
+    '--email', help="e-mail address used for job notification")
+@click.option(
+    '--feedback_size', type=int,
+    help="Feedback size of masking job")
+@click.option(
+    '--max_memory', type=int,
+    help="Maximum size of memory used by masking job")
+@click.option(
+    '--min_memory', type=int,
+    help="Minimum size of memory used by masking job")
+@click.option(
+    '--num_streams', type=int,
+    help="Number of concurrent objects (tables/files) being masked by job")
+@click.option(
+    '--multi_tenant', type=click.Choice(['Y', 'N']),
+    help="Define job as multi-tenant")
+@common_options
+@pass_state
+def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
+        max_memory, min_memory, jobdesc, num_streams, profilename,
+        multi_tenant):
+    """
+    Add a new profile job to Masking engine
+
+    List of required parameters:
+
+    \b
+        jobname
+        envname
+        rulesetname
+        profilename
+
+    Return non zero code if there was problem with adding a new job
+    """
+
+    params = {
+        "envname": envname,
+        "jobname": jobname,
+        "rulesetname": rulesetname,
+        "profilename": profilename,
+        "email": email,
+        "feedback_size": feedback_size,
+        "max_memory": max_memory,
+        "min_memory": min_memory,
+        "job_description": jobdesc,
+        "num_input_streams": num_streams,
+        "multi_tenant": multi_tenant
+    }
+    exit(profilejob_add(dxm_state.engine, params))
+
+@profilejob.command()
+@click.option('--jobname', required=True, help="Name of job to update")
+@click.option(
+    '--envname', help="Name of environment where job will be updated")
+@click.option(
+    '--rulesetname', help="Name of ruleset which will be used for masking job")
+@click.option(
+    '--profilename',
+    help="Name of profileset to be executed in job")
+@click.option(
+    '--jobdesc', help="Desciption of the job")
+@click.option(
+    '--email', help="e-mail address used for job notification")
+@click.option(
+    '--feedback_size', type=int,
+    help="Feedback size of masking job")
+@click.option(
+    '--max_memory', type=int,
+    help="Maximum size of memory used by masking job")
+@click.option(
+    '--min_memory', type=int,
+    help="Minimum size of memory used by masking job")
+@click.option(
+    '--num_streams', type=int,
+    help="Number of concurrent objects (tables/files) being masked by job")
+@click.option(
+    '--multi_tenant', type=click.Choice(['Y', 'N']),
+    help="Define job as multi-tenant")
+@common_options
+@pass_state
+def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
+           max_memory, min_memory, jobdesc, num_streams, profilename,
+           multi_tenant):
+    """
+    Update an existing proflejob on Masking engine
+    Return non zero code if there was problem with updating a job
+    """
+
+    params = {
+        "envname": envname,
+        "jobname": jobname,
+        "rulesetname": rulesetname,
+        "profilename": profilename,
+        "email": email,
+        "feedback_size": feedback_size,
+        "max_memory": max_memory,
+        "min_memory": min_memory,
+        "job_description": jobdesc,
+        "num_input_streams": num_streams,
+        "multi_tenant": multi_tenant
+    }
+    exit(profilejob_update(dxm_state.engine, jobname, envname, params))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of job to be deleted")
+@click.option(
+    '--envname', help="Name of environment where job will be deleted")
+@common_options
+@pass_state
+def delete(dxm_state, jobname, envname):
+    """
+    Delete an existing job from Masking Engine.
+    Return non zero code if there was problem with deleting a job
+    """
+    exit(profilejob_delete(dxm_state.engine, jobname, envname))
+
+
+# doesn't work with profile job
+# @profilejob.command()
+# @click.option(
+#     '--jobname', required=True, help="Name of job to be canceled")
+# @click.option(
+#     '--envname', help="Name of environment where job will be canceled")
+# @common_options
+# @pass_state
+# def cancel(dxm_state, jobname, envname):
+#     """
+#     Cancel execution of running job.
+#     Return non zero code if there was problem with canceling a job
+#     """
+#     exit(profilejob_cancel(dxm_state.engine, jobname, envname))

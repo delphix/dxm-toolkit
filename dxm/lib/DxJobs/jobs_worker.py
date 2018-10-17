@@ -31,8 +31,11 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 
 from dxm.lib.DxJobs.DxJobsList import DxJobsList
 from dxm.lib.DxJobs.DxJob import DxJob
+from dxm.lib.DxJobs.DxProfileJobsList import DxProfileJobsList
+from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
+from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
 from masking_apis.models.database_masking_options import DatabaseMaskingOptions
 from masking_apis.models.masking_job_script import MaskingJobScript
 
@@ -43,8 +46,16 @@ from tqdm import tqdm
 from threading import RLock
 import dxm.lib.DxJobs.DxJobCounter
 
+
 lock = RLock()
 
+masking_params_list =  ("email",
+                        "feedback_size",
+                        "max_memory",
+                        "min_memory",
+                        "job_description",
+                        "num_input_streams",
+                        "multi_tenant")
 
 optional_params_list = ("email",
                         "feedback_size",
@@ -64,10 +75,69 @@ optional_options_list = ("commit_size",
                          "disable_triggers",
                          "truncate_tables")
 
+def profilejob_add(p_engine, params):
+    """
+    Add profile job to Masking engine
+    param1: p_engine: engine name from configuration
+    param2: params: job parameters
+    return 0 if added, non 0 for error
+    """
+
+    ret = 0
+
+    enginelist = get_list_of_engines(p_engine)
+
+    logger = logging.getLogger()
+
+    envname = params['envname']
+    jobname = params['jobname']
+    rulesetname = params['rulesetname']
+    profilename = params['profilename']
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+
+        if engine_obj.get_session():
+            continue
+
+        joblist = DxProfileJobsList()
+        envlist = DxEnvironmentList()
+        rulesetlist = DxRulesetList()
+        profilesetlist = DxProfilesList()
+        profileref = profilesetlist.get_profileSetId_by_name(profilename)
+        envlist.LoadEnvironments()
+        logger.debug("Envname is %s, job name is %s" % (envname, jobname))
+        rulesetlist.LoadRulesets(envname)
+        rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
+
+
+        job = DxProfileJob(engine_obj, None)
+        job.ruleset_id = rulesetref
+        job.job_name = jobname
+        job.profile_set_id = profileref
+
+        for p in masking_params_list:
+            if params[p] is not None:
+                if params[p] == 'Y':
+                    value = True
+                elif params[p] == 'N':
+                    value = False
+                else:
+                    value = params[p]
+                setattr(job, p, value)
+
+        if joblist.add(job):
+            ret = ret + 1
+
+    return ret
 
 def job_add(p_engine, params):
     """
-    Add application to Masking engine
+    Add masking job to Masking engine
     param1: p_engine: engine name from configuration
     param2: params: job parameters
     return 0 if added, non 0 for error
@@ -149,11 +219,34 @@ def job_add(p_engine, params):
 
 def job_copy(p_engine, jobname, envname, newjobname):
     """
+    Copy masking job in Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: newjobname: new job name
+    return 0 if deleted, non 0 for error
+    """
+    return job_copy_worker(p_engine, jobname, envname, newjobname, "DxJobsList")
+
+def profilejob_copy(p_engine, jobname, envname, newjobname):
+    """
+    Copy profile job in Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: newjobname: new job name
+    return 0 if deleted, non 0 for error
+    """
+    return job_copy_worker(p_engine, jobname, envname, newjobname, "DxProfileJobsList")
+
+def job_copy_worker(p_engine, jobname, envname, newjobname, joblist_class):
+    """
     Copy job in Masking engine
     param1: p_engine: engine name from configuration
     param2: jobname: job name
     param3: envname: environment name
     param4: newjobname: new job name
+    param5: joblist_class: type of job
     return 0 if deleted, non 0 for error
     """
     return job_selector(
@@ -161,7 +254,8 @@ def job_copy(p_engine, jobname, envname, newjobname):
         jobname=jobname,
         envname=envname,
         function_to_call='do_copy',
-        newjobname=newjobname)
+        newjobname=newjobname,
+        joblist_class=joblist_class)
 
 def job_update(p_engine, jobname, envname, params):
     """
@@ -172,44 +266,117 @@ def job_update(p_engine, jobname, envname, params):
     param4: params: dict with job parameters
     return 0 if updated, non 0 for error
     """
+    return job_update_worker(p_engine, jobname, envname, params, "DxJobsList")
+
+def profilejob_update(p_engine, jobname, envname, params):
+    """
+    Update a job in Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: params: dict with job parameters
+    return 0 if updated, non 0 for error
+    """
+    return job_update_worker(p_engine, jobname, envname, params, "DxProfileJobsList")
+
+def job_update_worker(p_engine, jobname, envname, params, joblist_class):
+    """
+    Update a job in Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: params: dict with job parameters
+    param5: joblist_class: type of job
+    return 0 if updated, non 0 for error
+    """
     return job_selector(
         p_engine=p_engine,
         jobname=jobname,
         envname=envname,
         function_to_call='do_update',
-        params=params)
+        params=params,
+        joblist_class=joblist_class)
 
 def do_update(**kwargs):
     jobref = kwargs.get('jobref')
     joblist = kwargs.get('joblist')
     params = kwargs.get('params')
-    jobobj = joblist.get_by_ref(jobref)
 
+    jobobj = joblist.get_by_ref(jobref)
     update = False
 
-    for p in optional_params_list:
-        if params[p] is not None:
-            update = True
-            if params[p] == 'Y':
-                value = True
-            elif params[p] == 'N':
-                value = False
-            else:
-                value = params[p]
-            setattr(jobobj, p, value)
+    logger = logging.getLogger()
 
-    dmo = jobobj.database_masking_options
-
-    for p in optional_options_list:
-        if params[p] is not None:
+    if "rulesetname" in params:
+        rulesetname = params['rulesetname']
+        # as job is in particular environment
+        # new ruleset need to be search in same environment
+        # job metadata doesn't return environment id so it has to be
+        # found by linking old ruleset via connector id to environment
+        rulesetlist = DxRulesetList()
+        rulesetlist.LoadRulesets(None)
+        connlist = DxConnectorsList()
+        connlist.LoadConnectors(None)
+        oldrulesetref = jobobj.ruleset_id
+        logger.debug("old ruleset %s" % oldrulesetref)
+        oldruleobj = rulesetlist.get_by_ref(oldrulesetref)
+        oldconnobj = connlist.get_by_ref(oldruleobj.connectorId)
+        rulesetlist.LoadRulesetsbyId(oldconnobj.environment_id)
+        rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
+        logger.debug("new ruleset %s" % rulesetref)
+        if rulesetref != oldrulesetref:
             update = True
-            if params[p] == 'Y':
-                value = True
-            elif params[p] == 'N':
-                value = False
-            else:
-                value = params[p]
-            setattr(dmo, p, value)
+            jobobj.ruleset_id = rulesetref
+
+    if type(jobobj) == dxm.lib.DxJobs.DxJob.DxJob:
+
+        for p in optional_params_list:
+            if params[p] is not None:
+                update = True
+                if params[p] == 'Y':
+                    value = True
+                elif params[p] == 'N':
+                    value = False
+                else:
+                    value = params[p]
+                setattr(jobobj, p, value)
+
+        dmo = jobobj.database_masking_options
+
+        for p in optional_options_list:
+            if params[p] is not None:
+                update = True
+                if params[p] == 'Y':
+                    value = True
+                elif params[p] == 'N':
+                    value = False
+                else:
+                    value = params[p]
+                setattr(dmo, p, value)
+    else:
+
+        if "profilename" in params:
+            profilename = params['profilename']
+
+            oldprofile = jobobj.profile_set_id
+            logger.debug("old profile %s" % oldprofile)
+            profilelist = DxProfilesList()
+            profileref = profilelist.get_profileSetId_by_name(profilename)
+            logger.debug("new profile %s" % profileref)
+            if profileref != oldprofile:
+                update = True
+                jobobj.profile_set_id = profileref
+
+        for p in masking_params_list:
+            if params[p] is not None:
+                update = True
+                if params[p] == 'Y':
+                    value = True
+                elif params[p] == 'N':
+                    value = False
+                else:
+                    value = params[p]
+                setattr(jobobj, p, value)
 
     if update:
         return jobobj.update()
@@ -246,11 +413,33 @@ def job_cancel(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
+    return job_cancel_worker(p_engine, jobname, envname, "DxJobsList")
+
+def profilejob_cancel(p_engine, jobname, envname):
+    """
+    Delete job from Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    return 0 if deleted, non 0 for error
+    """
+    return job_cancel_worker(p_engine, jobname, envname, "DxProfileJobsList")
+
+def job_cancel_worker(p_engine, jobname, envname, joblist_class):
+    """
+    Delete job from Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: joblist_class: type of job
+    return 0 if deleted, non 0 for error
+    """
     return job_selector(
         p_engine=p_engine,
         jobname=jobname,
         envname=envname,
-        function_to_call='do_cancel')
+        function_to_call='do_cancel',
+        joblist_class=joblist_class)
 
 def job_delete(p_engine, jobname, envname):
     """
@@ -260,11 +449,33 @@ def job_delete(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
+    return job_delete_worker(p_engine, jobname, envname, "DxJobsList")
+
+def profilejob_delete(p_engine, jobname, envname):
+    """
+    Delete job from Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    return 0 if deleted, non 0 for error
+    """
+    return job_delete_worker(p_engine, jobname, envname, "DxProfileJobsList")
+
+def job_delete_worker(p_engine, jobname, envname, joblist_class):
+    """
+    Delete job from Masking engine
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name
+    param3: envname: environment name
+    param4: joblist_class: type of job
+    return 0 if deleted, non 0 for error
+    """
     return job_selector(
         p_engine=p_engine,
         jobname=jobname,
         envname=envname,
-        function_to_call='do_delete')
+        function_to_call='do_delete',
+        joblist_class=joblist_class)
 
 def job_selector(**kwargs):
     """
@@ -280,6 +491,7 @@ def job_selector(**kwargs):
     jobname = kwargs.get('jobname')
     envname = kwargs.get('envname')
     function_to_call = kwargs.get('function_to_call')
+    joblist_class = kwargs.get('joblist_class')
 
     ret = 0
 
@@ -297,7 +509,7 @@ def job_selector(**kwargs):
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
 
-        joblist = DxJobsList()
+        joblist = globals()[joblist_class]()
         joblist.LoadJobs(envname)
 
         jobref = joblist.get_jobId_by_name(jobname)
@@ -314,8 +526,9 @@ def job_selector(**kwargs):
 
     return ret
 
-def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
-              nowait, parallel, monitor):
+
+def job_start(p_engine, jobname, envname, tgt_connector,
+              tgt_connector_env, nowait, parallel, monitor):
     """
     Start job
     param1: p_engine: engine name from configuration
@@ -326,6 +539,44 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
     param6: nowait: no wait for job to complete
     param7: parallel: number of concurrent masking jobs
     param8: monitor: enable progress bar
+    return 0 if environment found
+    """
+    return job_start_worker(
+                p_engine, jobname, envname, tgt_connector,
+                tgt_connector_env, nowait, parallel, monitor,
+                "DxJobsList")
+
+def profilejob_start(p_engine, jobname, envname, nowait, parallel, monitor):
+    """
+    Start profile job
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environment name
+    param6: nowait: no wait for job to complete
+    param7: parallel: number of concurrent masking jobs
+    param8: monitor: enable progress bar
+    return 0 if environment found
+    """
+    return job_start_worker(
+                p_engine, jobname, envname, None,
+                None, nowait, parallel, monitor,
+                "DxProfileJobsList")
+
+
+def job_start_worker(p_engine, jobname, envname, tgt_connector,
+                     tgt_connector_env, nowait, parallel, monitor,
+                     joblist_class):
+    """
+    Start job
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environment name
+    param4: tgt_connector: target connector for multi tenant
+    param5: tgt_connector_env: target connector environment for multi tenant
+    param6: nowait: no wait for job to complete
+    param7: parallel: number of concurrent masking jobs
+    param8: monitor: enable progress bar
+    param9: joblist_class - DxJobsList or DxProfileJobsList
     return 0 if environment found
     """
 
@@ -362,12 +613,15 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
                     logger.debug("starting job %s" % single_jobname)
                     t = Thread(
                         target=job_selector,
-                        kwargs={'p_engine': p_engine, 'jobname': single_jobname,
-                                'envname': envname, 'function_to_call': 'do_start',
+                        kwargs={'p_engine': p_engine,
+                                'jobname': single_jobname,
+                                'envname': envname,
+                                'function_to_call': 'do_start',
                                 'tgt_connector': tgt_connector,
                                 'tgt_connector_env': tgt_connector_env,
                                 'nowait': nowait, 'posno': posno,
-                                'lock': lock, 'monitor': monitor})
+                                'lock': lock, 'monitor': monitor,
+                                'joblist_class': joblist_class})
                     t.start()
                     posno = posno + 1
                     logger.debug("before update")
@@ -378,17 +632,13 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
 
                 except IndexError:
                     pass
-
-
-        except:
+        except Exception:
             print "Error: unable to start thread"
 
-
+        # wait 1 sec before kicking off next job
         time.sleep(1)
 
-
     # Wait for all threads to complete
-
     while (active_count() > no_of_active_threads):
         logger.debug("waiting for threads - active count %s"
                      % active_count())
@@ -402,12 +652,11 @@ def job_start(p_engine, jobname, envname, tgt_connector, tgt_connector_env,
     logger.debug("After close")
     print "\n" * posno
 
-    return dxm.lib.DxJobs.DxJobCounter.ret
+    if joblist_class == "DxJobsList":
+        return dxm.lib.DxJobs.DxJobCounter.ret
+    else:
+        return dxm.lib.DxJobs.DxJobCounter.profileret
 
-    # return job_selector(p_engine, jobname, envname, 'do_start',
-    #                     tgt_connector=tgt_connector,
-    #                     tgt_connector_env=tgt_connector_env,
-    #                     nowait=nowait, lock=lock)
 
 def do_start(**kwargs):
     """
@@ -439,14 +688,36 @@ def do_start(**kwargs):
 
 
 
-
 def jobs_list(p_engine, jobname, envname, p_format):
+    """
+    Print list of masking jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    return 0 if environment found
+    """
+    return jobs_list_worker(p_engine, jobname, envname, p_format, "DxJobsList")
+
+def profilejobs_list(p_engine, jobname, envname, p_format):
+    """
+    Print list of profile jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    return 0 if environment found
+    """
+    return jobs_list_worker(p_engine, jobname, envname, p_format, "DxProfileJobsList")
+
+def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
     """
     Print list of jobs
     param1: p_engine: engine name from configuration
     param2: jobname: job name to list
     param3: envname: environemnt name to list jobs from
     param4: p_format: output format
+    param5: joblist_class - DxJobsList, DxProfileJobslist
     return 0 if environment found
     """
 
@@ -484,7 +755,7 @@ def jobs_list(p_engine, jobname, envname, p_format):
         envlist.LoadEnvironments()
         rulesetlist = DxRulesetList()
         connectorlist = DxConnectorsList()
-        joblist = DxJobsList()
+        joblist = globals()[joblist_class]()
 
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
 
