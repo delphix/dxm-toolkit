@@ -152,11 +152,15 @@ class DxJob(MaskingJob):
         """
 
         try:
+            execid = self.__lastExec.execution_id
             exec_api = ExecutionApi(self.__engine.api_client)
             self.__logger.debug("Stopping execution %s" % str(self.__lastExec))
-            res = exec_api.cancel_execution(self.__lastExec.execution_id)
-            print res
+            execjob = exec_api.cancel_execution(execid)
+            while execjob.status == 'RUNNING':
+                time.sleep(1)
+                execjob = exec_api.get_execution_by_id(execid)
 
+            print execjob
             return 0
 
         except ApiException as e:
