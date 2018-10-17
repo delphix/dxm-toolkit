@@ -72,6 +72,14 @@ from lib.DxProfile.profile_worker import profile_delete
 from lib.DxProfile.profile_worker import profile_export
 from lib.DxProfile.profile_worker import profile_addexpression
 from lib.DxProfile.profile_worker import profile_deleteexpression
+from lib.DxJobs.jobs_worker import profilejobs_list
+from lib.DxJobs.jobs_worker import profilejob_start
+from lib.DxJobs.jobs_worker import profilejob_copy
+from lib.DxJobs.jobs_worker import profilejob_add
+from lib.DxJobs.jobs_worker import profilejob_update
+from lib.DxJobs.jobs_worker import profilejob_delete
+from lib.DxJobs.jobs_worker import profilejob_cancel
+
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
@@ -259,6 +267,13 @@ def profileset(dxm_state):
 def expression(dxm_state):
     """
     Expression group allow to control Profile expressions
+    """
+
+@dxm.group()
+@pass_state
+def profilejob(dxm_state):
+    """
+    Profile job group allow to control Profile jobs
     """
 
 @engine.command()
@@ -1105,20 +1120,20 @@ def delete(dxm_state, jobname, envname):
     """
     exit(job_delete(dxm_state.engine, jobname, envname))
 
-
-@job.command()
-@click.option(
-    '--jobname', required=True, help="Name of job to be canceled")
-@click.option(
-    '--envname', help="Name of environment where job will be canceled")
-@common_options
-@pass_state
-def cancel(dxm_state, jobname, envname):
-    """
-    Cancel execution of running job.
-    Return non zero code if there was problem with canceling a job
-    """
-    exit(job_cancel(dxm_state.engine, jobname, envname))
+# clarification with API develeopers needed about canceling job
+# @job.command()
+# @click.option(
+#     '--jobname', required=True, help="Name of job to be canceled")
+# @click.option(
+#     '--envname', help="Name of environment where job will be canceled")
+# @common_options
+# @pass_state
+# def cancel(dxm_state, jobname, envname):
+#     """
+#     Cancel execution of running job.
+#     Return non zero code if there was problem with canceling a job
+#     """
+#     exit(job_cancel(dxm_state.engine, jobname, envname))
 
 
 @job.command()
@@ -1668,3 +1683,206 @@ def update(dxm_state, expressionname, domainname, level, regex):
             domainname,
             level,
             regex))
+
+@profilejob.command()
+@click.option('--jobname', help="Filter jobs using jobname")
+@click.option('--envname', help='Filter jobs belongs to one environment')
+@common_options
+@pass_state
+def list(dxm_state, jobname, envname):
+    """
+    Display list of jobs defined in Masking Engine
+
+    If no filter options are specified, all jobs will be displayed.
+    If --envname or --jobname is set, output list will
+    be limited by value of this option and return non-zero return code
+    if jobname is not found.
+    """
+    exit(profilejobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of job to update", multiple=True)
+@click.option(
+    '--envname', help="Name of environment where job will be started")
+@click.option('--nowait', is_flag=True, help="No wait for job to finish")
+@click.option(
+    '--parallel', type=int, help="Number of parallel jobs",
+    default=1
+)
+@click.option('--monitor', is_flag=True, help="Display progress bars")
+@common_options
+@pass_state
+def start(dxm_state, jobname, envname,
+          nowait, parallel, monitor):
+    """
+    Start masking job. By default control is returned when job is finished.
+    If --nowait flag is specified script doesn't monitor job and release
+    control after job is started.
+    """
+    exit(profilejob_start(dxm_state.engine, jobname, envname,
+                          nowait, parallel, monitor))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of source job")
+@click.option(
+    '--envname', help="Name of environment for source and target job")
+@click.option(
+    '--newjobname', required=True, help="Name of target job")
+@common_options
+@pass_state
+def copy(dxm_state, jobname, envname, newjobname):
+    """
+    Copy an existing job to a new one.
+    Return non zero code if there was problem with canceling a job
+    """
+    exit(profilejob_copy(dxm_state.engine, jobname, envname, newjobname))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of job to add")
+@click.option(
+    '--envname', required=True,
+    help="Name of environment where job will be added")
+@click.option(
+    '--rulesetname', required=True,
+    help="Name of ruleset which will be used for masking job")
+@click.option(
+    '--profilename', required=True,
+    help="Name of profileset to be executed in job")
+@click.option(
+    '--jobdesc', help="Desciption of the job")
+@click.option(
+    '--email', help="e-mail address used for job notification")
+@click.option(
+    '--feedback_size', type=int,
+    help="Feedback size of masking job")
+@click.option(
+    '--max_memory', type=int,
+    help="Maximum size of memory used by masking job")
+@click.option(
+    '--min_memory', type=int,
+    help="Minimum size of memory used by masking job")
+@click.option(
+    '--num_streams', type=int,
+    help="Number of concurrent objects (tables/files) being masked by job")
+@click.option(
+    '--multi_tenant', type=click.Choice(['Y', 'N']),
+    help="Define job as multi-tenant")
+@common_options
+@pass_state
+def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
+        max_memory, min_memory, jobdesc, num_streams, profilename,
+        multi_tenant):
+    """
+    Add a new profile job to Masking engine
+
+    List of required parameters:
+
+    \b
+        jobname
+        envname
+        rulesetname
+        profilename
+
+    Return non zero code if there was problem with adding a new job
+    """
+
+    params = {
+        "envname": envname,
+        "jobname": jobname,
+        "rulesetname": rulesetname,
+        "profilename": profilename,
+        "email": email,
+        "feedback_size": feedback_size,
+        "max_memory": max_memory,
+        "min_memory": min_memory,
+        "job_description": jobdesc,
+        "num_input_streams": num_streams,
+        "multi_tenant": multi_tenant
+    }
+    exit(profilejob_add(dxm_state.engine, params))
+
+@profilejob.command()
+@click.option('--jobname', required=True, help="Name of job to update")
+@click.option(
+    '--envname', help="Name of environment where job will be updated")
+@click.option(
+    '--rulesetname', help="Name of ruleset which will be used for masking job")
+@click.option(
+    '--profilename',
+    help="Name of profileset to be executed in job")
+@click.option(
+    '--jobdesc', help="Desciption of the job")
+@click.option(
+    '--email', help="e-mail address used for job notification")
+@click.option(
+    '--feedback_size', type=int,
+    help="Feedback size of masking job")
+@click.option(
+    '--max_memory', type=int,
+    help="Maximum size of memory used by masking job")
+@click.option(
+    '--min_memory', type=int,
+    help="Minimum size of memory used by masking job")
+@click.option(
+    '--num_streams', type=int,
+    help="Number of concurrent objects (tables/files) being masked by job")
+@click.option(
+    '--multi_tenant', type=click.Choice(['Y', 'N']),
+    help="Define job as multi-tenant")
+@common_options
+@pass_state
+def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
+           max_memory, min_memory, jobdesc, num_streams, profilename,
+           multi_tenant):
+    """
+    Update an existing proflejob on Masking engine
+    Return non zero code if there was problem with updating a job
+    """
+
+    params = {
+        "envname": envname,
+        "jobname": jobname,
+        "rulesetname": rulesetname,
+        "profilename": profilename,
+        "email": email,
+        "feedback_size": feedback_size,
+        "max_memory": max_memory,
+        "min_memory": min_memory,
+        "job_description": jobdesc,
+        "num_input_streams": num_streams,
+        "multi_tenant": multi_tenant
+    }
+    exit(profilejob_update(dxm_state.engine, jobname, envname, params))
+
+@profilejob.command()
+@click.option(
+    '--jobname', required=True, help="Name of job to be deleted")
+@click.option(
+    '--envname', help="Name of environment where job will be deleted")
+@common_options
+@pass_state
+def delete(dxm_state, jobname, envname):
+    """
+    Delete an existing job from Masking Engine.
+    Return non zero code if there was problem with deleting a job
+    """
+    exit(profilejob_delete(dxm_state.engine, jobname, envname))
+
+
+# doesn't work with profile job
+# @profilejob.command()
+# @click.option(
+#     '--jobname', required=True, help="Name of job to be canceled")
+# @click.option(
+#     '--envname', help="Name of environment where job will be canceled")
+# @common_options
+# @pass_state
+# def cancel(dxm_state, jobname, envname):
+#     """
+#     Cancel execution of running job.
+#     Return non zero code if there was problem with canceling a job
+#     """
+#     exit(profilejob_cancel(dxm_state.engine, jobname, envname))

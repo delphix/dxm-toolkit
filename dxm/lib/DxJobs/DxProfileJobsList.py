@@ -22,7 +22,7 @@ import sys
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from masking_apis.apis.profile_job_api import ProfileJobApi
-from dxm.lib.DxJobs.DxJob import DxProfileJob
+from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from masking_apis.apis.execution_api import ExecutionApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from masking_apis.rest import ApiException
@@ -90,7 +90,7 @@ class DxProfileJobsList(object):
 
             if jobs.response_list:
                 for c in jobs.response_list:
-                    if c.masking_job_id in self.__executionList:
+                    if c.profile_job_id in self.__executionList:
                         lastExec = self.__executionList[c.profile_job_id]
                     else:
                         lastExec = None
@@ -183,31 +183,31 @@ class DxProfileJobsList(object):
     def add(self, job):
         """
         Add an Job to a list and Engine
-        :param ruleset: Ruleset object to add to Engine and list
+        :param job: job object to add to Engine and list
         return None if OK
         """
 
         if (job.add() is None):
             self.__logger.debug("Adding job %s to list" % job)
-            self.__jobsList[job.masking_job_id] = job
+            self.__jobsList[job.profile_job_id] = job
             return None
         else:
             return 1
 
     @classmethod
-    def delete(self, masking_job_id):
+    def delete(self, profile_job_id):
         """
         Delete a job from a list and Engine
-        :param masking_job_id: masking job id to delete from Engine and list
+        :param profile_job_id: profile job id to delete from Engine and list
         return None if OK
         """
 
-        job = self.get_by_ref(masking_job_id)
+        job = self.get_by_ref(profile_job_id)
         if job is not None:
             if job.delete() is None:
                 return None
             else:
                 return 1
         else:
-            print "Job with id %s not found" % masking_job_id
+            print "Job with id %s not found" % profile_job_id
             return 1

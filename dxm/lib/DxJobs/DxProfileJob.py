@@ -43,7 +43,7 @@ class DxProfileJob(ProfileJob):
         self.__engine = engine
         self.__lastExec = lastExec
         self.__logger = logging.getLogger()
-        self.__logger.debug("creating DxDxProfileJobJob object")
+        self.__logger.debug("creating DxProfileJob object")
         self.__monitor = False
 
     @property
@@ -152,11 +152,15 @@ class DxProfileJob(ProfileJob):
         """
 
         try:
+            execid = self.__lastExec.execution_id
             exec_api = ExecutionApi(self.__engine.api_client)
             self.__logger.debug("Stopping execution %s" % str(self.__lastExec))
-            res = exec_api.cancel_execution(self.__lastExec.execution_id)
-            print res
+            execjob = exec_api.cancel_execution(self.__lastExec.execution_id)
+            while execjob.status == 'RUNNING':
+                time.sleep(1)
+                execjob = exec_api.get_execution_by_id(execid)
 
+            print execjob
             return 0
 
         except ApiException as e:
@@ -179,31 +183,14 @@ class DxProfileJob(ProfileJob):
         exec_api = ExecutionApi(self.__engine.api_client)
 
         execjob = Execution()
-        execjob.job_id = self.masking_job_id
-
-        if (self.multi_tenant):
-            # target is mandatory
-            if target_connector_id:
-                execjob.target_connector_id = target_connector_id
-            else:
-                print_error("Target connector is required for multitenant job")
-                return 1
-
-        if (self.on_the_fly_masking):
-            if not self.on_the_fly_masking_source:
-                if source_connector_id:
-                    execjob.source_connector_id = source_connector_id
-                else:
-                    print_error(
-                        "Source connector is required for on the fly job")
-                    return 1
+        execjob.job_id = self.profile_job_id
 
         try:
-            self.__logger.debug("start job input %s" % str(execjob))
+            self.__logger.debug("start profilejob input %s" % str(execjob))
             response = exec_api.create_execution(
                 execjob,
                 _request_timeout=self.__engine.get_timeout())
-            self.__logger.debug("start job response %s"
+            self.__logger.debug("start profilejob response %s"
                                 % str(response))
 
             if nowait:
@@ -231,71 +218,37 @@ class DxProfileJob(ProfileJob):
         """
 
         execid = execjob.execution_id
-        first = True
-        bar = None
 
         exec_api = ExecutionApi(self.__engine.api_client)
-        last = 0
 
-        self.__logger.debug('Waiting for job %s to start processing rows'
+        self.__logger.debug('Waiting for profilejob %s to finish'
                             % self.job_name)
 
         if not self.monitor:
-            print_message('Waiting for job %s to start processing rows'
+            print_message('Waiting for profilejob %s to finish'
                           % self.job_name)
 
         while execjob.status == 'RUNNING':
             time.sleep(10)
             execjob = exec_api.get_execution_by_id(execid)
-            if first and (execjob.rows_total is not None):
-                first = False
-                if self.monitor and (bar is None):
-                    bar = tqdm(
-                        total=execjob.rows_total,
-                        desc=self.job_name,
-                        position=posno,
-                        bar_format="{desc}: {percentage:3.0f}%|{bar}|"
-                                   " {n_fmt}/{total_fmt}")
-                else:
-                    print_message('Job %s is processing rows'
-                                  % self.job_name)
-
-            if execjob.rows_masked is not None:
-                if self.monitor and (bar is not None):
-                    self.__logger.debug(execjob.rows_masked)
-                    self.__logger.debug(last)
-                    step = execjob.rows_masked-last
-                    # if step == 0:
-                    #     step = 1
-                    self.__logger.debug(step)
-                    bar.update(step)
-                    last = execjob.rows_masked
 
         if execjob.status == 'SUCCEEDED':
             if not self.monitor:
-                print_message('Masking job %s finished.' % self.job_name)
-                print_message('%s rows masked' % (execjob.rows_masked or 0))
+                print_message('Profile job %s finished.' % self.job_name)
             else:
-                if bar:
-                    bar.close()
-                self.__logger.debug('Masking job %s finished' % self.job_name)
+                self.__logger.debug('Profile job %s finished' % self.job_name)
                 self.__logger.debug('%s rows masked' % execjob.rows_masked)
             return 0
         else:
             if not self.monitor:
-                print_error('Problem with masking job %s' % self.job_name)
-                print_error('%s rows masked' % (execjob.rows_masked or 0))
+                print_error('Problem with profile job %s' % self.job_name)
             else:
-                if bar:
-                    bar.close()
-                self.__logger.error('Problem with masking job %s'
+                self.__logger.error('Problem with profile job %s'
                                     % self.job_name)
-                self.__logger.error('%s rows masked' % execjob.rows_masked)
-
             lock.acquire()
-            dxm.lib.DxJobs.DxJobCounter.ret = \
-                dxm.lib.DxJobs.DxJobCounter.ret + 1
+            dxm.lib.DxJobs.DxJobCounter.profileret = \
+                dxm.lib.DxJobs.DxJobCounter.profileret + 1
             lock.release()
             self.__logger.error('return value %s'
-                                % dxm.lib.DxJobs.DxJobCounter.ret)
+                                % dxm.lib.DxJobs.DxJobCounter.profileret)
             return 1
