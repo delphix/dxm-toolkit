@@ -33,6 +33,9 @@ from lib.DxRuleset.rule_worker import ruleset_list
 from lib.DxRuleset.rule_worker import ruleset_add
 from lib.DxRuleset.rule_worker import ruleset_delete
 from lib.DxRuleset.rule_worker import ruleset_clone
+from lib.DxRuleset.rule_worker import ruleset_export
+from lib.DxRuleset.rule_worker import ruleset_import
+from lib.DxRuleset.rule_worker import ruleset_check
 from lib.DxRuleset.rule_worker import ruleset_addmeta
 from lib.DxRuleset.rule_worker import ruleset_listmeta
 from lib.DxRuleset.rule_worker import ruleset_deletemeta
@@ -719,6 +722,68 @@ def clone(dxm_state, rulesetname, envname, newrulesetname):
     exit(ruleset_clone(dxm_state.engine, rulesetname, envname,
                        newrulesetname))
 
+
+@ruleset.command()
+@click.option(
+    '--rulesetname', required=True,
+    help='Ruleset name of source ruleset to clone')
+@click.option(
+    '--envname', help="Environment name where source and target ruleset exist")
+@click.option(
+    '--outputfile', type=click.File('wt'), required=True,
+    help="Name with path of output file where ruleset(s) will be exported"
+    " in JSON format")
+@click.option(
+    '--exportmeta', help="Export metadata with ruleset. Default set to yes",
+    type=click.Choice(['Y', 'N']), default='Y')
+@click.option(
+    '--metaname',
+    help="Name of table or file to export. If not specified all objects from"
+         " ruleset will be exported")
+@common_options
+@pass_state
+def exportrule(dxm_state, rulesetname, envname, outputfile,
+               exportmeta, metaname):
+    """
+    Export ruleset into a JSON file
+    """
+    exit(ruleset_export(
+        dxm_state.engine, rulesetname, envname,
+        outputfile, exportmeta, metaname))
+
+
+@ruleset.command()
+@click.option(
+    '--rulesetname',
+    help='Ruleset name of source ruleset to clone')
+@click.option(
+    '--connectorname',
+    help='Connector name to be used by ruleset')
+@click.option(
+    '--envname', help="Environment name where source and target ruleset exist")
+@click.option(
+    '--inputfile', type=click.File('rt'), required=True,
+    help="Name with path of input file where ruleset(s) will be imported from")
+@common_options
+@pass_state
+def importrule(dxm_state, inputfile, rulesetname, envname, connectorname):
+    """
+    Export
+    """
+    exit(ruleset_import(
+        dxm_state.engine, inputfile, rulesetname, connectorname, envname))
+
+@ruleset.command()
+@click.option(
+    '--inputfile', type=click.File('rt'), required=True,
+    help="Name with path of input file where ruleset(s) will be imported from")
+@common_options
+@pass_state
+def checkrule(dxm_state, inputfile):
+    """
+    Check
+    """
+    exit(ruleset_check(dxm_state.engine, inputfile))
 
 @ruleset.command()
 @click.option(

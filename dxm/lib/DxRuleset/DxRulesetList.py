@@ -28,6 +28,7 @@ from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
 from masking_apis.apis.file_ruleset_api import FileRulesetApi
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
+from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 
 
 class DxRulesetList(object):
@@ -37,7 +38,7 @@ class DxRulesetList(object):
     __logger = None
 
     @classmethod
-    def __init__(self):
+    def __init__(self, environment_name=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -45,6 +46,7 @@ class DxRulesetList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxRulesetList object")
+        self.LoadRulesets(environment_name)
 
     @classmethod
     def LoadRulesets(self, environment_name):
@@ -69,6 +71,7 @@ class DxRulesetList(object):
         Return None if OK
         """
 
+        DxConnectorsList(environment_name)
         self.__rulesetList = {}
 
         try:

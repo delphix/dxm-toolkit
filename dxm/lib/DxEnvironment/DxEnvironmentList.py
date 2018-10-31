@@ -45,6 +45,7 @@ class DxEnvironmentList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxEnvironmentList object")
+        self.LoadEnvironments()
 
     @classmethod
     def LoadEnvironments(self):

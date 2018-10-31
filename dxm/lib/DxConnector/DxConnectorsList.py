@@ -40,7 +40,7 @@ class DxConnectorsList(object):
     __logger = None
 
     @classmethod
-    def __init__(self):
+    def __init__(self, environment_name=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -48,6 +48,8 @@ class DxConnectorsList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxConnectorsList object")
+        DxEnvironmentList()
+        self.LoadConnectors(environment_name)
 
     @classmethod
     def LoadConnectors(self, environment_name):

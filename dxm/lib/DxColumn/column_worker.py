@@ -109,6 +109,17 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
                          newdomain, 'update_algorithm')
 
 
+def column_check(p_engine, rulesetname, envname, metaname, columnname,
+                 algname):
+
+    return column_worker(p_engine, None, rulesetname, envname, metaname,
+                         columnname, algname, None, None, None,
+                         None, 'found')
+
+def found(**kwargs):
+    return 1
+
+
 def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
                 columnname, algname, is_masked):
     """
@@ -148,6 +159,40 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
 
     return ret
 
+def generate_column_list(p_engine, sortby, rulesetname, envname, metaname,
+                         columnname, algname, is_masked, data, format):
+    """
+    Generate a column list to save into csv or export into SDLC
+    param1: p_engine: engine name from configuration
+    param2: sortby: sort by output if needed
+    param3: rulesetname: ruleset name
+    param4: envname: environment name
+    param5: metaname: meta name (table or file)
+    param6: columnname: column name (column or field)
+    param7: algname: algorithm name to filter
+    param8: is_masked: is masked fileter
+    param9: data: DataOutput object
+    param10: format: output format
+    """
+
+    data_header = [
+                    ("Metadata name", 32),
+                    ("Column name", 32),
+                    ("Alg name", 32),
+                    ("Domain name", 32),
+                    ("is_masked", 32)
+                  ]
+    data.create_header(data_header)
+    data.format_type = format
+
+    ret = column_worker(
+        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        algname, is_masked, None, None,
+        None, 'do_save', data=data)
+
+    return ret
+
+
 def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                 algname, is_masked, file):
     """
@@ -165,20 +210,10 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
     """
 
     data = DataFormatter()
-    data_header = [
-                    ("Metadata name", 32),
-                    ("Column name", 32),
-                    ("Alg name", 32),
-                    ("Domain name", 32),
-                    ("is_masked", 32)
-                  ]
-    data.create_header(data_header)
-    data.format_type = "csv"
 
-    ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
-        algname, is_masked, None, None,
-        None, 'do_save', data=data)
+    ret = generate_column_list(p_engine, sortby, rulesetname, envname,
+                               metaname, columnname, algname, is_masked,
+                               data, "csv")
 
     if ret == 0:
 
@@ -190,12 +225,39 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
             return 0
         except Exception as e:
             print_error("Problem with file %s Error: %s" %
-                       (file.name, str(e)))
+                        (file.name, str(e)))
             return 1
 
     else:
         return 1
 
+
+def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
+                  algname):
+    """
+    Print column list
+    param1: p_engine: engine name from configuration
+    param2: sortby: sort by output if needed
+    param3: rulesetname: ruleset name
+    param4: envname: environment name
+    param5: metaname: meta name (table or file)
+    param6: columnname: column name (column or field)
+    param7: algname: algorithm name to filter
+    param8: is_masked: is masked fileter
+    param9: file: file to write output
+    return 0 if no issues
+    """
+
+    data = DataFormatter()
+
+    ret = generate_column_list(p_engine, sortby, rulesetname, envname,
+                               metaname, columnname, algname, True,
+                               data, "json")
+
+    if ret == 0:
+        return data
+    else:
+        return None
 
 
 def do_print(**kwargs):
