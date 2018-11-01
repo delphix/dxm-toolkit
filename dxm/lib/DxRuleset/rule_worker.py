@@ -33,6 +33,7 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxTable.DxMetaList import DxMetaList
 from dxm.lib.DxColumn.column_worker import column_export
 from dxm.lib.DxColumn.column_worker import column_setmasking
+from dxm.lib.DxColumn.column_worker import column_unsetmasking
 from dxm.lib.DxColumn.column_worker import column_check
 from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
 
@@ -719,17 +720,25 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
 
                 ret = ret + ruleset_addmeta(p_engine, params, None)
 
-
             for column in ruleset["Columns"]:
-                colret = column_setmasking(
-                            p_engine,
-                            runrulesetname,
-                            runenvname,
-                            column["Metadata name"],
-                            column["Column name"],
-                            column["Alg name"],
-                            column["Domain name"])
-                ret = ret + colret
+                if column["is_masked"] == "Y":
+                    colret = column_setmasking(
+                                p_engine,
+                                runrulesetname,
+                                runenvname,
+                                column["Metadata name"],
+                                column["Column name"],
+                                column["Alg name"],
+                                column["Domain name"])
+                    ret = ret + colret
+                else:
+                    colret = column_unsetmasking(
+                                p_engine,
+                                runrulesetname,
+                                runenvname,
+                                column["Metadata name"],
+                                column["Column name"])
+                    ret = ret + colret
 
     return ret
 
