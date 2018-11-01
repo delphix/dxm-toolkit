@@ -198,7 +198,7 @@ class DxMetaList(object):
         return None if OK
         """
 
-        if (metaobj.add() is None):
+        if (metaobj.add() == 0):
             self.__logger.debug("Adding table/file %s to list" % metaobj)
             self.__tableList[metaobj.meta_id] = metaobj
             return None
@@ -215,7 +215,7 @@ class DxMetaList(object):
 
         table = self.get_by_ref(tableMetadataId)
         if table is not None:
-            if table.delete() is None:
+            if table.delete() == 0:
                 return None
             else:
                 return 1
@@ -236,15 +236,15 @@ class DxMetaList(object):
             newmeta = DxTable(self.__engine)
             newmeta.from_table(metaobj)
             newmeta.ruleset_id = newruleset_id
-            if self.add(newmeta):
-                return None
-            else:
+            if self.add(newmeta) is None:
                 return newmeta.table_metadata_id
+            else:
+                return None
         else:
             newmeta = DxFile(self.__engine)
             newmeta.from_file(metaobj)
             newmeta.ruleset_id = newruleset_id
-            if self.add(newmeta):
-                return None
-            else:
+            if self.add(newmeta) is None:
                 return newmeta.file_metadata_id
+            else:
+                return None

@@ -744,8 +744,6 @@ def ruleset_check(p_engine, inputfile):
                         envname=ruleset["Environent name"],
                         ruleset=ruleset,
                         function_to_call="do_check")
-
-    print ret
     return ret
 
 
@@ -775,10 +773,6 @@ def do_check(**kwargs):
         connector_name = 'N/A'
         environment_name = 'N/A'
 
-    print "%s and %s" % (ruleobj.ruleset_name, rulesetname)
-    print "%s and %s" % (connector_name, connname)
-    print "%s and %s" % (environment_name, envname)
-
     retcol = 0
 
     metalist = DxMetaList()
@@ -790,39 +784,27 @@ def do_check(**kwargs):
         metalist_ref = metalist.get_MetadataId_by_name(meta["meta_name"], 1)
         if metalist_ref:
             rettab = rettab + 1
-
-    print "Rettab %s" % rettab
-    print "tabsize %s" % len(ruleset["Metadata"])
+        else:
+            print_message("Missing meta %s" % meta["meta_name"])
 
     for col in ruleset["Columns"]:
-        print len(ruleset["Columns"])
-
-        retcol = retcol + column_check(p_engine, rulesetname, envname,
-                                       col['Metadata name'],
-                                       col['Column name'],
-                                       col['Alg name'])
-
-
-
-
-
-
-
-        # for p in optional_params_list:
-        #     if params[p] is not None:
-        #         update = True
-        #         if params[p] == 'Y':
-        #             value = True
-        #         elif params[p] == 'N':
-        #             value = False
-        #         else:
-        #             value = params[p]
-        #         setattr(jobobj, p, value)
+        if column_check(p_engine, rulesetname, envname,
+                        col['Metadata name'],
+                        col['Column name'],
+                        col['Alg name']) == 1:
+            retcol = retcol + 1
+        else:
+            print_message("Column %s of meta %s not exist or has different "
+                          "algorithm to mask"
+                          % (col["Column name"], col['Metadata name']))
 
     if (ruleobj.ruleset_name == rulesetname) and \
        (connector_name == connname) and \
        (environment_name == envname) and \
-       (len(ruleset["Columns"]) == retcol):
+       (len(ruleset["Columns"]) == retcol) and \
+       (rettab == len(ruleset["Metadata"])):
+        print_message("Ruleset definition in engine is matching import file")
         return 0
     else:
+        print_error("There are difference between engine and import file")
         return 1

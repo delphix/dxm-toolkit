@@ -19,6 +19,7 @@ from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
 from masking_apis.apis.file_ruleset_api import FileRulesetApi
 from masking_apis.models.file_ruleset_list import FileRulesetList
 from masking_apis.models.database_connector import DatabaseConnector
+from masking_apis.models.file_connector import FileConnector
 from masking_apis.models.database_connector_list import DatabaseConnectorList
 from masking_apis.apis.database_connector_api import DatabaseConnectorApi
 from masking_apis.models.file_connector_list import FileConnectorList
@@ -50,8 +51,9 @@ def fileconnector_load(a, **kwargs):
     Create an output for get_all_file_connectors call
     """
     pi = PageInfo(number_on_page=0, total=0)
-    dbrpo = FileConnectorList(page_info=pi, response_list=[])
-    return dbrpo
+    fileconnector = [FileConnector(file_connector_id=1, connector_name="File connector", environment_id=1, file_type="DELIMITED")]
+    filerpo = FileConnectorList(page_info=pi, response_list=fileconnector)
+    return filerpo
 
 
 def env_load(a, **kwargs):
@@ -96,9 +98,9 @@ class TestConnector(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Environment name,Connector name,Connector '
-            'type\r\ntesteng,Env1,DB connector2'
-            ',SYBASE\r\ntesteng,Env1,DB connector'
-            ',ORACLE'
+            'type\r\ntesteng,Env1,DB connector'
+            ',ORACLE\r\ntesteng,Env1,DB connector2'
+            ',SYBASE\r\ntesteng,Env1,File connector,DELIMITED'
         )
 
     def test_connector_add(self, get_session):
@@ -124,11 +126,12 @@ class TestConnector(TestCase):
                     'type': 'oracle'
                 }
 
-                connector_add(None, params)
+                ret = connector_add(None, params)
                 name, args, kwargs = mock_method.mock_calls[0]
                 print args[0]
                 self.assertEqual(1, args[0].environment_id)
-                self.assertEqual(1522, args[0].port)
+                self.assertEqual(1521, args[0].port)
+                self.assertEqual(0, ret)
 
 if __name__ == '__main__':
     logging_est('test.log', False)

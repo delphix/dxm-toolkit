@@ -43,11 +43,19 @@ def columns_copy(engine_obj, meta_id, new_meta_id):
 
     ret = 0
 
+    logger = logging.getLogger()
+
     collist = DxColumnList()
-    collist.LoadColumns(metadata_id=meta_id, is_masked=True)
+    if collist.LoadColumns(metadata_id=meta_id, is_masked=True) == 1:
+        logger.debug("Problem with loading masked columns for meta %s"
+                     % meta_id)
+        return 1
 
     newcollist = DxColumnList()
-    newcollist.LoadColumns(metadata_id=new_meta_id)
+    if newcollist.LoadColumns(metadata_id=new_meta_id) == 1:
+        logger.debug("Problem with loading columns for new meta %s"
+                     % new_meta_id)
+        return 1
 
     for colref in collist.get_allref():
         colobj = collist.get_by_ref(colref)
@@ -251,7 +259,7 @@ def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
     data = DataFormatter()
 
     ret = generate_column_list(p_engine, sortby, rulesetname, envname,
-                               metaname, columnname, algname, True,
+                               metaname, columnname, algname, None,
                                data, "json")
 
     if ret == 0:

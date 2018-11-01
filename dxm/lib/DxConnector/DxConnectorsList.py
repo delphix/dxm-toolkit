@@ -152,7 +152,7 @@ class DxConnectorsList(object):
         """
         return a list of all references
         """
-        return self.__connectorsList.keys()
+        return sorted(self.__connectorsList.keys())
 
     @classmethod
     def get_connectorId_by_name(self, name):
@@ -212,7 +212,7 @@ class DxConnectorsList(object):
         return None if OK
         """
 
-        if (connector.add() is None):
+        if connector.add() == 0:
             self.__logger.debug("Adding connector %s to list" % connector)
             self.__connectorsList[connector.database_connector_id] = connector
             return None
@@ -229,7 +229,7 @@ class DxConnectorsList(object):
 
         connector = self.get_by_ref(databaseConnectorId)
         if connector is not None:
-            if connector.delete() is None:
+            if connector.delete() == 0:
                 return None
             else:
                 return 1
