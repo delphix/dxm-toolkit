@@ -1233,8 +1233,8 @@ def delete(dxm_state, fileformatname):
 
 
 @fileformat.command()
-@click.option('--fileformattype', type=click.Choice(['delimited', 'excel',
-                                                     'fixed_width', 'xml']))
+@click.option('--fileformattype', type=click.Choice(['DELIMITED', 'EXCEL',
+                                                     'FIXED_WIDTH', 'XML']))
 @click.option('--fileformatname')
 @common_options
 @pass_state
