@@ -62,6 +62,8 @@ from lib.DxFileFormat.fileformat_worker import fileformat_add
 from lib.DxFileFormat.fileformat_worker import fileformat_list
 from lib.DxFileFormat.fileformat_worker import fileformat_delete
 from lib.DxAlgorithm.alg_worker import algorithm_list
+from lib.DxAlgorithm.alg_worker import algorithm_export
+from lib.DxAlgorithm.alg_worker import algorithm_import
 from lib.DxTable.tab_worker import tab_listtable_details
 from lib.DxTable.tab_worker import tab_listfile_details
 from lib.DxTable.tab_worker import tab_update_meta
@@ -1436,6 +1438,32 @@ def list(dxm_state, algname):
     and return non-zero return code if algname is not found.
     """
     exit(algorithm_list(dxm_state.engine, dxm_state.format, algname))
+
+
+# @algorithms.command()
+# @click.option('--algname', help="Filter list based on algorithm name")
+# @common_options
+# @pass_state
+# def export(dxm_state, algname):
+#     """
+#     Display a list algorithms.
+#     Output list will be limited by value of --algname options if set
+#     and return non-zero return code if algname is not found.
+#     """
+#     exit(algorithm_export(dxm_state.engine, algname, None))
+#
+#
+# @algorithms.command()
+# @click.option('--algname', help="Filter list based on algorithm name")
+# @common_options
+# @pass_state
+# def load(dxm_state, algname):
+#     """
+#     Display a list algorithms.
+#     Output list will be limited by value of --algname options if set
+#     and return non-zero return code if algname is not found.
+#     """
+#     exit(algorithm_import(dxm_state.engine, None))
 
 
 @meta.command()

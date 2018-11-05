@@ -25,6 +25,7 @@ from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
 
 from dxm.lib.DxAlgorithm.DxAlgorithmList import DxAlgorithmList
+from dxm.lib.DxAlgorithm.DxAlgorithm import DxAlgorithm
 from dxm.lib.DxDomain.DxDomainList import DxDomainList
 import sys
 
@@ -101,3 +102,89 @@ def algorithm_list(p_engine, format, algname):
         print("")
 
     return ret
+
+
+def algorithm_worker(p_engine, algname, **kwargs):
+    """
+    Select an algorithm and run action on it
+    param1: p_engine: engine name from configuration
+    param2: algname: algorithm name
+    kwargs: parameters to pass including function name to call
+    return 0 if algname found
+    """
+
+    ret = 0
+
+    function_to_call = kwargs.get('function_to_call')
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+
+        if engine_obj.get_session():
+            continue
+
+        domainlist = DxDomainList()
+        domainlist.LoadDomains()
+
+        alglist = DxAlgorithmList()
+
+        algref_list = []
+
+
+        algobj = alglist.get_by_ref(algname)
+        if algobj is None:
+            ret = ret + 1
+            continue
+
+        dynfunc = globals()[function_to_call]
+        if dynfunc(algobj=algobj, engine_obj=engine_obj, **kwargs):
+            ret = ret + 1
+
+    return ret
+
+def algorithm_export(p_engine, algname, outputfile):
+    """
+    Save algorithm to file
+    param1: p_engine: engine name from configuration
+    param2: algname: algname name to export
+    param3: outputfile: output file
+    return 0 if OK
+    """
+    return algorithm_worker(p_engine, algname, outputfile=outputfile,
+                            function_to_call='do_export')
+
+
+def do_export(**kwargs):
+    algobj = kwargs.get('algobj')
+    algobj.export()
+
+def algorithm_import(p_engine, inputfile):
+    """
+    Load algorithm from file
+    param1: p_engine: engine name from configuration
+    param2: inputfile: input file
+    return 0 if OK
+    """
+    ret = 0
+
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+
+        if engine_obj.get_session():
+            continue
+
+        algobj = DxAlgorithm(engine_obj)
+        algobj.importalg(None)
