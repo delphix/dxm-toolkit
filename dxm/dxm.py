@@ -88,7 +88,7 @@ from lib.DxJobs.jobs_worker import profilejob_cancel
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.22
+__version__ = 0.3
 
 class dxm_state(object):
 
