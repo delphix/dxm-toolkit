@@ -29,6 +29,10 @@ from dxm.lib.DxLogging import print_message
 class DxConnector(DatabaseConnector):
 
     @property
+    def connectorId(self):
+        return self.database_connector_id
+
+    @property
     def connector_type(self):
         """
         connector_type

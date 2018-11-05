@@ -88,7 +88,7 @@ class DxColumnList(object):
                         column.from_column(c)
                         self.__columnList[column.cf_metadata_id] = column
                 else:
-                    print_error("No column metadata found")
+                    # print_error("No column metadata found")
                     self.__logger.error("No column metadata found")
 
             except ApiException as e:

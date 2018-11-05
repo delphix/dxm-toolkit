@@ -33,6 +33,9 @@ from lib.DxRuleset.rule_worker import ruleset_list
 from lib.DxRuleset.rule_worker import ruleset_add
 from lib.DxRuleset.rule_worker import ruleset_delete
 from lib.DxRuleset.rule_worker import ruleset_clone
+from lib.DxRuleset.rule_worker import ruleset_export
+from lib.DxRuleset.rule_worker import ruleset_import
+from lib.DxRuleset.rule_worker import ruleset_check
 from lib.DxRuleset.rule_worker import ruleset_addmeta
 from lib.DxRuleset.rule_worker import ruleset_listmeta
 from lib.DxRuleset.rule_worker import ruleset_deletemeta
@@ -59,6 +62,8 @@ from lib.DxFileFormat.fileformat_worker import fileformat_add
 from lib.DxFileFormat.fileformat_worker import fileformat_list
 from lib.DxFileFormat.fileformat_worker import fileformat_delete
 from lib.DxAlgorithm.alg_worker import algorithm_list
+from lib.DxAlgorithm.alg_worker import algorithm_export
+from lib.DxAlgorithm.alg_worker import algorithm_import
 from lib.DxTable.tab_worker import tab_listtable_details
 from lib.DxTable.tab_worker import tab_listfile_details
 from lib.DxTable.tab_worker import tab_update_meta
@@ -723,6 +728,68 @@ def clone(dxm_state, rulesetname, envname, newrulesetname):
 @ruleset.command()
 @click.option(
     '--rulesetname', required=True,
+    help='Ruleset name of source ruleset to clone')
+@click.option(
+    '--envname', help="Environment name where source and target ruleset exist")
+@click.option(
+    '--outputfile', type=click.File('wt'), required=True,
+    help="Name with path of output file where ruleset(s) will be exported"
+    " in JSON format")
+@click.option(
+    '--exportmeta', help="Export metadata with ruleset. Default set to yes",
+    type=click.Choice(['Y', 'N']), default='Y')
+@click.option(
+    '--metaname',
+    help="Name of table or file to export. If not specified all objects from"
+         " ruleset will be exported")
+@common_options
+@pass_state
+def exportrule(dxm_state, rulesetname, envname, outputfile,
+               exportmeta, metaname):
+    """
+    Export ruleset into a JSON file
+    """
+    exit(ruleset_export(
+        dxm_state.engine, rulesetname, envname,
+        outputfile, exportmeta, metaname))
+
+
+@ruleset.command()
+@click.option(
+    '--rulesetname',
+    help='Ruleset name of source ruleset to clone')
+@click.option(
+    '--connectorname',
+    help='Connector name to be used by ruleset')
+@click.option(
+    '--envname', help="Environment name where source and target ruleset exist")
+@click.option(
+    '--inputfile', type=click.File('rt'), required=True,
+    help="Name with path of input file where ruleset(s) will be imported from")
+@common_options
+@pass_state
+def importrule(dxm_state, inputfile, rulesetname, envname, connectorname):
+    """
+    Export
+    """
+    exit(ruleset_import(
+        dxm_state.engine, inputfile, rulesetname, connectorname, envname))
+
+@ruleset.command()
+@click.option(
+    '--inputfile', type=click.File('rt'), required=True,
+    help="Name with path of input file where ruleset(s) will be imported from")
+@common_options
+@pass_state
+def checkrule(dxm_state, inputfile):
+    """
+    Check
+    """
+    exit(ruleset_check(dxm_state.engine, inputfile))
+
+@ruleset.command()
+@click.option(
+    '--rulesetname', required=True,
     help='Ruleset name where table or file will be added')
 @click.option(
     '--envname', help="Environment name where ruleset exist")
@@ -1168,8 +1235,8 @@ def delete(dxm_state, fileformatname):
 
 
 @fileformat.command()
-@click.option('--fileformattype', type=click.Choice(['delimited', 'excel',
-                                                     'fixed_width', 'xml']))
+@click.option('--fileformattype', type=click.Choice(['DELIMITED', 'EXCEL',
+                                                     'FIXED_WIDTH', 'XML']))
 @click.option('--fileformatname')
 @common_options
 @pass_state
@@ -1371,6 +1438,32 @@ def list(dxm_state, algname):
     and return non-zero return code if algname is not found.
     """
     exit(algorithm_list(dxm_state.engine, dxm_state.format, algname))
+
+
+# @algorithms.command()
+# @click.option('--algname', help="Filter list based on algorithm name")
+# @common_options
+# @pass_state
+# def export(dxm_state, algname):
+#     """
+#     Display a list algorithms.
+#     Output list will be limited by value of --algname options if set
+#     and return non-zero return code if algname is not found.
+#     """
+#     exit(algorithm_export(dxm_state.engine, algname, None))
+#
+#
+# @algorithms.command()
+# @click.option('--algname', help="Filter list based on algorithm name")
+# @common_options
+# @pass_state
+# def load(dxm_state, algname):
+#     """
+#     Display a list algorithms.
+#     Output list will be limited by value of --algname options if set
+#     and return non-zero return code if algname is not found.
+#     """
+#     exit(algorithm_import(dxm_state.engine, None))
 
 
 @meta.command()
