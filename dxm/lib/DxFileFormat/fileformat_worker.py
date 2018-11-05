@@ -86,8 +86,6 @@ def fileformat_delete(p_engine, fileformat_name):
             continue
 
         fileformatList = DxFileFormatList()
-        fileformatList.LoadFileFormats()
-
         fileformatid = fileformatList.get_file_format_id_by_name(fileformat_name)
 
         if fileformatList.delete(fileformatid):
@@ -136,25 +134,37 @@ def fileformat_list(p_engine, format, fileformat_type, fileformat_name):
         fileformatList = DxFileFormatList()
         # load all objects
 
-        fileformats = fileformatList.get_allref()
-
-        for fileformatref in fileformats:
-            fileformatobj = fileformatList.get_by_ref(fileformatref)
-            if ((fileformat_name is not None) and
-               (fileformat_name != fileformatobj.file_format_name)):
+        if fileformat_name:
+            fileformats_name = fileformatList.get_all_file_format_id_by_name(
+                                            fileformat_name)
+            if fileformats_name is None:
                 ret = ret + 1
-                continue
+                fileformats_name = []
+        else:
+            fileformats_name = fileformatList.get_allref()
 
-            if ((fileformat_type is not None)
-               and (fileformat_type != fileformatobj.file_format_type)):
+        if fileformat_type:
+            fileformats_type = fileformatList.get_all_file_format_id_by_type(
+                                            fileformat_type)
+            if fileformats_type is None:
                 ret = ret + 1
-                continue
+                fileformats_type = []
+        else:
+            fileformats_type = fileformats_name
 
-            data.data_insert(
-                              engine_tuple[0],
-                              fileformatobj.file_format_type,
-                              fileformatobj.file_format_name
-                            )
+        fileformats = list(set(fileformats_name) & set(fileformats_type))
+
+        if fileformats:
+            for fileformatref in fileformats:
+                fileformatobj = fileformatList.get_by_ref(fileformatref)
+                data.data_insert(
+                                  engine_tuple[0],
+                                  fileformatobj.file_format_type,
+                                  fileformatobj.file_format_name
+                                )
+        else:
+            if fileformat_type and fileformat_name:
+                ret = ret + 1
 
     print("")
     print (data.data_output(False))

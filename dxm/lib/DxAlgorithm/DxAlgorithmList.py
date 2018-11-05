@@ -44,7 +44,10 @@ class DxAlgorithmList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxAlgorithmList object")
+        if not self.__algorithmList:
+            self.LoadAlgorithms()
 
+    @classmethod
     def LoadAlgorithms(self):
         """
         Load list of algorithms
@@ -89,9 +92,12 @@ class DxAlgorithmList(object):
             self.__logger.error(e.body)
             return 1
 
+    @classmethod
     def get_by_ref(self, reference):
         """
         return a algorithm object by refrerence
+        :param1 reference: algorithm name
+        None if not found
         """
         try:
             self.__logger.debug("reference %s" % reference)
@@ -101,15 +107,13 @@ class DxAlgorithmList(object):
             self.__logger.debug("can't find algorithm object"
                                 " for reference %s" % reference)
             self.__logger.debug(e)
-            sys.exit(1)
+            return None
 
+
+    @classmethod
     def get_allref(self, sortby1='algorithm_name'):
         """
         return a list of all references
         """
         return sorted(self.__algorithmList, key=lambda k:
                       getattr(self.__algorithmList[k], sortby1).lower())
-
-
-    def get_column_id_by_algorithm(self, alg):
-        return get_objref_by_val_and_attribute(alg, self, 'algorithm_name')

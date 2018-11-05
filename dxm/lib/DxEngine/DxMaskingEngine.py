@@ -82,6 +82,10 @@ class DxMaskingEngine(object):
                 logger.removeHandler(config.logger_stream_handler)
 
     @classmethod
+    def get_username(self):
+        return self.__username
+
+    @classmethod
     def get_name(self):
         return self.__name
 

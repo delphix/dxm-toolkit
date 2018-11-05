@@ -106,6 +106,12 @@ class DxFileFormatList(object):
             return None
 
     @classmethod
+    def get_all_file_format_id_by_name(self, name):
+        reflist = self.get_file_format_id_by_name_worker(name)
+        return reflist
+
+
+    @classmethod
     def get_file_format_id_by_name_worker(self, name, check_uniqueness=1):
         """
         :param1 name: name of ruleset
@@ -113,6 +119,34 @@ class DxFileFormatList(object):
         return list of rulesets
         """
         reflist = get_objref_by_val_and_attribute(name, self, 'file_format_name')
+        if len(reflist) == 0:
+            self.__logger.error('File format %s not found' % name)
+            print_error('File format %s not found' % name)
+            return None
+
+        if check_uniqueness:
+            if len(reflist) > 1:
+                self.__logger.error('File format %s is not unique' % name)
+                print_error('File format %s is not unique' % name)
+                return None
+
+        return reflist
+
+
+    @classmethod
+    def get_all_file_format_id_by_type(self, name):
+        reflist = self.get_file_format_id_by_type_worker(name, 0)
+        return reflist
+
+
+    @classmethod
+    def get_file_format_id_by_type_worker(self, name, check_uniqueness=1):
+        """
+        :param1 name: name of ruleset
+        :param2 check_uniqueness: check uniqueness put None if skip this check
+        return list of rulesets
+        """
+        reflist = get_objref_by_val_and_attribute(name, self, 'file_format_type')
         if len(reflist) == 0:
             self.__logger.error('File format %s not found' % name)
             print_error('File format %s not found' % name)
@@ -134,7 +168,7 @@ class DxFileFormatList(object):
         return None if OK
         """
 
-        if (filetype.add() is None):
+        if (filetype.add() == 0):
             self.__logger.debug("Adding file type %s to list" % filetype)
             self.__filetypeList[filetype.file_format_id] = filetype
             return None

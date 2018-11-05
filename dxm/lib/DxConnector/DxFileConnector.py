@@ -41,6 +41,10 @@ class DxFileConnector(DxConnector, FileConnector):
         self.__logger.debug("creating FileConnector object")
 
     @property
+    def connectorId(self):
+        return self.file_connector_id
+
+    @property
     def host(self):
         return self.connection_info.host
 

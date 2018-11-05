@@ -28,6 +28,7 @@ from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
 from masking_apis.apis.file_ruleset_api import FileRulesetApi
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
+from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 
 
 class DxRulesetList(object):
@@ -37,7 +38,7 @@ class DxRulesetList(object):
     __logger = None
 
     @classmethod
-    def __init__(self):
+    def __init__(self, environment_name=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -45,6 +46,7 @@ class DxRulesetList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxRulesetList object")
+        self.LoadRulesets(environment_name)
 
     @classmethod
     def LoadRulesets(self, environment_name):
@@ -52,6 +54,25 @@ class DxRulesetList(object):
         Load list of rule sets
         Return None if OK
         """
+        return self.LoadRulesets_worker(environment_name, None)
+
+    @classmethod
+    def LoadRulesetsbyId(self, env_id):
+        """
+        Load list of rule sets for env_id
+        Return None if OK
+        """
+        return self.LoadRulesets_worker(None, env_id)
+
+    @classmethod
+    def LoadRulesets_worker(self, environment_name, env_id):
+        """
+        Load list of rule sets
+        Return None if OK
+        """
+
+        DxConnectorsList(environment_name)
+        self.__rulesetList = {}
 
         try:
             api_instance = DatabaseRulesetApi(self.__engine.api_client)
@@ -70,10 +91,18 @@ class DxRulesetList(object):
                     return 1
 
             else:
-                environment_id = None
-                database_rulesets = paginator(
-                                        api_instance,
-                                        "get_all_database_rulesets")
+                if env_id:
+                    environment_id = env_id
+                    database_rulesets = paginator(
+                            api_instance,
+                            "get_all_database_rulesets",
+                            environment_id=environment_id,
+                            _request_timeout=self.__engine.get_timeout())
+                else:
+                    environment_id = None
+                    database_rulesets = paginator(
+                                            api_instance,
+                                            "get_all_database_rulesets")
 
             if database_rulesets.response_list:
                 for c in database_rulesets.response_list:

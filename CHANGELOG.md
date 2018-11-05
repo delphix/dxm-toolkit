@@ -1,3 +1,12 @@
+## Version 0.3
+
+### Added:
+ - support for profile (sets, expressions, jobs)
+ - support for export/import/check ruleset with all depended objects into JSON files  
+
+### Changed:
+ - various bug fixes
+ 
 ## Version 0.22
 
 ### Changed:

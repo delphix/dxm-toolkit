@@ -387,28 +387,30 @@ def connector_list(p_engine, format, envname, connector_name, details):
         if engine_obj.get_session():
             continue
 
-        connlist = DxConnectorsList()
-        envlist = DxEnvironmentList()
-        envlist.LoadEnvironments()
-        connlist.LoadConnectors(envname)
+        # connlist = DxConnectorsList()
+        # envlist = DxEnvironmentList()
+        # envlist.LoadEnvironments()
+        # connlist.LoadConnectors(envname)
+
+        DxConnectorsList(envname)
 
         if connector_name is None:
-            connectors = connlist.get_allref()
+            connectors = DxConnectorsList.get_allref()
         else:
-            connectors = connlist.get_all_connectorId_by_name(connector_name)
+            connectors = DxConnectorsList.get_all_connectorId_by_name(connector_name)
             if connectors is None:
                 ret = ret + 1
                 continue
 
         for connref in connectors:
-            connobj = connlist.get_by_ref(connref)
+            connobj = DxConnectorsList.get_by_ref(connref)
             if details:
                 rest = ''.join(['%s = %s ' % (key, value)
                                for (key, value)
                                in connobj.get_type_properties().items()])
                 data.data_insert(
                                   engine_tuple[0],
-                                  envlist.get_by_ref(connobj.environment_id)
+                                  DxEnvironmentList.get_by_ref(connobj.environment_id)
                                   .environment_name,
                                   connobj.connector_name,
                                   connobj.connector_type,
@@ -420,7 +422,7 @@ def connector_list(p_engine, format, envname, connector_name, details):
             else:
                 data.data_insert(
                                   engine_tuple[0],
-                                  envlist.get_by_ref(connobj.environment_id)
+                                  DxEnvironmentList.get_by_ref(connobj.environment_id)
                                   .environment_name,
                                   connobj.connector_name,
                                   connobj.connector_type

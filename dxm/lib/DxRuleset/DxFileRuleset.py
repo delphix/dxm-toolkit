@@ -158,7 +158,7 @@ class DxFileRuleset(FileRuleset):
         file.ruleset_id = self.file_ruleset_id
         file.file_type = connobj.file_type
         file.file_format_id = file_format
-        if len(regular) > 1:
+        if regular:
             file.name_is_regular_expression = regular
 
         file.delimiter = delimiter
