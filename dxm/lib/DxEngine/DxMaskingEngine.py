@@ -20,6 +20,7 @@
 
 import logging
 import requests
+from packaging import version
 from datetime import datetime, timedelta
 #import pickle
 from dxm.lib.DxEngine.DxConfig import DxConfig
@@ -31,6 +32,7 @@ from masking_apis.apis.login_api import LoginApi
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from masking_apis.apis.application_api import ApplicationApi
+from masking_apis.apis.system_information_api import SystemInformationApi
 
 
 class DxMaskingEngine(object):
@@ -149,6 +151,32 @@ class DxMaskingEngine(object):
                         % (self.__name, self.__address))
             self.__logger.debug(str(e))
             return 1
+
+    @classmethod
+    def get_version(self):
+        """
+        Return version of engine
+        return: version of engine as string. ex 5.3.0.0 or 5.2.0.0
+        """
+        try:
+            si = SystemInformationApi(self.api_client)
+            retobj = si.get_system_information()
+            ret = retobj.version
+        except ApiException:
+            print "Old engine"
+            ret = "5.2.0.0"
+
+        return ret
+
+    @classmethod
+    def version_ge(self, version_engine):
+        """
+        Compare an input parameter with engine version.
+        param1: version_engine: version number to compare ex. "5.3"
+        return: True if engine has higher or equal version
+        """
+        engine_ver = self.get_version()
+        return version.parse(engine_ver) >= version.parse(version_engine)
 
     @classmethod
     def save(self, apikey):
