@@ -155,14 +155,14 @@ class DxConnectorsList(object):
         return sorted(self.__connectorsList.keys())
 
     @classmethod
-    def get_connectorId_by_name(self, name):
+    def get_connectorId_by_name(self, name, verbose=True):
         """
         Return connector id by name.
         :param1 name: name of connector
         return ref if OK
         return None if ruleset not found or not unique
         """
-        reflist = self.get_connectorId_by_name_worker(name)
+        reflist = self.get_connectorId_by_name_worker(name, 1, verbose)
         # convert list to single value
         # as there will be only one element in list
         if reflist:
@@ -181,7 +181,7 @@ class DxConnectorsList(object):
         return self.get_connectorId_by_name_worker(name, None)
 
     @classmethod
-    def get_connectorId_by_name_worker(self, name, check_uniquness=1):
+    def get_connectorId_by_name_worker(self, name, check_uniquness, verbose):
         """
         Get a list of connectors by name
         :param1 name: name of connector
@@ -192,13 +192,15 @@ class DxConnectorsList(object):
             name, self, 'connector_name')
 
         if len(connectors) < 1:
-            print_error("Connector %s not found" % name)
+            if verbose:
+                print_error("Connector %s not found" % name)
             self.__logger.error("Connector %s not found " % name)
             return None
 
         if check_uniquness:
             if len(connectors) > 1:
-                print_error("Connector name %s is not unique" % name)
+                if verbose:
+                    print_error("Connector name %s is not unique" % name)
                 self.__logger.error("Connector %s is not unique" % name)
                 return None
 

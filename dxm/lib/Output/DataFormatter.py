@@ -44,8 +44,9 @@ class DataFormatter(object):
 
 
 
-    def data_insert(self, *kwarg):
-        self.results['data'].append((kwarg))
+    def data_insert(self, *args):
+        self.results['data'].append(tuple([e.encode('utf-8') for e in args]))
+
 
 
     @property

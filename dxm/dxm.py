@@ -84,6 +84,9 @@ from lib.DxJobs.jobs_worker import profilejob_add
 from lib.DxJobs.jobs_worker import profilejob_update
 from lib.DxJobs.jobs_worker import profilejob_delete
 from lib.DxJobs.jobs_worker import profilejob_cancel
+from lib.DxSync.sync_worker import sync_list
+from lib.DxSync.sync_worker import sync_export
+from lib.DxSync.sync_worker import sync_import
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
@@ -279,6 +282,13 @@ def expression(dxm_state):
 def profilejob(dxm_state):
     """
     Profile job group allow to control Profile jobs
+    """
+
+@dxm.group()
+@pass_state
+def sync(dxm_state):
+    """
+    Sync objects between engines or export/import to files
     """
 
 @engine.command()
@@ -1984,3 +1994,46 @@ def delete(dxm_state, jobname, envname):
 #     Return non zero code if there was problem with canceling a job
 #     """
 #     exit(profilejob_cancel(dxm_state.engine, jobname, envname))
+
+@sync.command()
+@click.option('--objecttype', help="Filter object using a type")
+@click.option('--objectname', help="Filter object using a name")
+@click.option('--envname', help="Filter using a environment name")
+@common_options
+@pass_state
+def list(dxm_state, objecttype, objectname, envname):
+    """
+    Display list of syncable objects from Masking Engine
+
+    If no filter options are specified, all objects types will be displayed.
+    """
+    exit(sync_list(dxm_state.engine, objecttype, objectname,
+                   envname, dxm_state.format))
+
+@sync.command()
+@click.option('--objecttype', help="Filter object using a type")
+@click.option('--objectname', help="Filter object using a name")
+@click.option('--envname', help="Filter using a environment name")
+@common_options
+@pass_state
+def export(dxm_state, objecttype, objectname, envname):
+    """
+    Display list of syncable objects from Masking Engine
+
+    If no filter options are specified, all objects types will be displayed.
+    """
+    exit(sync_export(dxm_state.engine, objecttype, objectname,
+                   envname, dxm_state.format))
+
+
+@sync.command()
+@click.option('--target_envname', help="Filter using a environment name")
+@common_options
+@pass_state
+def load(dxm_state, target_envname):
+    """
+    Display list of syncable objects from Masking Engine
+
+    If no filter options are specified, all objects types will be displayed.
+    """
+    exit(sync_import(dxm_state.engine, target_envname, None))

@@ -29,6 +29,7 @@ from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+from dxm.lib.DxSync.DxSyncList import DxSyncList
 
 class DxAlgorithmList(object):
 
@@ -58,12 +59,19 @@ class DxAlgorithmList(object):
             api_instance = AlgorithmApi(self.__engine.api_client)
             api_response = api_instance.get_all_algorithms()
 
-            api_sync = SyncApi(self.__engine.api_client)
-            api_sync_response = api_sync.get_all_syncable_objects()
+            synclist = DxSyncList()
+            sync = synclist.get_all_algorithms()
 
-            sync = dict([x.object_identifier['algorithmName'], x]
-                        for x in api_sync_response.response_list
-                        if 'algorithmName' in x.object_identifier)
+            # print "DUPKA"
+            #
+            # sys.exit(1)
+            #
+            # api_sync = SyncApi(self.__engine.api_client)
+            # api_sync_response = api_sync.get_all_syncable_objects()
+            # sync = dict([x.object_identifier['algorithmName'], x]
+            #             for x in api_sync_response.response_list
+            #             if 'algorithmName' in x.object_identifier)
+
 
             if api_response.response_list:
                 for c in api_response.response_list:
@@ -78,7 +86,7 @@ class DxAlgorithmList(object):
                         alg.domain_name = ''
 
                     if c.algorithm_name in sync:
-                        alg.sync = sync[c.algorithm_name]
+                        alg.sync = 1
                     self.__algorithmList[c.algorithm_name] = alg
             else:
                 print_error("No algorithm found")
