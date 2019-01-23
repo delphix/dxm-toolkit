@@ -128,8 +128,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
             continue
 
 
-        synclist = DxSyncList()
-        synclist.LoadSync(objecttype)
+        synclist = DxSyncList(objecttype)
 
         if objecttype is None or objecttype == "algorithm":
 

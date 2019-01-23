@@ -44,7 +44,7 @@ class DxSyncList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxSyncList object")
-
+        self.LoadSync(type)
 
     @classmethod
     def LoadSync(self, objecttype=None):

@@ -1997,7 +1997,19 @@ def delete(dxm_state, jobname, envname):
 
 @sync.command()
 @click.option('--objecttype', help="Filter object using a type")
-@click.option('--objectname', help="Filter object using a name")
+@click.option('--objectname', help="Filter object using a name",
+              type=click.Choice(
+                ['database_connector',
+                 'algorithm',
+                 'database_ruleset',
+                 'domain',
+                 'file_connector',
+                 'file_format',
+                 'file_ruleset',
+                 'global_object',
+                 'key',
+                 'masking_job']
+              ))
 @click.option('--envname', help="Filter using a environment name")
 @common_options
 @pass_state
