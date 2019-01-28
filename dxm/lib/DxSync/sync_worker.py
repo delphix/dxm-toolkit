@@ -19,6 +19,7 @@
 
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 import logging
+import pickle
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
@@ -26,12 +27,12 @@ from dxm.lib.DxTools.DxTools import get_list_of_engines
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
+from dxm.lib.DxJobs.DxJobsList import DxJobsList
 from dxm.lib.DxSync.DxSyncList import DxSyncList
 from dxm.lib.DxSync.DxSync import DxSync
 
-import sys
 
-def sync_export(p_engine, objecttype, objectname, envname, path=None):
+def sync_export(p_engine, objecttype, objectname, envname, path):
     """
     Print list of syncable objects
     param1: p_engine: engine name from configuration
@@ -50,9 +51,8 @@ def do_export(**kwargs):
     name = kwargs.get('name')
     path = kwargs.get('path')
 
-    syncobj.export(name, path)
+    return syncobj.export(name, path)
 
-    return 0
 
 
 def sync_list(p_engine, objecttype, objectname, envname, format):
@@ -68,6 +68,7 @@ def sync_list(p_engine, objecttype, objectname, envname, format):
     data_header = [
                     ("Engine name", 30),
                     ("Object type", 30),
+                    ("Env name",    32),
                     ("Object name", 32),
                     ("Revision",    50)
                   ]
@@ -88,11 +89,13 @@ def do_list(**kwargs):
     engine_obj = kwargs.get('engine_obj')
     syncobj = kwargs.get('object')
     name = kwargs.get('name')
+    envname = kwargs.get('envname')
     data = kwargs.get('data')
 
     data.data_insert(
                       engine_obj.get_name(),
                       syncobj.object_type,
+                      envname,
                       name,
                       syncobj.revision_hash
                     )
@@ -127,11 +130,10 @@ def sync_worker(p_engine, objecttype, objectname, envname,
         if engine_obj.get_session():
             continue
 
-
         synclist = DxSyncList(objecttype)
 
-        if objecttype is None or objecttype == "algorithm":
-
+        if (objecttype is None or objecttype == "algorithm") \
+           and envname is None:
             if objectname:
                 alglist = [objectname]
             else:
@@ -145,208 +147,177 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                     ret = ret + dynfunc(
                         object=syncobj,
                         engine_obj=engine_obj,
+                        envname='global',
                         name=syncref, **kwargs)
 
-
-        if objecttype is None or objecttype == "database_connector":
-
-            envlist = DxEnvironmentList()
-            connlist = DxConnectorsList(envname)
-
-            if objectname:
-                connbynameref = connlist.get_connectorId_by_name(
-                                    objectname, False)
-                if connbynameref and \
-                   connlist.get_by_ref(connbynameref).is_database:
-                    syncconnref = int(connbynameref[1:])
-                    if synclist.get_object_by_type_name(
-                                            "database_connector",
-                                            syncconnref):
-                        dbconnrefs = [syncconnref]
-                    else:
-                        dbconnrefs = []
-                else:
-                    dbconnrefs = []
-            else:
-                dbconnrefs = synclist.get_all_object_by_type(
-                                            "database_connector")
-
-
-            for syncref in dbconnrefs:
-                syncobj = synclist.get_object_by_type_name(
-                                        "database_connector", syncref)
-                connobj = connlist.get_by_ref("d" + str(syncref))
-                envobj = envlist.get_by_ref(connobj.environment_id)
-
-                dynfunc = globals()[function_to_call]
-                ret = ret + dynfunc(
-                    object=syncobj,
-                    engine_obj=engine_obj,
-                    name=envobj.environment_name + "_"
-                    + connobj.connector_name,
-                    **kwargs)
-
-
-        if objecttype is None or objecttype == "file_connector":
+        if objecttype is None or objecttype == "database_connector" \
+           or objecttype == "file_connector":
 
             envlist = DxEnvironmentList()
             connlist = DxConnectorsList(envname)
 
-
-            if objectname:
-                connbynameref = connlist.get_connectorId_by_name(
-                                    objectname, False)
-                if connbynameref and \
-                   not connlist.get_by_ref(connbynameref).is_database:
-                    syncconnref = int(connbynameref[1:])
-                    if synclist.get_object_by_type_name(
-                                            "file_connector", syncconnref):
-                        fileconnrefs = [syncconnref]
-                    else:
-                        fileconnrefs = []
-                else:
-                    fileconnrefs = []
+            if objecttype is None:
+                objtypelist = ["database_connector", "file_connector"]
             else:
-                fileconnrefs = synclist.get_all_object_by_type(
-                                            "file_connector")
+                objtypelist = [objecttype]
 
+            for objtype in objtypelist:
 
-            for syncref in fileconnrefs:
-                syncobj = synclist.get_object_by_type_name(
-                                        "file_connector", syncref)
-                connobj = connlist.get_by_ref("f" + str(syncref))
-                envobj = envlist.get_by_ref(connobj.environment_id)
-                dynfunc = globals()[function_to_call]
-                ret = ret + dynfunc(
-                    object=syncobj,
-                    engine_obj=engine_obj,
-                    name=envobj.environment_name + "_"
-                    + connobj.connector_name,
-                    **kwargs)
+                if objectname:
+                    connbynameref = connlist.get_connectorId_by_name(
+                                        objectname, False)
+                    if connbynameref:
+                        syncconnref = int(connbynameref[1:])
+                        if synclist.get_object_by_type_name(
+                                                objtype,
+                                                syncconnref):
+                            connrefs = [syncconnref]
+                        else:
+                            connrefs = []
+                    else:
+                        connrefs = []
+                else:
+                    connrefs = synclist.get_all_object_by_type(objtype)
 
+                for syncref in connrefs:
+                    syncobj = synclist.get_object_by_type_name(
+                                        objtype, syncref)
+                    if syncobj.object_type == 'DATABASE_CONNECTOR':
+                        connobj = connlist.get_by_ref("d" + str(syncref))
+                    else:
+                        connobj = connlist.get_by_ref("f" + str(syncref))
 
-        if objecttype is None or objecttype == "database_ruleset":
+                    if connobj is None:
+                        # limited by env
+                        continue
+                    envobj = envlist.get_by_ref(connobj.environment_id)
+
+                    dynfunc = globals()[function_to_call]
+                    ret = ret + dynfunc(
+                        object=syncobj,
+                        engine_obj=engine_obj,
+                        envname=envobj.environment_name,
+                        name=connobj.connector_name,
+                        **kwargs)
+
+        if objecttype is None or objecttype == "database_ruleset" \
+           or objecttype == "file_ruleset":
 
             envlist = DxEnvironmentList()
             connlist = DxConnectorsList(envname)
             rulesetList = DxRulesetList(envname)
 
-            if objectname:
-                rulesetref = rulesetList.get_rulesetId_by_name(objectname)
-                if synclist.get_object_by_type_name(
-                                        "database_ruleset", rulesetref):
-
-                    rulesetrefs = [rulesetref]
-                else:
-                    rulesetrefs = []
+            if objecttype is None:
+                objtypelist = ["database_ruleset", "file_ruleset"]
             else:
-                rulesetrefs = synclist.get_all_object_by_type(
-                                            "database_ruleset")
+                objtypelist = [objecttype]
 
-            for syncref in rulesetrefs:
-                syncobj = synclist.get_object_by_type_name(
-                                        "database_ruleset", syncref)
-                rulesetobj = rulesetList.get_by_ref(syncref)
-                connobj = connlist.get_by_ref(rulesetobj.connectorId)
-                envobj = envlist.get_by_ref(connobj.environment_id)
-                dynfunc = globals()[function_to_call]
-                ret = ret + dynfunc(
-                    object=syncobj,
-                    engine_obj=engine_obj,
-                    name=envobj.environment_name + "_"
-                    + rulesetobj.ruleset_name,
-                    **kwargs)
+            for objtype in objtypelist:
 
-        if objecttype is None or objecttype == "file_ruleset":
+                if objectname:
+                    rulesetrefs = []
+                    rulesetref = rulesetList.get_all_rulesetId_by_name(objectname)
+                    if rulesetref:
+                        for rsref in rulesetref:
+                            if synclist.get_object_by_type_name(objtype, rsref):
+                                rulesetrefs.append(rsref)
+                            else:
+                                rulesetrefs = []
+                    else:
+                        rulesetrefs = []
+                else:
+                    rulesetrefs = synclist.get_all_object_by_type(objtype)
+
+                for syncref in rulesetrefs:
+                    syncobj = synclist.get_object_by_type_name(objtype,
+                                                               syncref)
+                    rulesetobj = rulesetList.get_by_ref(syncref)
+                    if rulesetobj is None:
+                        # limited by env
+                        continue
+                    connobj = connlist.get_by_ref(rulesetobj.connectorId)
+                    envobj = envlist.get_by_ref(connobj.environment_id)
+                    dynfunc = globals()[function_to_call]
+                    ret = ret + dynfunc(
+                        object=syncobj,
+                        engine_obj=engine_obj,
+                        envname=envobj.environment_name,
+                        name=rulesetobj.ruleset_name,
+                        **kwargs)
+
+        if (objecttype is None or objecttype == "global_object" \
+           or objecttype == "key" or objecttype == "domain") \
+           and envname is None:
+
+            if objecttype is None:
+                objtypelist = ["global_object", "key", "domain"]
+            else:
+                objtypelist = [objecttype]
+
+            for objtype in objtypelist:
+                if objectname:
+                    objlist = [objectname]
+                else:
+                    objlist = synclist.get_all_object_by_type(objtype)
+                for syncref in objlist:
+                    syncobj = synclist.get_object_by_type_name(objtype,
+                                                               syncref)
+                    if syncobj:
+
+                        dynfunc = globals()[function_to_call]
+                        ret = ret + dynfunc(
+                            object=syncobj,
+                            engine_obj=engine_obj,
+                            envname='global',
+                            name=syncref, **kwargs)
+
+        if objecttype is None or objecttype == "masking_job":
 
             envlist = DxEnvironmentList()
+            joblist = DxJobsList()
+            joblist.LoadJobs(envname)
             connlist = DxConnectorsList(envname)
-            rulesetList = DxRulesetList(envname)
+            rulesetlist = DxRulesetList(envname)
 
             if objectname:
-                rulesetref = rulesetList.get_rulesetId_by_name(objectname)
-                if synclist.get_object_by_type_name(
-                                        "file_ruleset", rulesetref):
-
-                    rulesetrefs = [rulesetref]
+                jobref = joblist.get_jobId_by_name(objectname)
+                if synclist.get_object_by_type_name("masking_job", jobref):
+                    jobrefs = [jobref]
                 else:
-                    rulesetrefs = []
+                    jobrefs = []
             else:
-                rulesetrefs = synclist.get_all_object_by_type(
-                                            "file_ruleset")
+                jobrefs = synclist.get_all_object_by_type("masking_job")
 
-            for syncref in rulesetrefs:
-                syncobj = synclist.get_object_by_type_name(
-                                        "file_ruleset", syncref)
-                rulesetobj = rulesetList.get_by_ref(syncref)
-                connobj = connlist.get_by_ref(rulesetobj.connectorId)
-                envobj = envlist.get_by_ref(connobj.environment_id)
+            for syncref in jobrefs:
+                syncobj = synclist.get_object_by_type_name("masking_job",
+                                                           syncref)
+                jobobj = joblist.get_by_ref(syncref)
+                if envname and jobobj is None:
+                    # limited by env
+                    continue
+                rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
+                connectorobj = connlist.get_by_ref(rulesetobj.connectorId)
+                envobj = envlist.get_by_ref(connectorobj.environment_id)
                 dynfunc = globals()[function_to_call]
                 ret = ret + dynfunc(
                     object=syncobj,
                     engine_obj=engine_obj,
-                    name=envobj.environment_name + "_"
-                    + rulesetobj.ruleset_name,
+                    envname=envobj.environment_name,
+                    name=jobobj.job_name,
                     **kwargs)
 
     return ret
 
 
-def algorithm_worker(p_engine, algname, **kwargs):
-    """
-    Select an algorithm and run action on it
-    param1: p_engine: engine name from configuration
-    param2: algname: algorithm name
-    kwargs: parameters to pass including function name to call
-    return 0 if algname found
-    """
-
-    ret = 0
-
-    function_to_call = kwargs.get('function_to_call')
-
-    enginelist = get_list_of_engines(p_engine)
-
-    if enginelist is None:
-        return 1
-
-    for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
-
-        if engine_obj.get_session():
-            continue
-
-        domainlist = DxDomainList()
-        domainlist.LoadDomains()
-
-        alglist = DxAlgorithmList()
-
-        algref_list = []
-
-
-        algobj = alglist.get_by_ref(algname)
-        if algobj is None:
-            ret = ret + 1
-            continue
-
-        dynfunc = globals()[function_to_call]
-        if dynfunc(algobj=algobj, engine_obj=engine_obj, **kwargs):
-            ret = ret + 1
-
-    return ret
-
-
-def sync_import(p_engine, target_envname, inputfile):
+def sync_import(p_engine, envname, inputfile, force):
     """
     Load algorithm from file
     param1: p_engine: engine name from configuration
     param2: inputfile: input file
     return 0 if OK
     """
+
     ret = 0
-
-
     enginelist = get_list_of_engines(p_engine)
 
     if enginelist is None:
@@ -359,5 +330,29 @@ def sync_import(p_engine, target_envname, inputfile):
         if engine_obj.get_session():
             continue
 
+        envlist = DxEnvironmentList()
+        environment_id = envlist.get_environmentId_by_name(envname)
+
+        # try:
+        #     syncobj = pickle.load(inputfile)
+        #     inputfile.close()
+        # except Exception as e:
+        #     print_error("There is an error with reading file %s"
+        #                 % inputfile.name)
+        #     ret = ret + 1
+        #     continue
+        #
+        # for b in syncobj["object"].export_response_metadata["exportedObjectList"]:
+        #
+        #     synclist = DxSyncList(objecttype)
+        #     synclist.get_object_by_type_name(objtype, rsref)
+        #
+        # sys.exit()
+
+
+
+
         syncobj = DxSync(engine_obj)
-        syncobj.importsync(None)
+        ret = ret + syncobj.importsync(inputfile, environment_id, force)
+
+    return ret

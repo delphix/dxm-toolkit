@@ -80,9 +80,17 @@ class DxSyncList(object):
                                             "get_all_syncable_objects",
                                             object_type=objecttype)
             else:
-                api_sync_response = paginator(
+                if (objecttype is None) \
+                   or (objecttype in \
+                   ["LOOKUP", "DATE_SHIFT", "SEGMENT",
+                    "TOKENIZATION", "ALGORITHM"]):
+                    api_sync_response = paginator(
                                             api_sync,
                                             "get_all_syncable_objects")
+                else:
+                    print_error("This object type is not supported"
+                                "in version 5.2.X")
+                    sys.exit(1)
 
             if api_sync_response.response_list:
                 for c in api_sync_response.response_list:
@@ -141,11 +149,10 @@ class DxSyncList(object):
     @classmethod
     def get_object_by_type_name(self, objecttype, name):
         objecttype = objecttype.upper()
-        if  name in self.__syncableList[objecttype]:
+        if name in self.__syncableList[objecttype]:
             return self.__syncableList[objecttype][name]
         else:
             return None
-
 
     @classmethod
     def get_all_object_by_type(self, objecttype):
@@ -154,4 +161,7 @@ class DxSyncList(object):
         param1: objectype: object type to return
         """
         objecttype = objecttype.upper()
-        return self.__syncableList[objecttype]
+        try:
+            return self.__syncableList[objecttype]
+        except KeyError:
+            return []

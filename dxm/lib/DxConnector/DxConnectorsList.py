@@ -178,7 +178,7 @@ class DxConnectorsList(object):
         return list of references if OK
         return None if ruleset not found
         """
-        return self.get_connectorId_by_name_worker(name, None)
+        return self.get_connectorId_by_name_worker(name, None, True)
 
     @classmethod
     def get_connectorId_by_name_worker(self, name, check_uniquness, verbose):
@@ -186,6 +186,7 @@ class DxConnectorsList(object):
         Get a list of connectors by name
         :param1 name: name of connector
         :param2 check_uniqueness: check uniqueness put None if skip this check
+        :param3 verbose: set if output should be printed
         return list of connectors
         """
         connectors = get_objref_by_val_and_attribute(

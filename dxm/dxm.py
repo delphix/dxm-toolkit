@@ -1996,8 +1996,8 @@ def delete(dxm_state, jobname, envname):
 #     exit(profilejob_cancel(dxm_state.engine, jobname, envname))
 
 @sync.command()
-@click.option('--objecttype', help="Filter object using a type")
-@click.option('--objectname', help="Filter object using a name",
+@click.option('--objectname', help="Filter object using a name")
+@click.option('--objecttype', help="Filter object using a type",
               type=click.Choice(
                 ['database_connector',
                  'algorithm',
@@ -2026,26 +2026,32 @@ def list(dxm_state, objecttype, objectname, envname):
 @click.option('--objecttype', help="Filter object using a type")
 @click.option('--objectname', help="Filter object using a name")
 @click.option('--envname', help="Filter using a environment name")
+@click.option('--path', help="Path to export", default=".")
 @common_options
 @pass_state
-def export(dxm_state, objecttype, objectname, envname):
+def export(dxm_state, objecttype, objectname, envname, path):
     """
     Display list of syncable objects from Masking Engine
 
     If no filter options are specified, all objects types will be displayed.
     """
     exit(sync_export(dxm_state.engine, objecttype, objectname,
-                   envname, dxm_state.format))
+                     envname, path))
 
 
 @sync.command()
 @click.option('--target_envname', help="Filter using a environment name")
+@click.option('--force', is_flag=True, default=False,
+              help="Force object overwrite")
+@click.option(
+    '--inputfile', type=click.File('rt'), required=True,
+    help="Name with path to exported object")
 @common_options
 @pass_state
-def load(dxm_state, target_envname):
+def load(dxm_state, target_envname, inputfile, force):
     """
     Display list of syncable objects from Masking Engine
 
     If no filter options are specified, all objects types will be displayed.
     """
-    exit(sync_import(dxm_state.engine, target_envname, None))
+    exit(sync_import(dxm_state.engine, target_envname, inputfile, force))
