@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018,2019 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
-# Date    : April 2018
+# Date    : December 2018
 
 
 import logging
@@ -61,10 +61,6 @@ class DxSync(ExportObjectMetadata):
         api_response = api_sync.export(export_list)
         self.__logger.debug("Export response (without blob) %s"
                             % str(api_response.export_response_metadata))
-
-        # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
-        # json.dump(api_response.blob, binary_file)
-        # binary_file.close()
 
         filename = os.path.join(path, '{0}.bin'.format(name))
         self.__logger.debug("saving to %s" % filename)
@@ -156,6 +152,3 @@ class DxSync(ExportObjectMetadata):
                                     % path.name)
                 self.__logger.debug(str(e))
                 return 1
-        # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
-        # json.dump(api_response.blob, binary_file)
-        # binary_file.close()

@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018.2019 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
 # Date    : November 2018
@@ -19,7 +19,6 @@
 
 import logging
 import sys
-import operator
 from masking_apis.apis.sync_api import SyncApi
 from masking_apis.models.export_object_metadata_list import ExportObjectMetadataList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
@@ -29,6 +28,7 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxSync.DxSync import DxSync
 from dxm.lib.DxTools.DxTools import paginator
+
 
 class DxSyncList(object):
 
@@ -81,7 +81,7 @@ class DxSyncList(object):
                                             object_type=objecttype)
             else:
                 if (objecttype is None) \
-                   or (objecttype in \
+                   or (objecttype in
                    ["LOOKUP", "DATE_SHIFT", "SEGMENT",
                     "TOKENIZATION", "ALGORITHM"]):
                     api_sync_response = paginator(
@@ -118,24 +118,6 @@ class DxSyncList(object):
             self.__logger.error(e.body)
             return 1
 
-    # @classmethod
-    # def get_by_ref(self, reference):
-    #     """
-    #     return a algorithm object by refrerence
-    #     :param1 reference: algorithm name
-    #     None if not found
-    #     """
-    #     try:
-    #         self.__logger.debug("reference %s" % reference)
-    #         return self.__algorithmList[reference]
-    #
-    #     except KeyError as e:
-    #         self.__logger.debug("can't find algorithm object"
-    #                             " for reference %s" % reference)
-    #         self.__logger.debug(e)
-    #         return None
-
-
     @classmethod
     def get_all_algorithms(self):
         """
@@ -148,6 +130,11 @@ class DxSyncList(object):
 
     @classmethod
     def get_object_by_type_name(self, objecttype, name):
+        """
+        return an object by type and name
+        param1: objectype: object type to return
+        param2: name: object name
+        """
         objecttype = objecttype.upper()
         if name in self.__syncableList[objecttype]:
             return self.__syncableList[objecttype][name]

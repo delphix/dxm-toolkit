@@ -2031,27 +2031,24 @@ def list(dxm_state, objecttype, objectname, envname):
 @pass_state
 def export(dxm_state, objecttype, objectname, envname, path):
     """
-    Display list of syncable objects from Masking Engine
-
-    If no filter options are specified, all objects types will be displayed.
+    Export an object to file in specified path
     """
     exit(sync_export(dxm_state.engine, objecttype, objectname,
                      envname, path))
 
 
 @sync.command()
-@click.option('--target_envname', help="Filter using a environment name")
+@click.option('--target_envname', help="Target environment name "
+              "(ignored for global obejcts)")
 @click.option('--force', is_flag=True, default=False,
               help="Force object overwrite")
 @click.option(
     '--inputfile', type=click.File('rt'), required=True,
-    help="Name with path to exported object")
+    help="Name with path to imported object")
 @common_options
 @pass_state
 def load(dxm_state, target_envname, inputfile, force):
     """
-    Display list of syncable objects from Masking Engine
-
-    If no filter options are specified, all objects types will be displayed.
+    Load an object from file into Masking Engine
     """
     exit(sync_import(dxm_state.engine, target_envname, inputfile, force))

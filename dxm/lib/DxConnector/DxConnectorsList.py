@@ -18,7 +18,6 @@
 # Comments: List of the Database connectors
 
 import logging
-import sys
 from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector

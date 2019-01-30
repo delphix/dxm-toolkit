@@ -11,10 +11,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018,2019 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
-# Date    : April 2018
+# Date    : December 2018
 
 
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
@@ -47,12 +47,18 @@ def sync_export(p_engine, objecttype, objectname, envname, path):
 
 
 def do_export(**kwargs):
+    """
+    Run object export function for passed object
+    object: syncable object DxSync
+    name: object name
+    path: path to export location
+    return 0 if object exported
+    return 1 if there where issues
+    """
     syncobj = kwargs.get('object')
     name = kwargs.get('name')
     path = kwargs.get('path')
-
     return syncobj.export(name, path)
-
 
 
 def sync_list(p_engine, objecttype, objectname, envname, format):
@@ -86,6 +92,15 @@ def sync_list(p_engine, objecttype, objectname, envname, format):
 
 
 def do_list(**kwargs):
+    """
+    Add object information to data object
+    engine_obj: Masking engine object
+    object: syncable object DxSync
+    name: object name
+    envname: environment name
+    data: output data object
+    return 0
+    """
     engine_obj = kwargs.get('engine_obj')
     syncobj = kwargs.get('object')
     name = kwargs.get('name')
@@ -140,7 +155,8 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                 alglist = synclist.get_all_algorithms()
 
             for syncref in alglist:
-                syncobj = synclist.get_object_by_type_name("algorithm", syncref)
+                syncobj = synclist.get_object_by_type_name(
+                                        "algorithm", syncref)
                 if syncobj:
 
                     dynfunc = globals()[function_to_call]
@@ -216,10 +232,12 @@ def sync_worker(p_engine, objecttype, objectname, envname,
 
                 if objectname:
                     rulesetrefs = []
-                    rulesetref = rulesetList.get_all_rulesetId_by_name(objectname)
+                    rulesetref = rulesetList.get_all_rulesetId_by_name(
+                                                objectname)
                     if rulesetref:
                         for rsref in rulesetref:
-                            if synclist.get_object_by_type_name(objtype, rsref):
+                            if synclist.get_object_by_type_name(
+                                                objtype, rsref):
                                 rulesetrefs.append(rsref)
                             else:
                                 rulesetrefs = []
@@ -245,7 +263,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                         name=rulesetobj.ruleset_name,
                         **kwargs)
 
-        if (objecttype is None or objecttype == "global_object" \
+        if (objecttype is None or objecttype == "global_object"
            or objecttype == "key" or objecttype == "domain") \
            and envname is None:
 
@@ -314,6 +332,7 @@ def sync_import(p_engine, envname, inputfile, force):
     Load algorithm from file
     param1: p_engine: engine name from configuration
     param2: inputfile: input file
+    param3: force: overwrite object
     return 0 if OK
     """
 
@@ -332,26 +351,6 @@ def sync_import(p_engine, envname, inputfile, force):
 
         envlist = DxEnvironmentList()
         environment_id = envlist.get_environmentId_by_name(envname)
-
-        # try:
-        #     syncobj = pickle.load(inputfile)
-        #     inputfile.close()
-        # except Exception as e:
-        #     print_error("There is an error with reading file %s"
-        #                 % inputfile.name)
-        #     ret = ret + 1
-        #     continue
-        #
-        # for b in syncobj["object"].export_response_metadata["exportedObjectList"]:
-        #
-        #     synclist = DxSyncList(objecttype)
-        #     synclist.get_object_by_type_name(objtype, rsref)
-        #
-        # sys.exit()
-
-
-
-
         syncobj = DxSync(engine_obj)
         ret = ret + syncobj.importsync(inputfile, environment_id, force)
 
