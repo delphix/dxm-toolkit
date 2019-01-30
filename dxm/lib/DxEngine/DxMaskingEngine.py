@@ -163,7 +163,6 @@ class DxMaskingEngine(object):
             retobj = si.get_system_information()
             ret = retobj.version
         except ApiException:
-            print "Old engine"
             ret = "5.2.0.0"
 
         return ret

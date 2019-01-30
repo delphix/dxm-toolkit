@@ -44,8 +44,10 @@ class DataFormatter(object):
 
 
 
-    def data_insert(self, *kwarg):
-        self.results['data'].append((kwarg))
+    def data_insert(self, *args):
+        # convert all strings to UTF but copy non-strings as is
+        self.results['data'].append(tuple([e.encode('utf-8') if isinstance(e, basestring) else e for e in args]))
+
 
 
     @property

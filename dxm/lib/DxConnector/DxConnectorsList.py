@@ -18,7 +18,6 @@
 # Comments: List of the Database connectors
 
 import logging
-import sys
 from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
@@ -155,14 +154,14 @@ class DxConnectorsList(object):
         return sorted(self.__connectorsList.keys())
 
     @classmethod
-    def get_connectorId_by_name(self, name):
+    def get_connectorId_by_name(self, name, verbose=True):
         """
         Return connector id by name.
         :param1 name: name of connector
         return ref if OK
         return None if ruleset not found or not unique
         """
-        reflist = self.get_connectorId_by_name_worker(name)
+        reflist = self.get_connectorId_by_name_worker(name, 1, verbose)
         # convert list to single value
         # as there will be only one element in list
         if reflist:
@@ -178,27 +177,30 @@ class DxConnectorsList(object):
         return list of references if OK
         return None if ruleset not found
         """
-        return self.get_connectorId_by_name_worker(name, None)
+        return self.get_connectorId_by_name_worker(name, None, True)
 
     @classmethod
-    def get_connectorId_by_name_worker(self, name, check_uniquness=1):
+    def get_connectorId_by_name_worker(self, name, check_uniquness, verbose):
         """
         Get a list of connectors by name
         :param1 name: name of connector
         :param2 check_uniqueness: check uniqueness put None if skip this check
+        :param3 verbose: set if output should be printed
         return list of connectors
         """
         connectors = get_objref_by_val_and_attribute(
             name, self, 'connector_name')
 
         if len(connectors) < 1:
-            print_error("Connector %s not found" % name)
+            if verbose:
+                print_error("Connector %s not found" % name)
             self.__logger.error("Connector %s not found " % name)
             return None
 
         if check_uniquness:
             if len(connectors) > 1:
-                print_error("Connector name %s is not unique" % name)
+                if verbose:
+                    print_error("Connector name %s is not unique" % name)
                 self.__logger.error("Connector %s is not unique" % name)
                 return None
 

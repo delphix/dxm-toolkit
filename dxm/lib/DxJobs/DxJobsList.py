@@ -122,7 +122,7 @@ class DxJobsList(object):
             self.__logger.debug("can't find job object"
                                 " for reference %s" % reference)
             self.__logger.debug(e)
-            sys.exit(1)
+            #sys.exit(1)
 
     @classmethod
     def get_allref(self):

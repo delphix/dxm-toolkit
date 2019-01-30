@@ -64,43 +64,43 @@ class DxAlgorithm(Algorithm):
     def sync(self, sync):
         self.__sync = sync
 
-    def export(self, path=None):
-        """
-        Export algorithm into file
-        :param path: path to save algorithm
-        """
-        api_sync = SyncApi(self.__engine.api_client)
-        self.__logger.debug("Export input %s" % self.sync)
-        export_list = []
-        export_list.append(self.sync)
-        api_response = api_sync.export(export_list)
-        self.__logger.debug("Export response %s" % str(api_response))
-
-        # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
-        # json.dump(api_response.blob, binary_file)
-        # binary_file.close()
-
-        binary_file = open('{0}.alg_bin '.format(self.algorithm_name), mode='wb')
-        pickle.dump(api_response, binary_file)
-        binary_file.close()
-
-
-    def importalg(self, path=None):
-        """
-        Import algorithm from file
-        :param path: path to save algorithm
-        """
-
-        binary_file = open('{0}.alg_bin'.format("EU_LAST_NAME"), mode='rb')
-        algobj = pickle.load(binary_file)
-        binary_file.close()
-
-
-        api_sync = SyncApi(self.__engine.api_client)
-        self.__logger.debug("Import input %s" % self.sync)
-        api_response = api_sync.import_object(algobj, force_overwrite=True)
-        self.__logger.debug("Import response %s" % str(api_response))
-
-        # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
-        # json.dump(api_response.blob, binary_file)
-        # binary_file.close()
+    # def export(self, path=None):
+    #     """
+    #     Export algorithm into file
+    #     :param path: path to save algorithm
+    #     """
+    #     api_sync = SyncApi(self.__engine.api_client)
+    #     self.__logger.debug("Export input %s" % self.sync)
+    #     export_list = []
+    #     export_list.append(self.sync)
+    #     api_response = api_sync.export(export_list)
+    #     self.__logger.debug("Export response %s" % str(api_response))
+    #
+    #     # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
+    #     # json.dump(api_response.blob, binary_file)
+    #     # binary_file.close()
+    #
+    #     binary_file = open('{0}.alg_bin '.format(self.algorithm_name), mode='wb')
+    #     pickle.dump(api_response, binary_file)
+    #     binary_file.close()
+    #
+    #
+    # def importalg(self, path=None):
+    #     """
+    #     Import algorithm from file
+    #     :param path: path to save algorithm
+    #     """
+    #
+    #     binary_file = open('{0}.alg_bin'.format("EU_LAST_NAME"), mode='rb')
+    #     algobj = pickle.load(binary_file)
+    #     binary_file.close()
+    #
+    #
+    #     api_sync = SyncApi(self.__engine.api_client)
+    #     self.__logger.debug("Import input %s" % self.sync)
+    #     api_response = api_sync.import_object(algobj, force_overwrite=True)
+    #     self.__logger.debug("Import response %s" % str(api_response))
+    #
+    #     # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
+    #     # json.dump(api_response.blob, binary_file)
+    #     # binary_file.close()
