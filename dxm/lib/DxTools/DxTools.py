@@ -56,7 +56,7 @@ def get_list_of_engines(p_engine):
     enginelist = config.get_engine_info(p_engine, None)
     logger.debug("p_engine %s enginelist %s" % (p_engine, enginelist))
 
-    if len(enginelist) == 0:
+    if enginelist is None or len(enginelist) == 0:
         print_error("Engine name %s not found in configuration" % p_engine)
         logger.error("Engine name %s not found in configuration" % p_engine)
         return None

@@ -84,11 +84,14 @@ from lib.DxJobs.jobs_worker import profilejob_add
 from lib.DxJobs.jobs_worker import profilejob_update
 from lib.DxJobs.jobs_worker import profilejob_delete
 from lib.DxJobs.jobs_worker import profilejob_cancel
+from lib.DxSync.sync_worker import sync_list
+from lib.DxSync.sync_worker import sync_export
+from lib.DxSync.sync_worker import sync_import
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.3
+__version__ = 0.4
 
 class dxm_state(object):
 
@@ -279,6 +282,13 @@ def expression(dxm_state):
 def profilejob(dxm_state):
     """
     Profile job group allow to control Profile jobs
+    """
+
+@dxm.group()
+@pass_state
+def sync(dxm_state):
+    """
+    Sync objects between engines or export/import to files
     """
 
 @engine.command()
@@ -1300,7 +1310,8 @@ def list(dxm_state, rulesetname, envname, metaname, columnname, algname,
 @click.option('--columnname', help="Filter output by a column name")
 @click.option(
     '--metaname', help="Filter output by a meta name (table or file name)")
-@click.option('--rulesetname', help="Filter output by a ruleset name")
+@click.option('--rulesetname', help="Filter output by a ruleset name",
+              required=True)
 @click.option('--envname', help="Filter output by an environment name")
 @click.option('--algname', help="Filter output by an algorithm name")
 @click.option(
@@ -1420,9 +1431,31 @@ def batch(dxm_state, rulesetname, envname, inputfile):
     """
     Set / unset masking for columns specified in CSV file.
 
-    File format is as follow:
+    File format for databases rulesets is a part
+    of GUI inventory export format:
 
-    tablename, columnname, algorithm_name, domain_name, is_masked [Y|N]
+    Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked
+
+    Columns: Type, Parent Column Name, Data Type are IGNORED.
+
+    Ex. database ruleset input file:
+
+    #Table Name,Type,Parent Column Name,Column name,Data Type,Domain,Algorithm,Is masked
+    EMP,,,ENAME,VARCHAR2(10),LAST_NAME,LastNameLookup,Y
+    DEPT,IX,-,DEPTNO,NUMBER(2),,,N
+
+    File format for file rulesets is a part of GUI inventory export format:
+
+    File Name, Field Name, Domain, Algorithm, Is Masked
+
+    Ex. file ruleset input file:
+
+    #File Name,Field Name,Domain,Algorithm,Is masked
+    mask.txt,col1,ADDRESS,AddrLookup,Y
+    mask.txt,col2,,,N
+    mask.txt,col3,ADDRESS,AddrLookup,Y
+
+
     """
     exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile))
 
@@ -1984,3 +2017,61 @@ def delete(dxm_state, jobname, envname):
 #     Return non zero code if there was problem with canceling a job
 #     """
 #     exit(profilejob_cancel(dxm_state.engine, jobname, envname))
+
+@sync.command()
+@click.option('--objectname', help="Filter object using a name")
+@click.option('--objecttype', help="Filter object using a type",
+              type=click.Choice(
+                ['database_connector',
+                 'algorithm',
+                 'database_ruleset',
+                 'domain',
+                 'file_connector',
+                 'file_format',
+                 'file_ruleset',
+                 'global_object',
+                 'key',
+                 'masking_job']
+              ))
+@click.option('--envname', help="Filter using a environment name")
+@common_options
+@pass_state
+def list(dxm_state, objecttype, objectname, envname):
+    """
+    Display list of syncable objects from Masking Engine
+
+    If no filter options are specified, all objects types will be displayed.
+    """
+    exit(sync_list(dxm_state.engine, objecttype, objectname,
+                   envname, dxm_state.format))
+
+@sync.command()
+@click.option('--objecttype', help="Filter object using a type")
+@click.option('--objectname', help="Filter object using a name")
+@click.option('--envname', help="Filter using a environment name")
+@click.option('--path', help="Path to export", default=".")
+@common_options
+@pass_state
+def export(dxm_state, objecttype, objectname, envname, path):
+    """
+    Export an object to file in specified path
+    """
+    exit(sync_export(dxm_state.engine, objecttype, objectname,
+                     envname, path))
+
+
+@sync.command()
+@click.option('--target_envname', help="Target environment name "
+              "(ignored for global obejcts)")
+@click.option('--force', is_flag=True, default=False,
+              help="Force object overwrite")
+@click.option(
+    '--inputfile', type=click.File('rt'), required=True,
+    help="Name with path to imported object")
+@common_options
+@pass_state
+def load(dxm_state, target_envname, inputfile, force):
+    """
+    Load an object from file into Masking Engine
+    """
+    exit(sync_import(dxm_state.engine, target_envname, inputfile, force))

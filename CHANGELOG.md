@@ -1,3 +1,16 @@
+## Version 0.4
+
+### Added:
+ - support for sync API to export / import object between engines
+ - support for Delphix Engine 5.3
+ - column list is displaying a data type plus column type (index, FK, PK)
+
+### Changed:
+ - various bug fixes
+ - UTF-8 related bug fixes
+ - column save / batch format file is changed to similar to GUI inventory export
+
+
 ## Version 0.3
 
 ### Added:

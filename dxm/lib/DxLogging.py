@@ -92,3 +92,4 @@ def print_exception(print_obj):
     """
     logger = logging.getLogger()
     logger.error('EXCEPTION: %s' % (str(print_obj)))
+    print_error('EXCEPTION: %s' % (str(print_obj)))
