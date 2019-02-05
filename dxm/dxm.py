@@ -91,7 +91,7 @@ from lib.DxSync.sync_worker import sync_import
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.3
+__version__ = 0.4
 
 class dxm_state(object):
 
@@ -1435,7 +1435,7 @@ def batch(dxm_state, rulesetname, envname, inputfile):
     of GUI inventory export format:
 
     Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked
-    
+
     Columns: Type, Parent Column Name, Data Type are IGNORED.
 
     Ex. database ruleset input file:
