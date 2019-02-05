@@ -52,6 +52,27 @@ class DxDBColumn(ColumnMetadata):
     def cf_meta_name(self):
         return self.column_name
 
+    @property
+    def cf_meta_type(self):
+        if self.column_length == 0:
+            return "{}".format(self.data_type)
+        else:
+            return "{}({})".format(self.data_type, self.column_length)
+
+    @property
+    def cf_meta_column_role(self):
+        ret = ''
+        if self.is_primary_key:
+            ret = 'PK '
+
+        if self.is_foreign_key:
+            ret = ret + "FK "
+
+        if self.is_index:
+            ret = ret + "IX "
+
+        return ret.strip()
+
     def update(self):
         """
         Update column data to Masking engine and print status message

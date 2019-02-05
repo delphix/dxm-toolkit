@@ -52,6 +52,18 @@ class DxFileField(FileFieldMetadata):
     def cf_metadata_id(self):
         return self.file_field_metadata_id
 
+    @property
+    def cf_meta_type(self):
+        if self.field_length == 0 or self.field_length is None:
+            return "pos {}".format(self.field_position_number)
+        else:
+            return "pos {} ({})".format(self.field_position_number,
+                                        self.field_length)
+
+    @property
+    def cf_meta_column_role(self):
+        return ''
+
     def update(self):
         """
         Update file field data to Masking engine and print status message
