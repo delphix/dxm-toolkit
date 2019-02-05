@@ -147,12 +147,14 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
     data = DataFormatter()
     data_header = [
                     ("Engine name", 30),
-                    ("Environent name", 30),
+                    ("Environment name", 30),
                     ("Ruleset name", 30),
                     ("Metadata name", 32),
                     ("Column name", 32),
+                    ("Type", 8),
+                    ("Data type", 30),
+                    ("Domain name", 32),
                     ("Alg name", 32),
-                    ("Domain name", 32)
                   ]
     data.create_header(data_header)
     data.format_type = format
@@ -167,38 +169,6 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
 
     return ret
 
-def generate_column_list(p_engine, sortby, rulesetname, envname, metaname,
-                         columnname, algname, is_masked, data, format):
-    """
-    Generate a column list to save into csv or export into SDLC
-    param1: p_engine: engine name from configuration
-    param2: sortby: sort by output if needed
-    param3: rulesetname: ruleset name
-    param4: envname: environment name
-    param5: metaname: meta name (table or file)
-    param6: columnname: column name (column or field)
-    param7: algname: algorithm name to filter
-    param8: is_masked: is masked fileter
-    param9: data: DataOutput object
-    param10: format: output format
-    """
-
-    data_header = [
-                    ("Metadata name", 32),
-                    ("Column name", 32),
-                    ("Alg name", 32),
-                    ("Domain name", 32),
-                    ("is_masked", 32)
-                  ]
-    data.create_header(data_header)
-    data.format_type = format
-
-    ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
-        algname, is_masked, None, None,
-        None, 'do_save', data=data)
-
-    return ret
 
 
 def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
@@ -217,11 +187,66 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
     return 0 if no issues
     """
 
-    data = DataFormatter()
+    if p_engine == 'all':
+        print_error("you can run column save command on all engines"
+                    "at same time")
+        return 1
 
-    ret = generate_column_list(p_engine, sortby, rulesetname, envname,
-                               metaname, columnname, algname, is_masked,
-                               data, "csv")
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    engine_tuple = enginelist[-1]
+
+    engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                 engine_tuple[2], engine_tuple[3])
+
+    if engine_obj.get_session():
+        return 1
+
+    rulelist = DxRulesetList()
+    rulelist.LoadRulesets(envname)
+    ruleref = rulelist.get_rulesetId_by_name(rulesetname)
+
+    ruleobj = rulelist.get_by_ref(ruleref)
+
+    if ruleobj is None:
+        return 1
+
+    if ruleobj.type == "Database":
+        data = DataFormatter()
+        data_header = [
+                        ("Table Name", 32),
+                        ("Type", 5),
+                        ("Parent Column Name", 5),
+                        ("Column name", 32),
+                        ("Data Type", 32),
+                        ("Domain", 32),
+                        ("Algorithm", 32),
+                        ("Is masked", 32)
+                      ]
+        data.create_header(data_header)
+        data.format_type = "csv"
+        worker = "do_save_database"
+    else:
+        data = DataFormatter()
+        data_header = [
+                        ("File Name", 32),
+                        ("Field Name", 5),
+                        ("Domain", 32),
+                        ("Algorithm", 32),
+                        ("Is masked", 32)
+                      ]
+        data.create_header(data_header)
+        data.format_type = "csv"
+        worker = "do_save_file"
+
+
+    ret = column_worker(
+        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        algname, is_masked, None, None,
+        None, worker, data=data)
 
     if ret == 0:
 
@@ -257,10 +282,20 @@ def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
     """
 
     data = DataFormatter()
+    data_header = [
+                    ("Metadata name", 32),
+                    ("Column name", 32),
+                    ("Alg name", 32),
+                    ("Domain name", 32),
+                    ("is_masked", 32)
+                  ]
+    data.create_header(data_header)
+    data.format_type = "json"
 
-    ret = generate_column_list(p_engine, sortby, rulesetname, envname,
-                               metaname, columnname, algname, None,
-                               data, "json")
+    ret = column_worker(
+        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        algname, None, None, None,
+        None, 'do_export', data=data)
 
     if ret == 0:
         return data
@@ -300,14 +335,16 @@ def do_print(**kwargs):
                       ruleobj.ruleset_name,
                       metaobj.meta_name,
                       colobj.cf_meta_name,
-                      print_algname,
-                      print_domain
+                      colobj.cf_meta_column_role,
+                      colobj.cf_meta_type,
+                      print_domain,
+                      print_algname
                     )
 
     return 0
 
 
-def do_save(**kwargs):
+def do_export(**kwargs):
     """
     Put column information to data object
     for metadata save
@@ -331,6 +368,67 @@ def do_save(**kwargs):
                       colobj.cf_meta_name,
                       print_algname,
                       print_domain,
+                      print_ismasked
+                    )
+
+    return 0
+
+def do_save_database(**kwargs):
+    """
+    Put column information to data object
+    for metadata save
+    """
+
+    colobj = kwargs.get('colobj')
+    metaobj = kwargs.get('metaobj')
+    data = kwargs.get('data')
+
+    if colobj.is_masked:
+        print_algname = colobj.algorithm_name
+        print_domain = colobj.domain_name
+        print_ismasked = 'Y'
+    else:
+        print_algname = ''
+        print_domain = ''
+        print_ismasked = 'N'
+
+    data.data_insert(
+                      metaobj.meta_name,
+                      colobj.cf_meta_column_role,
+                      "-",
+                      colobj.cf_meta_name,
+                      colobj.cf_meta_type,
+                      print_domain,
+                      print_algname,
+                      print_ismasked
+                    )
+
+    return 0
+
+def do_save_file(**kwargs):
+    """
+    Put column information to data object
+    for metadata save
+    """
+
+    colobj = kwargs.get('colobj')
+    metaobj = kwargs.get('metaobj')
+    data = kwargs.get('data')
+
+    if colobj.is_masked:
+        print_algname = colobj.algorithm_name
+        print_domain = colobj.domain_name
+        print_ismasked = 'Y'
+    else:
+        print_algname = ''
+        print_domain = ''
+        print_ismasked = 'N'
+
+    data.data_insert(
+                      metaobj.meta_name,
+                      colobj.cf_meta_name,
+                      print_domain,
+                      print_algname,
                       print_ismasked
                     )
 
@@ -539,8 +637,13 @@ def column_batch(p_engine, rulesetname, envname, inputfile):
                 continue
             try:
                 logger.debug("readling line %s" % line)
-                (metaname, column_name,
-                 algname, domain_name, is_masked_YN) = line.strip().split(',')
+                if ruleobj.type == "Database":
+                    (metaname, column_role, parent_column, column_name,
+                     type, domain_name, algname,
+                     is_masked_YN) = line.strip().split(',')
+                else:
+                    (metaname, column_name, domain_name, algname,
+                     is_masked_YN) = line.strip().split(',')
 
             except ValueError:
                 logger.error("not all columns in file have value")

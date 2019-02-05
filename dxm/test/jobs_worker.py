@@ -125,7 +125,7 @@ class TestApp(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Job name,Ruleset name,Connector name,'
-            'Environment name,Completed,Status,Runtime\r\ntesteng,Job1,'
+            'Environment name,Completed,Status,Runtime\r\n53,Job1,'
             'DB Ruleset1,DB connector,Env1,2018-09-01 01:10:00,SUCCEEDED,'
             '0:10:00')
 

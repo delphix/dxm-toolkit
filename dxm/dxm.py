@@ -1310,7 +1310,8 @@ def list(dxm_state, rulesetname, envname, metaname, columnname, algname,
 @click.option('--columnname', help="Filter output by a column name")
 @click.option(
     '--metaname', help="Filter output by a meta name (table or file name)")
-@click.option('--rulesetname', help="Filter output by a ruleset name")
+@click.option('--rulesetname', help="Filter output by a ruleset name",
+              required=True)
 @click.option('--envname', help="Filter output by an environment name")
 @click.option('--algname', help="Filter output by an algorithm name")
 @click.option(
@@ -1430,9 +1431,31 @@ def batch(dxm_state, rulesetname, envname, inputfile):
     """
     Set / unset masking for columns specified in CSV file.
 
-    File format is as follow:
+    File format for databases rulesets is a part
+    of GUI inventory export format:
 
-    tablename, columnname, algorithm_name, domain_name, is_masked [Y|N]
+    Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked
+    
+    Columns: Type, Parent Column Name, Data Type are IGNORED.
+
+    Ex. database ruleset input file:
+
+    #Table Name,Type,Parent Column Name,Column name,Data Type,Domain,Algorithm,Is masked
+    EMP,,,ENAME,VARCHAR2(10),LAST_NAME,LastNameLookup,Y
+    DEPT,IX,-,DEPTNO,NUMBER(2),,,N
+
+    File format for file rulesets is a part of GUI inventory export format:
+
+    File Name, Field Name, Domain, Algorithm, Is Masked
+
+    Ex. file ruleset input file:
+
+    #File Name,Field Name,Domain,Algorithm,Is masked
+    mask.txt,col1,ADDRESS,AddrLookup,Y
+    mask.txt,col2,,,N
+    mask.txt,col3,ADDRESS,AddrLookup,Y
+
+
     """
     exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile))
 
