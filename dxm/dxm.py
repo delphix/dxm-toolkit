@@ -152,6 +152,7 @@ def format_option(f):
                         default='fixed',
                         callback=callback)(f)
 
+                        
 
 def common_options(f):
     f = logfile_option(f)
@@ -160,7 +161,10 @@ def common_options(f):
     f = format_option(f)
     return f
 
-
+def debug_options(f):
+    f = debug_option(f)
+    return f
+    
 def sort_options():
     return click.option('--sortby',
                         help='Sort by column number')
@@ -336,7 +340,7 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default):
 @click.option(
     '--password', help='Engine password for specified user. '
     'If you want to hide input put '' as value and you will be propted')
-@debug_option
+@debug_options
 @pass_state
 def update(dxm_state, engine, ip, port, protocol, username, password, default):
     """
@@ -385,13 +389,20 @@ def delete(dxm_state):
 @click.option(
     '--enginelog', type=click.File('wt'), required=True,
     help="Name with path of output logfile")
-@common_options
+@click.option(
+    '--page_size', type=int, required=False, default=1,
+    help="How many pages of log to load (Default=1)")
+@click.option(
+    '--level', type=click.Choice(['ERROR', 'DEBUG','INFO','WARN']), required=False, default='DEBUG',
+    help="Define the required log level (Default=DEBUG)")
+# """@common_options"""
+@debug_options
 @pass_state
-def logs(dxm_state, enginelog):
+def logs(dxm_state, enginelog,page_size,level):
     """
     Save Masking Engine log into file
     """
-    exit(engine_logs(dxm_state.engine, enginelog))
+    exit(engine_logs(dxm_state.engine, enginelog, page_size,level))
 
 
 @application.command()
