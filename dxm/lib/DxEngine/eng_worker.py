@@ -142,7 +142,7 @@ def engine_list(p_engine, p_username, p_format):
     return None
 
 
-def engine_logs(p_engine, outputlog):
+def engine_logs(p_engine, outputlog, page_size,level):
 
     enginelist = get_list_of_engines(p_engine)
 
@@ -152,4 +152,6 @@ def engine_logs(p_engine, outputlog):
     for engine_tuple in enginelist:
         engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
                                      engine_tuple[2], engine_tuple[3])
-        engine_obj.getlogs(outputlog)
+        if engine_obj.get_session():
+            continue
+        engine_obj.getlogs(outputlog,page_size,level)

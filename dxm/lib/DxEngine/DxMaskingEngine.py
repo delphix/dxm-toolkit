@@ -33,6 +33,9 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from masking_apis.apis.application_api import ApplicationApi
 from masking_apis.apis.system_information_api import SystemInformationApi
+from masking_apis.apis.logging_api import LoggingApi
+from masking_apis.apis.file_download_api import FileDownloadApi
+import os
 
 
 class DxMaskingEngine(object):
@@ -216,47 +219,60 @@ class DxMaskingEngine(object):
         Tuple (connect_timeout, read_timeout)
         """
         return (5, 15)
+        """    enginelist = get_list_of_engines(p_engine)
 
+    if enginelist is None:
+        return 1
 
+    data = DataFormatter()
+    data_header = [
+                    ("Engine name", 30),
+                    ("Application name", 30),
+                  ]
+    data.create_header(data_header)
+    data.format_type = format
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
+                                     engine_tuple[2], engine_tuple[3])
+        if engine_obj.get_session():
+            continue
+        applist = DxApplicationList()
+        # load all objects
+        applist.LoadApplications()
+      """
     @classmethod
-    def getlogs(self, outputlog):
+    def getlogs(self, outputlog,page_size,level):
         """
-        Temporary procedure using GUI hack to download logs
+        Get engine logs via API 
         """
-
-        base_url = self.__protocol + "://" + self.__address \
-                   + ":" + str(self.__port)
-        loginurl = base_url + '/dmsuite/login.do'
-        logsurl = base_url + '/dmsuite/logsReport.do'
-        dataurl = base_url + '/dmsuite/logsReport.do?action=download'
-
-        session = requests.session()
-
-        req_headers = {
-                    'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-
-        formdata = {
-                    'userName': self.__username,
-                    'password': self.__password,
-                   }
-
-        # Authenticate
-        session.post(
-            loginurl, data=formdata, headers=req_headers,
-            allow_redirects=False)
-        session.get(logsurl)
-        r2 = session.get(dataurl)
-
         try:
-            outputlog.write(r2.text)
-            outputlog.close()
-            print_message("Log saved to file %s" % outputlog.name)
-            return 0
-        except Exception as e:
-            print_error("Problem with file %s Error: %s" %
-                       (outputlog.name, str(e)))
+            si = LoggingApi(self.api_client) 
+            arr = si.get_all_logs(page_size=page_size, log_level=level)
+        except ApiException as e:
+            print_error("Problem with LoggingAPI %s Error: %s" % (outputlog.name, str(e)))
             return 1
+ 
+        list = arr.response_list
+        list.reverse()
 
-            # if datafound:
-            #     print line
+        for l in list:
+            try:
+                data = FileDownloadApi(self.api_client)
+                data_file = data.download_file(l.file_download_id)
+            except ApiException as e:
+                print_error("Problem with FileDownloadApi %s Error: %s" % (outputlog.name, str(e)))
+                return 1
+            with open(data_file) as f:
+                s = f.readlines()
+                try:
+                    for line in s:
+                        outputlog.write(line)
+                    f.close()
+                    os.remove(f.name)
+                except Exception as e:
+                    print_error("Failed to write file %s because error: %s" % (outputlog.name, str(e)))
+                    return 1
+        outputlog.close()
+        print_message("Log saved to file %s" % outputlog.name)
+        return 0
+        
