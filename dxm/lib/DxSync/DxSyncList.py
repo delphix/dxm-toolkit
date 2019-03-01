@@ -58,8 +58,9 @@ class DxSyncList(object):
 
         try:
             api_sync = SyncApi(self.__engine.api_client)
-            if objecttype and self.__engine.version_ge("5.3"):
+            if objecttype:
                 objecttype = objecttype.upper()
+            if objecttype and self.__engine.version_ge("5.3"):
                 if objecttype == "ALGORITHM":
                     api_sync_response = ExportObjectMetadataList()
                     for atype in ["SEGMENT", "DATE_SHIFT",
@@ -135,10 +136,14 @@ class DxSyncList(object):
         param1: objectype: object type to return
         param2: name: object name
         """
-        objecttype = objecttype.upper()
-        if name in self.__syncableList[objecttype]:
-            return self.__syncableList[objecttype][name]
-        else:
+        try:
+            objecttype = objecttype.upper()
+            if name in self.__syncableList[objecttype]:
+                return self.__syncableList[objecttype][name]
+            else:
+                return None
+        except KeyError:
+            # it can happen for older engines using newer dxmc
             return None
 
     @classmethod
