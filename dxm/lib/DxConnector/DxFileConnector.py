@@ -22,6 +22,7 @@ import logging
 from dxm.lib.DxConnector.DxConnector import DxConnector
 from masking_apis.apis.file_connector_api import FileConnectorApi
 from masking_apis.models.file_connector import FileConnector
+from masking_apis.models.connection_info import ConnectionInfo
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -138,6 +139,49 @@ class DxFileConnector(DxConnector, FileConnector):
             print_error(e.body)
             self.__logger.error(e)
             return 1
+
+    def update(self):
+        """
+        Update connector on engine
+        Return None if OK
+        """
+
+        api_instance = FileConnectorApi(self.__engine.api_client)
+        body = FileConnector()
+        newci = ConnectionInfo()
+
+        print_error("Update of file connector has a API bug - this function doesn't work")
+        self.__logger.error("Update of file connector has a API bug")
+        return 1
+
+        # for k in self.attribute_map.keys():
+        #     if k == 'connection_info':
+        #         ci = self.connection_info
+        #         for c in ci.attribute_map.keys():
+        #             if getattr(ci, c) is not None:
+        #                 print "settuje"
+        #                 setattr(newci, c, getattr(ci, c))
+        #         setattr(body, k, newci)
+        #     else:
+        #         if getattr(self, k) is not None:
+        #             setattr(body, k, getattr(self, k))
+        #
+        #
+        # try:
+        #     self.__logger.debug("update connector input %s" % str(self))
+        #     response = api_instance.update_file_connector(
+        #         self.file_connector_id,
+        #         body,
+        #         _request_timeout=self.__engine.get_timeout())
+        #     self.__logger.debug("update connector response %s"
+        #                         % str(response))
+        #
+        #     self.file_connector_id = response.file_connector_id
+        #     print_message("Connector %s updated" % self.connector_name)
+        # except ApiException as e:
+        #     print_error(e.body)
+        #     self.__logger.error(e)
+        #     return 1
 
     def test(self):
         """
