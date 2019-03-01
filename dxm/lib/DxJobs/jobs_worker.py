@@ -680,7 +680,16 @@ def do_start(**kwargs):
         envlist.LoadEnvironments()
         connectorlist = DxConnectorsList()
         connectorlist.LoadConnectors(tgt_connector_env)
-        targetconnector = DxConnectorsList.get_connectorId_by_name(tgt_connector)
+        targetconnector = DxConnectorsList.get_connectorId_by_name(
+                            tgt_connector)
+        if targetconnector:
+            targetconnector = targetconnector[1:]
+        else:
+            print_error("Target connector not found")
+            lock.acquire()
+            dxm.lib.DxJobs.DxJobCounter.ret = \
+                dxm.lib.DxJobs.DxJobCounter.ret + 1
+            lock.release()
 
     #staring job
     jobobj.monitor = monitor
