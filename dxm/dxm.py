@@ -26,7 +26,7 @@ from lib.DxEnvironment.env_worker import environment_delete
 from lib.DxConnector.conn_worker import connector_list
 from lib.DxConnector.conn_worker import connector_add
 from lib.DxConnector.conn_worker import connector_delete
-# from lib.DxConnector.conn_worker import connector_update
+from lib.DxConnector.conn_worker import connector_update
 from lib.DxConnector.conn_worker import connector_test
 from lib.DxConnector.conn_worker import connector_fetch
 from lib.DxRuleset.rule_worker import ruleset_list
@@ -91,7 +91,7 @@ from lib.DxSync.sync_worker import sync_import
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.4
+__version__ = 0.41
 
 class dxm_state(object):
 
@@ -579,34 +579,87 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
     }
     exit(connector_add(dxm_state.engine, params))
 
-# API issue - not in use now
-# @connector.command()
-# @click.option('--connectorname', required=True)
-# @click.option('--host')
-# @click.option('--port', type=int)
-# @click.option('--username')
-# @click.option('--schemaname')
-# @click.option('--password')
-# @click.option('--sid')
-# @click.option('--instancename')
-# @click.option('--databasename')
-# @common_options
-# @pass_state
-# def update(dxm_state, connectorname, host, port, username,
-#         schemaname, password, sid, instancename, databasename):
-#     """ tobedone """
-#     params = {
-#         'schemaName': schemaname,
-#         'host': host,
-#         'port': port,
-#         'password': password,
-#         'username': username,
-#         'connname': connectorname,
-#         'sid': sid,
-#         'instancename': instancename,
-#         'databasename': databasename
-#     }
-#     exit(connector_update(dxm_state.engine, params))
+
+@connector.command()
+@click.option('--connectorname', required=True)
+@click.option('--host', help='Host where connector will be pointed')
+@click.option('--port', type=int, help='Port used by database connector')
+@click.option('--username',
+              help='Username (login) of database (for database connectors)'
+              'or host user (for file connectors)')
+@click.option('--schemaname',
+              help='Schema name used for ruleset for database connectors')
+@click.option('--password',
+              help='Connector password for specified user. If you want to hide'
+              ' input put '' as password and you will be propted')
+@click.option('--sid', help='Oracle SID of database for Oracle connector type')
+@click.option('--instancename',
+              help='MSSQL instance name for MSSQL connector type')
+@click.option('--databasename',
+              help='Database name for MSSQL or SYBASE connector type')
+@click.option(
+    '--envname',
+    help='Environment name where connector will be added')
+@click.option(
+    '--path', help='Path of files for FILE connector type')
+@click.option(
+    '--servertype', type=click.Choice(['sftp', 'ftp']),
+    help='Server type for FILE connector type')
+@common_options
+@pass_state
+def update(dxm_state, envname, connectorname, host, port, username,
+           schemaname, password, sid, instancename, databasename,
+           path, servertype):
+    """
+    Add connector to Masking Engine.
+    List of required parameters depend on connector type:
+
+    \b
+        - database connectors:
+            connectorname,
+            envname,
+            connectortype,
+            host,
+            port,
+            username,
+            schemaname,
+        - database depended options:
+            sid,
+            instancename,
+            databasename
+
+    \b
+        - file connectors:
+            connectorname,
+            envname,
+            connectortype,
+            host,
+            username,
+            path,
+            servertype
+
+
+    Exit code will be set to 0 if environment was added
+    and to non-zero value if there was an error
+    """
+    if password == '':
+        password = click.prompt('Please enter a password', hide_input=True,
+                                confirmation_prompt=True)
+    params = {
+        'schemaName': schemaname,
+        'host': host,
+        'port': port,
+        'password': password,
+        'username': username,
+        'connname': connectorname,
+        'sid': sid,
+        'instancename': instancename,
+        'databasename': databasename,
+        'envname': envname,
+        'servertype': servertype,
+        'path': path
+    }
+    exit(connector_update(dxm_state.engine, params))
 
 
 @connector.command()
@@ -2066,12 +2119,14 @@ def export(dxm_state, objecttype, objectname, envname, path):
 @click.option('--force', is_flag=True, default=False,
               help="Force object overwrite")
 @click.option(
-    '--inputfile', type=click.File('rt'), required=True,
+    '--inputfile', type=click.File('rt'),
     help="Name with path to imported object")
+@click.option('--inputpath', help="Path to object to load")
 @common_options
 @pass_state
-def load(dxm_state, target_envname, inputfile, force):
+def load(dxm_state, target_envname, inputfile, inputpath, force):
     """
     Load an object from file into Masking Engine
     """
-    exit(sync_import(dxm_state.engine, target_envname, inputfile, force))
+    exit(sync_import(dxm_state.engine, target_envname, inputfile,
+                     inputpath, force))

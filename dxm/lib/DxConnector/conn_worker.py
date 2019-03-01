@@ -276,6 +276,7 @@ def connector_update(p_engine, params):
         return 1
 
     connectorname = params['connname']
+    envname = params['envname']
 
     for engine_tuple in enginelist:
         engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
@@ -284,22 +285,14 @@ def connector_update(p_engine, params):
         if engine_obj.get_session():
             continue
 
-        connlist = DxConnectorsList(engine_obj)
-        connlist.LoadConnectors()
-        reflist = connlist.get_connectorId_by_name(connectorname)
+        DxConnectorsList(envname)
+        connref = DxConnectorsList.get_connectorId_by_name(connectorname)
 
-        if len(reflist) == 0:
-            logger.error('Connector %s not found' % connectorname)
-            print_error('Connector %s not found' % connectorname)
-            return 1
+        if connref is None:
+            ret = ret + 1
+            continue
 
-        if len(reflist) > 1:
-            logger.error('Connector name %s is not unique' % connectorname)
-            print_error('Connector name %s is not unique' % connectorname)
-            return 1
-
-        connobj = connlist.get_by_ref(reflist[0])
-
+        connobj = DxConnectorsList.get_by_ref(connref)
 
         if params['schemaName']:
             connobj.schema_name = params['schemaName']
