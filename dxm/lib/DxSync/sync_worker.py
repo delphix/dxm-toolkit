@@ -20,6 +20,7 @@
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 import logging
 import pickle
+import os
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
@@ -327,7 +328,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
     return ret
 
 
-def sync_import(p_engine, envname, inputfile, force):
+def sync_import(p_engine, envname, inputfile, inputpath, force):
     """
     Load algorithm from file
     param1: p_engine: engine name from configuration
@@ -338,6 +339,22 @@ def sync_import(p_engine, envname, inputfile, force):
 
     ret = 0
     enginelist = get_list_of_engines(p_engine)
+
+    if inputfile is None and inputpath is None:
+        print_error("Inputfile or inputpath parameter is required")
+        return 1
+
+    list_of_opened_files = []
+
+    if inputpath:
+        for f in os.listdir(inputpath):
+            fullpath = os.path.join(inputpath, f)
+            if os.path.isfile(fullpath):
+                fh = open(fullpath)
+                list_of_opened_files.append(fh)
+    else:
+        if inputfile:
+            list_of_opened_files = [inputfile]
 
     if enginelist is None:
         return 1
@@ -351,7 +368,10 @@ def sync_import(p_engine, envname, inputfile, force):
 
         envlist = DxEnvironmentList()
         environment_id = envlist.get_environmentId_by_name(envname)
-        syncobj = DxSync(engine_obj)
-        ret = ret + syncobj.importsync(inputfile, environment_id, force)
+
+
+        for i in list_of_opened_files:
+            syncobj = DxSync(engine_obj)
+            ret = ret + syncobj.importsync(i, environment_id, force)
 
     return ret

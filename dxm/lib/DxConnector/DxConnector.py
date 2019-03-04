@@ -118,13 +118,9 @@ class DxConnector(DatabaseConnector):
         api_instance = DatabaseConnectorApi(self.__engine.api_client)
         body = DatabaseConnector()
 
-        del body.password
-
         for k in self.attribute_map.keys():
             if getattr(self, k) is not None:
                 setattr(body, k, getattr(self, k))
-
-        print body
 
         try:
             self.__logger.debug("update connector input %s" % str(self))
