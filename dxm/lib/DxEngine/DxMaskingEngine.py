@@ -245,6 +245,11 @@ class DxMaskingEngine(object):
         """
         Get engine logs via API 
         """
+        
+        file = outputlog.name
+        outputlog.write(" ")
+        outputlog.close()
+        
         try:
             si = LoggingApi(self.api_client) 
             arr = si.get_all_logs(page_size=page_size, log_level=level)
@@ -254,7 +259,7 @@ class DxMaskingEngine(object):
  
         list = arr.response_list
         list.reverse()
-
+      
         for l in list:
             try:
                 data = FileDownloadApi(self.api_client)
@@ -265,14 +270,16 @@ class DxMaskingEngine(object):
             with open(data_file) as f:
                 s = f.readlines()
                 try:
+                    outputlog = open(file,"a")
                     for line in s:
                         outputlog.write(line)
+                    outputlog.close()    
                     f.close()
                     os.remove(f.name)
                 except Exception as e:
                     print_error("Failed to write file %s because error: %s" % (outputlog.name, str(e)))
                     return 1
-        outputlog.close()
+       
         print_message("Log saved to file %s" % outputlog.name)
         return 0
         

@@ -162,6 +162,7 @@ def common_options(f):
     return f
 
 def debug_options(f):
+    f = engine_option(f)
     f = debug_option(f)
     return f
     
