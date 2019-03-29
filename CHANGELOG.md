@@ -1,3 +1,11 @@
+## Version 0.42
+
+### Added:
+ - log export
+
+### Changed:
+ - various bug fixes
+
 ## Version 0.4
 
 ### Added:
