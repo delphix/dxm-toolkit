@@ -91,7 +91,7 @@ from lib.DxSync.sync_worker import sync_import
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.41
+__version__ = 0.42
 
 class dxm_state(object):
 
