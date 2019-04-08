@@ -300,7 +300,7 @@ def sync(dxm_state):
 @click.option('--engine', help='Engine name (or alias)', required=True)
 @click.option('--ip',  help='IP or FQDN of engine', required=True)
 @click.option(
-    '--port', help='Port used by engine (default 8282)', default=8282,
+    '--port', help='Port used by engine (default 8282)', default=80,
     required=True)
 @click.option(
     '--protocol', help='Communication protocol (default http)', default='http',

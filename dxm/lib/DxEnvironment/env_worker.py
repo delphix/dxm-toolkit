@@ -46,8 +46,7 @@ def environment_add(p_engine, envname, appname, purpose):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -81,8 +80,7 @@ def environment_delete(p_engine, envname):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 
@@ -120,8 +118,7 @@ def environment_list(p_engine, format, envname):
     data.create_header(data_header)
     data.format_type = format
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
         envlist = DxEnvironmentList()
