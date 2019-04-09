@@ -61,8 +61,9 @@ class DxSync(ExportObjectMetadata):
         api_response = api_sync.export(export_list)
         self.__logger.debug("Export response (without blob) %s"
                             % str(api_response.export_response_metadata))
-
+        print(path)
         filename = os.path.join(path, '{0}.bin'.format(name))
+        print(filename)
         self.__logger.debug("saving to %s" % filename)
         dependencylist = [
             b["objectType"]

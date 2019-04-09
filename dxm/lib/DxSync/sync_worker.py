@@ -59,6 +59,9 @@ def do_export(**kwargs):
     syncobj = kwargs.get('object')
     name = kwargs.get('name')
     path = kwargs.get('path')
+    print(name)
+    print(path)
+    print(kwargs)
     return syncobj.export(name, path)
 
 
@@ -85,7 +88,7 @@ def sync_list(p_engine, objecttype, objectname, envname, format):
     ret = sync_worker(p_engine, objecttype, objectname, envname, "do_list",
                       data=data)
 
-    print("")
+    print("XXX")
     print (data.data_output(False))
     print("")
 
@@ -140,8 +143,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -360,8 +362,7 @@ def sync_import(p_engine, envname, inputfile, inputpath, force):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue

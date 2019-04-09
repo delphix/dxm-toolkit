@@ -50,8 +50,7 @@ class DxMaskingEngine(object):
     __logger = None
 
     @classmethod
-    def __init__(self, name, address, username, password, port=8282,
-                 protocol="http"):
+    def __init__(self, engine_tuple):
         """
         Constructor
         :param address: Engine addess
@@ -61,20 +60,22 @@ class DxMaskingEngine(object):
         :param protocol: connection protocol (default http)
         :returns: this is a description of what is returned
         :raises keyError: raises an exception
+        tuple:
+        engine_name,ip_address,username,password, protocol,port, defengine, auth_id
         """
-        self.__address = address
-        self.__name = name
-        self.__username = username
-        self.__password = password
-        self.__port = port
-        self.__protocol = protocol
+        self.__address = engine_tuple[1]
+        self.__name = engine_tuple[0]
+        self.__username = engine_tuple[2]
+        self.__password = engine_tuple[3]
+        self.__port = engine_tuple[5]
+        self.__protocol = engine_tuple[4]
 
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxMaskingEngine object")
         self.__logger.debug(("parameters: %s %s %s %s %s"
-                            % (address, username,
-                               password, port, protocol)))
-        self.__base_url = self.__protocol + "://" + address + ":" \
+                            % (self.__address, self.__username,
+                               self.__password, self.__port, self.__protocol)))
+        self.__base_url = self.__protocol + "://" + self.__address + ":" \
             + str(self.__port) + "/masking/api"
 
         config = Configuration()
