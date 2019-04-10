@@ -210,8 +210,7 @@ def connector_selector(p_engine, connectorname, envname, function_to_call):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -278,8 +277,7 @@ def connector_update(p_engine, params):
     envname = params['envname']
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
