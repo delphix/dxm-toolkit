@@ -87,6 +87,10 @@ from lib.DxJobs.jobs_worker import profilejob_cancel
 from lib.DxSync.sync_worker import sync_list
 from lib.DxSync.sync_worker import sync_export
 from lib.DxSync.sync_worker import sync_import
+from lib.DxRole.role_worker import role_list
+from lib.DxUser.user_worker import user_list
+from lib.DxUser.user_worker import user_add
+from lib.DxUser.user_worker import user_delete
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
@@ -152,7 +156,7 @@ def format_option(f):
                         default='fixed',
                         callback=callback)(f)
 
-                        
+
 
 def common_options(f):
     f = logfile_option(f)
@@ -165,7 +169,7 @@ def debug_options(f):
     f = engine_option(f)
     f = debug_option(f)
     return f
-    
+
 def sort_options():
     return click.option('--sortby',
                         help='Sort by column number')
@@ -294,6 +298,20 @@ def profilejob(dxm_state):
 def sync(dxm_state):
     """
     Sync objects between engines or export/import to files
+    """
+
+@dxm.group()
+@pass_state
+def role(dxm_state):
+    """
+    Role group allow to control user roles
+    """
+
+@dxm.group()
+@pass_state
+def user(dxm_state):
+    """
+    User group allow to control users
     """
 
 @engine.command()
@@ -2142,3 +2160,64 @@ def load(dxm_state, target_envname, inputfile, inputpath, force):
     """
     exit(sync_import(dxm_state.engine, target_envname, inputfile,
                      inputpath, force))
+
+@role.command()
+@click.option('--rolename', help="Filter roles using a name")
+@common_options
+@pass_state
+def list(dxm_state, rolename):
+    """
+    Display list of roles from Masking Engine
+
+    If no filter options are specified, all roles will be displayed.
+    """
+    exit(role_list(dxm_state.engine, dxm_state.format, rolename))
+
+
+@user.command()
+@click.option('--username', help="Filter users using a name")
+@common_options
+@pass_state
+def list(dxm_state, username):
+    """
+    Display list of users from Masking Engine
+
+    If no filter options are specified, all users will be displayed.
+    """
+    exit(user_list(dxm_state.engine, dxm_state.format, username))
+
+@user.command()
+@click.option('--username', help="User name", required=True)
+@click.option('--firstname', help="User first name", required=True)
+@click.option('--lastname', help="User last name", required=True)
+@click.option('--email', help="User email", required=True)
+@click.option(
+    '--password', prompt=True, hide_input=True, confirmation_prompt=True,
+    help='Password for specified user. If you want to hide input'
+    ' don''t specify this parameter and you will be propted')
+@click.option('--user_type', help="User type ( admin / nonadmin)",
+              required=True, type=click.Choice(['admin', 'nonadmin']))
+@click.option('--user_role', help="User role")
+@click.option('--user_environments', help="User environments")
+@common_options
+@pass_state
+def add(dxm_state, username, firstname, lastname, email, password, user_type,
+        user_environments, user_role):
+    """
+    Add user to Masking Engine
+    """
+    exit(user_add(dxm_state.engine, username, firstname, lastname, email,
+                  password, user_type, user_environments, user_role))
+
+@user.command()
+@click.option('--username', help="Filter users using a name")
+@click.option('--force', is_flag=True, help="Force user deletion for admin users")
+@common_options
+@pass_state
+def delete(dxm_state, username, force):
+    """
+    Display list of users from Masking Engine
+
+    If no filter options are specified, all users will be displayed.
+    """
+    exit(user_delete(dxm_state.engine, username, force))

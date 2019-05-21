@@ -36,6 +36,7 @@ from masking_apis.apis.system_information_api import SystemInformationApi
 from masking_apis.apis.logging_api import LoggingApi
 from masking_apis.apis.file_download_api import FileDownloadApi
 import os
+import urllib3
 
 
 class DxMaskingEngine(object):
@@ -81,6 +82,10 @@ class DxMaskingEngine(object):
         config = Configuration()
         config.host = self.__base_url
         config.debug = False
+
+        # to disable certs
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        config.verify_ssl = False
 
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
             for name, logger in config.logger.items():
@@ -243,23 +248,23 @@ class DxMaskingEngine(object):
     @classmethod
     def getlogs(self, outputlog,page_size,level):
         """
-        Get engine logs via API 
+        Get engine logs via API
         """
-        
+
         file = outputlog.name
         outputlog.write(" ")
         outputlog.close()
-        
+
         try:
-            si = LoggingApi(self.api_client) 
+            si = LoggingApi(self.api_client)
             arr = si.get_all_logs(page_size=page_size, log_level=level)
         except ApiException as e:
             print_error("Problem with LoggingAPI %s Error: %s" % (outputlog.name, str(e)))
             return 1
- 
+
         list = arr.response_list
         list.reverse()
-      
+
         for l in list:
             try:
                 data = FileDownloadApi(self.api_client)
@@ -273,13 +278,12 @@ class DxMaskingEngine(object):
                     outputlog = open(file,"a")
                     for line in s:
                         outputlog.write(line)
-                    outputlog.close()    
+                    outputlog.close()
                     f.close()
                     os.remove(f.name)
                 except Exception as e:
                     print_error("Failed to write file %s because error: %s" % (outputlog.name, str(e)))
                     return 1
-       
+
         print_message("Log saved to file %s" % outputlog.name)
         return 0
-        
