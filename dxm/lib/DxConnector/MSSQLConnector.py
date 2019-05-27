@@ -57,14 +57,16 @@ class MSSQLConnector(DxConnector):
             'port': self.port,
             'host': self.host,
             'username': self.username,
-            'schemaName': self.schema_name,
-            'connectorName': self.connector_name,
+            'schema_name': self.schema_name,
+            'connector_name': self.connector_name,
             'password': self.password,
-            'databaseType': self.database_type,
-            'environmentId': self.environment_id,
-            'databaseName': self.database_name,
-            'instanceName': self.instance_name
+            'database_type': self.database_type,
+            'environment_id': self.environment_id,
+            'database_name': self.database_name,
+            'instance_name': self.instance_name
         }
+
+        print props
 
         empty = 0
         for k in props.keys():

@@ -70,6 +70,10 @@ def connector_add(p_engine, params):
         logger.debug("Envname is %s" % envname)
         envref = envlist.get_environmentId_by_name(envname)
 
+        if envref is None:
+            ret = ret + 1
+            continue
+
         connlist = DxConnectorsList()
         if params['type'] == 'oracle':
             connobj = OracleConnector(engine_obj)
@@ -83,24 +87,27 @@ def connector_add(p_engine, params):
             connobj.environment_id = envref
         elif params['type'] == 'mssql':
             connobj = MSSQLConnector(engine_obj)
-            connobj.connectorName = connname
-            connobj.schemaName = schemaName
-            connobj.loginid = username
+            connobj.connector_name = connname
+            connobj.schema_name = schemaName
+            connobj.username = username
             connobj.password = password
             connobj.host = host
             connobj.port = port
-            connobj.instanceName = params['instancename']
-            connobj.databaseName = params['databasename']
+            connobj.instance_name = params['instancename']
+            connobj.database_name = params['databasename']
             connobj.environment_id = envref
+            print "w worker"
+            print connobj
+
         elif params['type'] == 'sybase':
             connobj = SybaseConnector(engine_obj)
-            connobj.connectorName = connname
-            connobj.schemaName = schemaName
-            connobj.loginid = username
+            connobj.connector_name = connname
+            connobj.schema_name = schemaName
+            connobj.username = username
             connobj.password = password
             connobj.host = host
             connobj.port = port
-            connobj.databaseName = params['databasename']
+            connobj.database_name = params['databasename']
             connobj.environment_id = envref
         elif params['type'].upper() in ['DELIMITED', 'EXCEL', 'FIXED_WIDTH',
                                         'XML']:
