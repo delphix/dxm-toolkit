@@ -543,20 +543,23 @@ def job_start(p_engine, jobname, envname, tgt_connector,
                 tgt_connector_env, nowait, parallel, monitor,
                 "DxJobsList")
 
-def profilejob_start(p_engine, jobname, envname, nowait, parallel, monitor):
+def profilejob_start(p_engine, jobname, envname, nowait, parallel, monitor,
+                     tgt_connector, tgt_connector_env):
     """
     Start profile job
     param1: p_engine: engine name from configuration
     param2: jobname: job name to list
     param3: envname: environment name
-    param6: nowait: no wait for job to complete
-    param7: parallel: number of concurrent masking jobs
-    param8: monitor: enable progress bar
+    param4: nowait: no wait for job to complete
+    param5: parallel: number of concurrent masking jobs
+    param6: monitor: enable progress bar
+    param7: tgt_connector: target connector for multi tenant
+    param8: tgt_connector_env: target connector environment for multi tenant
     return 0 if environment found
     """
     return job_start_worker(
-                p_engine, jobname, envname, None,
-                None, nowait, parallel, monitor,
+                p_engine, jobname, envname, tgt_connector,
+                tgt_connector_env, nowait, parallel, monitor,
                 "DxProfileJobsList")
 
 
@@ -667,6 +670,7 @@ def do_start(**kwargs):
     posno = kwargs.get('posno')
     lock = kwargs.get('lock')
     monitor = kwargs.get('monitor')
+    joblist_class = kwargs.get('joblist_class')
 
     jobobj = joblist.get_by_ref(jobref)
 
@@ -676,17 +680,35 @@ def do_start(**kwargs):
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
         connectorlist = DxConnectorsList()
+
+        if tgt_connector is None:
+            print_error("Target connector is required for multitenant job")
+            lock.acquire()
+            if joblist_class == "DxJobsList":
+                dxm.lib.DxJobs.DxJobCounter.ret = \
+                    dxm.lib.DxJobs.DxJobCounter.ret + 1
+            else:
+                dxm.lib.DxJobs.DxJobCounter.profileret = \
+                    dxm.lib.DxJobs.DxJobCounter.profileret + 1
+            lock.release()
+            return 1
+
         connectorlist.LoadConnectors(tgt_connector_env)
         targetconnector = DxConnectorsList.get_connectorId_by_name(
                             tgt_connector)
         if targetconnector:
             targetconnector = targetconnector[1:]
         else:
-            print_error("Target connector not found")
+            print_error("Target connector for multitenant job not found")
             lock.acquire()
-            dxm.lib.DxJobs.DxJobCounter.ret = \
-                dxm.lib.DxJobs.DxJobCounter.ret + 1
+            if joblist_class == "DxJobsList":
+                dxm.lib.DxJobs.DxJobCounter.ret = \
+                    dxm.lib.DxJobs.DxJobCounter.ret + 1
+            else:
+                dxm.lib.DxJobs.DxJobCounter.profileret = \
+                    dxm.lib.DxJobs.DxJobCounter.profileret + 1
             lock.release()
+            return 1
 
     #staring job
     jobobj.monitor = monitor

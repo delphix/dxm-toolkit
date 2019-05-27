@@ -185,6 +185,14 @@ class DxProfileJob(ProfileJob):
         execjob = Execution()
         execjob.job_id = self.profile_job_id
 
+        if (self.multi_tenant):
+            # target is mandatory
+            if target_connector_id:
+                execjob.target_connector_id = target_connector_id
+            else:
+                print_error("Target connector is required for multitenant job")
+                return 1
+
         try:
             self.__logger.debug("start profilejob input %s" % str(execjob))
             response = exec_api.create_execution(
