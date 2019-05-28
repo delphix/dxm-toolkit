@@ -736,7 +736,8 @@ def fetch_meta(dxm_state, connectorname, envname):
 
     Exit code will be set to non-zero value if there was an error
     """
-    exit(connector_fetch(dxm_state.engine, connectorname, envname))
+    exit(connector_fetch(dxm_state.engine, connectorname, envname,
+                         dxm_state.format))
 
 
 @ruleset.command()

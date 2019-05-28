@@ -153,6 +153,7 @@ def do_print_meta(**kwargs):
     connref = kwargs.get('connref')
     connlist = kwargs.get('connlist')
     engine_obj = kwargs.get('engine_obj')
+    format = kwargs.get('format')
 
     connobj = connlist.get_by_ref(connref)
 
@@ -170,7 +171,7 @@ def do_print_meta(**kwargs):
                   ]
 
     data.create_header(data_header)
-
+    data.format_type = format
     metalist = connobj.fetch_meta()
 
     if metalist:
@@ -199,18 +200,19 @@ def connector_delete(p_engine, connectorname, envname):
     """
     return connector_selector(p_engine, connectorname, envname, 'do_delete')
 
-def connector_selector(p_engine, connectorname, envname, function_to_call):
+def connector_selector(p_engine, connectorname, envname, function_to_call,
+                       format='fixed'):
     """
     Select unique connector from Masking engine and run function on it
     param1: p_engine: engine name from configuration
     param2: connectorname: connectorname name
     param3: envname: environment name
     param4: function_to_call: name of function to call on connector
+    param5: format: format of output, set to fixed
     return 0 if added, non 0 for error
     """
 
     ret = 0
-
     enginelist = get_list_of_engines(p_engine)
 
     if enginelist is None:
@@ -234,7 +236,8 @@ def connector_selector(p_engine, connectorname, envname, function_to_call):
             ret = ret + dynfunc(
                 connref=connref,
                 engine_obj=engine_obj,
-                connlist=connlist)
+                connlist=connlist,
+                format=format)
         else:
             ret = ret + 1
             continue
@@ -251,16 +254,18 @@ def connector_test(p_engine, connectorname, envname):
 
     return connector_selector(p_engine, connectorname, envname, 'do_test')
 
-def connector_fetch(p_engine, connectorname, envname):
+def connector_fetch(p_engine, connectorname, envname, format):
     """
     Test connector from Masking engine
     param1: p_engine: engine name from configuration
     param2: connectorname: connectorname name
+    param3: envname: name of environment
+    param4: format: output format
     return 0 if added, non 0 for error
     """
 
     return connector_selector(p_engine, connectorname, envname,
-                              'do_print_meta')
+                              'do_print_meta', format)
 
 def connector_update(p_engine, params):
     """
