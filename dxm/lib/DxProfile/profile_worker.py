@@ -47,8 +47,7 @@ def expression_add(p_engine, expname, domainname, level, regex):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 
@@ -87,8 +86,7 @@ def profile_add(p_engine, profilename, expname, description):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 
@@ -168,10 +166,10 @@ def expression_delete(p_engine, expname):
 
     return expression_worker(p_engine=p_engine,
                              expname=expname,
-                             function_to_call='do_expresiondelete')
+                             function_to_call='do_expressiondelete')
 
 
-def do_expresiondelete(**kwargs):
+def do_expressiondelete(**kwargs):
     """
     Worker to remove expression from engine
     proexpobj: expression object
@@ -268,8 +266,7 @@ def expression_worker(**kwargs):
     ret = 0
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 
@@ -601,8 +598,7 @@ def profile_worker(**kwargs):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 

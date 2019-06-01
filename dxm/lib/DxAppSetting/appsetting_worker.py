@@ -24,72 +24,59 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
 
-from dxm.lib.DxAlgorithm.DxAlgorithmList import DxAlgorithmList
+from dxm.lib.DxRole.DxRole import DxRole
+from dxm.lib.DxRole.DxRoleList import DxRoleList
 
 
-def algorithm_list(p_engine, algname):
+
+
+def role_list(p_engine, format, rolename):
     """
-    Print list of algorithms
+    Print list of roles
     param1: p_engine: engine name from configuration
-    param2: algname: algname name to list, all if None
-    return 0 if algname found
+    param2: format: output format
+    param3: rolename: role name to list, all if None
+    return 0 if role found
     """
 
     ret = 0
-
-    logger = logging.getLogger()
-
-    data = DataFormatter()
-    data_header = [
-                    ("Engine name", 30),
-                    ("Algorithm name", 30),
-                    ("Domain name", 32),
-                    ("Syncable", 3)
-                  ]
-    data.create_header(data_header)
 
     enginelist = get_list_of_engines(p_engine)
 
     if enginelist is None:
         return 1
 
+    data = DataFormatter()
+    data_header = [
+                    ("Engine name", 30),
+                    ("Role name", 30)
+                  ]
+    data.create_header(data_header)
+    data.format_type = format
     for engine_tuple in enginelist:
         engine_obj = DxMaskingEngine(engine_tuple)
-
         if engine_obj.get_session():
             continue
+        rolelist = DxRoleList()
+        # load all objects
 
-        alglist = DxAlgorithmList()
-        alglist.LoadAlgorithms()
-
-        algref_list = []
-
-        if algname:
-            algobj = alglist.get_by_ref(algname)
-            if algobj:
-                algref_list.append(algobj.algorithm_name)
+        if rolename is None:
+            roles = rolelist.get_allref()
         else:
-            algref_list = alglist.get_allref()
+            role = rolelist.get_roleId_by_name(rolename)
 
-        for algref in algref_list:
-            algobj = alglist.get_by_ref(algref)
+            if role is None:
+                ret = ret + 1
+                continue
+            roles = [role]
 
-            if algobj.sync:
-                syncable = 'Y'
-            else:
-                syncable = 'N'
-
+        for roleref in roles:
+            roleobj = rolelist.get_by_ref(roleref)
             data.data_insert(
                               engine_tuple[0],
-                              algobj.algorithm_name,
-                              'domain',
-                              syncable
+                              roleobj.role_name
                             )
-
-            algobj.export()
-
-        print("")
-        print (data.data_output(False))
-        print("")
-
+    print("")
+    print (data.data_output(False))
+    print("")
     return ret

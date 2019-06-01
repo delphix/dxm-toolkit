@@ -44,8 +44,7 @@ def fileformat_add(p_engine, fileformat_type, fileformat_file):
 
     for engine_tuple in enginelist:
 
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -80,8 +79,7 @@ def fileformat_delete(p_engine, fileformat_name):
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 
@@ -126,8 +124,7 @@ def fileformat_list(p_engine, format, fileformat_type, fileformat_name):
     data.format_type = format
     for engine_tuple in enginelist:
 
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
 

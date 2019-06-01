@@ -87,6 +87,11 @@ from lib.DxJobs.jobs_worker import profilejob_cancel
 from lib.DxSync.sync_worker import sync_list
 from lib.DxSync.sync_worker import sync_export
 from lib.DxSync.sync_worker import sync_import
+from lib.DxRole.role_worker import role_list
+from lib.DxUser.user_worker import user_list
+from lib.DxUser.user_worker import user_add
+from lib.DxUser.user_worker import user_delete
+from lib.DxUser.user_worker import user_update
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
@@ -152,7 +157,7 @@ def format_option(f):
                         default='fixed',
                         callback=callback)(f)
 
-                        
+
 
 def common_options(f):
     f = logfile_option(f)
@@ -165,7 +170,7 @@ def debug_options(f):
     f = engine_option(f)
     f = debug_option(f)
     return f
-    
+
 def sort_options():
     return click.option('--sortby',
                         help='Sort by column number')
@@ -296,11 +301,25 @@ def sync(dxm_state):
     Sync objects between engines or export/import to files
     """
 
+@dxm.group()
+@pass_state
+def role(dxm_state):
+    """
+    Role group allow to control user roles
+    """
+
+@dxm.group()
+@pass_state
+def user(dxm_state):
+    """
+    User group allow to control users
+    """
+
 @engine.command()
 @click.option('--engine', help='Engine name (or alias)', required=True)
 @click.option('--ip',  help='IP or FQDN of engine', required=True)
 @click.option(
-    '--port', help='Port used by engine (default 8282)', default=8282,
+    '--port', help='Port used by engine (default 8282)', default=80,
     required=True)
 @click.option(
     '--protocol', help='Communication protocol (default http)', default='http',
@@ -718,7 +737,8 @@ def fetch_meta(dxm_state, connectorname, envname):
 
     Exit code will be set to non-zero value if there was an error
     """
-    exit(connector_fetch(dxm_state.engine, connectorname, envname))
+    exit(connector_fetch(dxm_state.engine, connectorname, envname,
+                         dxm_state.format))
 
 
 @ruleset.command()
@@ -1906,18 +1926,24 @@ def list(dxm_state, jobname, envname):
     '--parallel', type=int, help="Number of parallel jobs",
     default=1
 )
+@click.option(
+    '--tgt_connector', help="Name of target connector for multi tenant job")
+@click.option(
+    '--tgt_connector_env', help="Name of target connector environment "
+    "for multi tenant job")
 @click.option('--monitor', is_flag=True, help="Display progress bars")
 @common_options
 @pass_state
 def start(dxm_state, jobname, envname,
-          nowait, parallel, monitor):
+          nowait, parallel, monitor, tgt_connector, tgt_connector_env):
     """
     Start masking job. By default control is returned when job is finished.
     If --nowait flag is specified script doesn't monitor job and release
     control after job is started.
     """
     exit(profilejob_start(dxm_state.engine, jobname, envname,
-                          nowait, parallel, monitor))
+                          nowait, parallel, monitor, tgt_connector,
+                          tgt_connector_env))
 
 @profilejob.command()
 @click.option(
@@ -2142,3 +2168,89 @@ def load(dxm_state, target_envname, inputfile, inputpath, force):
     """
     exit(sync_import(dxm_state.engine, target_envname, inputfile,
                      inputpath, force))
+
+@role.command()
+@click.option('--rolename', help="Filter roles using a name")
+@common_options
+@pass_state
+def list(dxm_state, rolename):
+    """
+    Display list of roles from Masking Engine
+
+    If no filter options are specified, all roles will be displayed.
+    """
+    exit(role_list(dxm_state.engine, dxm_state.format, rolename))
+
+
+@user.command()
+@click.option('--username', help="Filter users using a name")
+@common_options
+@pass_state
+def list(dxm_state, username):
+    """
+    Display list of users from Masking Engine
+
+    If no filter options are specified, all users will be displayed.
+    """
+    exit(user_list(dxm_state.engine, dxm_state.format, username))
+
+@user.command()
+@click.option('--username', help="User name", required=True)
+@click.option('--firstname', help="User first name", required=True)
+@click.option('--lastname', help="User last name", required=True)
+@click.option('--email', help="User email", required=True)
+@click.option(
+    '--password', prompt=True, hide_input=True, confirmation_prompt=True,
+    help='Password for specified user. If you want to hide input'
+    ' don''t specify this parameter and you will be propted')
+@click.option('--user_type', help="User type ( admin / nonadmin)",
+              required=True, type=click.Choice(['admin', 'nonadmin']))
+@click.option('--user_role', help="User role")
+@click.option('--user_environments', help="User environments")
+@common_options
+@pass_state
+def add(dxm_state, username, firstname, lastname, email, password, user_type,
+        user_environments, user_role):
+    """
+    Add user to Masking Engine
+    """
+    exit(user_add(dxm_state.engine, username, firstname, lastname, email,
+                  password, user_type, user_environments, user_role))
+
+@user.command()
+@click.option('--username', help="Filter users using a name")
+@click.option('--force', is_flag=True, help="Force user deletion for admin users")
+@common_options
+@pass_state
+def delete(dxm_state, username, force):
+    """
+    Delete an user from Masking Engine
+    To delete admin user, please use force option. Use this with care !!!
+    """
+    exit(user_delete(dxm_state.engine, username, force))
+
+@user.command()
+@click.option('--username', help="User name", required=True)
+@click.option('--firstname', help="User first name")
+@click.option('--lastname', help="User last name")
+@click.option('--email', help="User email")
+@click.option(
+    '--password',
+    help='Password for specified user.'
+    'If you want to hide input put '' as value and you will be propted')
+@click.option('--user_type', help="User type ( admin / nonadmin)",
+              type=click.Choice(['admin', 'nonadmin']))
+@click.option('--user_role', help="User role")
+@click.option('--user_environments', help="User environments")
+@common_options
+@pass_state
+def update(dxm_state, username, firstname, lastname, email, password, user_type,
+           user_environments, user_role):
+    """
+    Update user in Masking Engine
+    """
+    if password == '':
+        password = click.prompt('Please enter a password', hide_input=True,
+                                confirmation_prompt=True)
+    exit(user_update(dxm_state.engine, username, firstname, lastname, email,
+                     password, user_type, user_environments, user_role))

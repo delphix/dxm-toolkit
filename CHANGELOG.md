@@ -1,3 +1,16 @@
+## Version 0.5
+
+### Added:
+ - user support added
+
+### Changed:
+ - fix for port and protocol setting
+ - [fix for #11](https://github.com/delphix/dxm-toolkit/issues/11) - Output in JSON for metadata fetch
+ - [fix for #15](https://github.com/delphix/dxm-toolkit/issues/15) - Multitenant for profile job
+ - [fix for #16](https://github.com/delphix/dxm-toolkit/issues/16) - fix for MS SQL and Sybase connectors
+
+
+
 ## Version 0.42
 
 ### Added:

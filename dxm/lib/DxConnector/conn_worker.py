@@ -60,8 +60,7 @@ def connector_add(p_engine, params):
     connname = params['connname']
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -70,6 +69,10 @@ def connector_add(p_engine, params):
         envlist.LoadEnvironments()
         logger.debug("Envname is %s" % envname)
         envref = envlist.get_environmentId_by_name(envname)
+
+        if envref is None:
+            ret = ret + 1
+            continue
 
         connlist = DxConnectorsList()
         if params['type'] == 'oracle':
@@ -84,24 +87,27 @@ def connector_add(p_engine, params):
             connobj.environment_id = envref
         elif params['type'] == 'mssql':
             connobj = MSSQLConnector(engine_obj)
-            connobj.connectorName = connname
-            connobj.schemaName = schemaName
-            connobj.loginid = username
+            connobj.connector_name = connname
+            connobj.schema_name = schemaName
+            connobj.username = username
             connobj.password = password
             connobj.host = host
             connobj.port = port
-            connobj.instanceName = params['instancename']
-            connobj.databaseName = params['databasename']
+            connobj.instance_name = params['instancename']
+            connobj.database_name = params['databasename']
             connobj.environment_id = envref
+            print "w worker"
+            print connobj
+
         elif params['type'] == 'sybase':
             connobj = SybaseConnector(engine_obj)
-            connobj.connectorName = connname
-            connobj.schemaName = schemaName
-            connobj.loginid = username
+            connobj.connector_name = connname
+            connobj.schema_name = schemaName
+            connobj.username = username
             connobj.password = password
             connobj.host = host
             connobj.port = port
-            connobj.databaseName = params['databasename']
+            connobj.database_name = params['databasename']
             connobj.environment_id = envref
         elif params['type'].upper() in ['DELIMITED', 'EXCEL', 'FIXED_WIDTH',
                                         'XML']:
@@ -147,6 +153,7 @@ def do_print_meta(**kwargs):
     connref = kwargs.get('connref')
     connlist = kwargs.get('connlist')
     engine_obj = kwargs.get('engine_obj')
+    format = kwargs.get('format')
 
     connobj = connlist.get_by_ref(connref)
 
@@ -164,7 +171,7 @@ def do_print_meta(**kwargs):
                   ]
 
     data.create_header(data_header)
-
+    data.format_type = format
     metalist = connobj.fetch_meta()
 
     if metalist:
@@ -193,26 +200,26 @@ def connector_delete(p_engine, connectorname, envname):
     """
     return connector_selector(p_engine, connectorname, envname, 'do_delete')
 
-def connector_selector(p_engine, connectorname, envname, function_to_call):
+def connector_selector(p_engine, connectorname, envname, function_to_call,
+                       format='fixed'):
     """
     Select unique connector from Masking engine and run function on it
     param1: p_engine: engine name from configuration
     param2: connectorname: connectorname name
     param3: envname: environment name
     param4: function_to_call: name of function to call on connector
+    param5: format: format of output, set to fixed
     return 0 if added, non 0 for error
     """
 
     ret = 0
-
     enginelist = get_list_of_engines(p_engine)
 
     if enginelist is None:
         return 1
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -229,7 +236,8 @@ def connector_selector(p_engine, connectorname, envname, function_to_call):
             ret = ret + dynfunc(
                 connref=connref,
                 engine_obj=engine_obj,
-                connlist=connlist)
+                connlist=connlist,
+                format=format)
         else:
             ret = ret + 1
             continue
@@ -246,16 +254,18 @@ def connector_test(p_engine, connectorname, envname):
 
     return connector_selector(p_engine, connectorname, envname, 'do_test')
 
-def connector_fetch(p_engine, connectorname, envname):
+def connector_fetch(p_engine, connectorname, envname, format):
     """
     Test connector from Masking engine
     param1: p_engine: engine name from configuration
     param2: connectorname: connectorname name
+    param3: envname: name of environment
+    param4: format: output format
     return 0 if added, non 0 for error
     """
 
     return connector_selector(p_engine, connectorname, envname,
-                              'do_print_meta')
+                              'do_print_meta', format)
 
 def connector_update(p_engine, params):
     """
@@ -279,8 +289,7 @@ def connector_update(p_engine, params):
     envname = params['envname']
 
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue
@@ -374,8 +383,7 @@ def connector_list(p_engine, format, envname, connector_name, details):
     data.create_header(data_header)
     data.format_type = format
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
 
         if engine_obj.get_session():
             continue

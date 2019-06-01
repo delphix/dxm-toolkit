@@ -36,6 +36,7 @@ from masking_apis.apis.system_information_api import SystemInformationApi
 from masking_apis.apis.logging_api import LoggingApi
 from masking_apis.apis.file_download_api import FileDownloadApi
 import os
+import urllib3
 
 
 class DxMaskingEngine(object):
@@ -50,8 +51,7 @@ class DxMaskingEngine(object):
     __logger = None
 
     @classmethod
-    def __init__(self, name, address, username, password, port=8282,
-                 protocol="http"):
+    def __init__(self, engine_tuple):
         """
         Constructor
         :param address: Engine addess
@@ -61,25 +61,31 @@ class DxMaskingEngine(object):
         :param protocol: connection protocol (default http)
         :returns: this is a description of what is returned
         :raises keyError: raises an exception
+        tuple:
+        engine_name,ip_address,username,password, protocol,port, defengine, auth_id
         """
-        self.__address = address
-        self.__name = name
-        self.__username = username
-        self.__password = password
-        self.__port = port
-        self.__protocol = protocol
+        self.__address = engine_tuple[1]
+        self.__name = engine_tuple[0]
+        self.__username = engine_tuple[2]
+        self.__password = engine_tuple[3]
+        self.__port = engine_tuple[5]
+        self.__protocol = engine_tuple[4]
 
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxMaskingEngine object")
         self.__logger.debug(("parameters: %s %s %s %s %s"
-                            % (address, username,
-                               password, port, protocol)))
-        self.__base_url = self.__protocol + "://" + address + ":" \
+                            % (self.__address, self.__username,
+                               self.__password, self.__port, self.__protocol)))
+        self.__base_url = self.__protocol + "://" + self.__address + ":" \
             + str(self.__port) + "/masking/api"
 
         config = Configuration()
         config.host = self.__base_url
         config.debug = False
+
+        # to disable certs
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        config.verify_ssl = False
 
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
             for name, logger in config.logger.items():
@@ -232,8 +238,7 @@ class DxMaskingEngine(object):
     data.create_header(data_header)
     data.format_type = format
     for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple[0], engine_tuple[1],
-                                     engine_tuple[2], engine_tuple[3])
+        engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
         applist = DxApplicationList()
@@ -243,23 +248,23 @@ class DxMaskingEngine(object):
     @classmethod
     def getlogs(self, outputlog,page_size,level):
         """
-        Get engine logs via API 
+        Get engine logs via API
         """
-        
+
         file = outputlog.name
         outputlog.write(" ")
         outputlog.close()
-        
+
         try:
-            si = LoggingApi(self.api_client) 
+            si = LoggingApi(self.api_client)
             arr = si.get_all_logs(page_size=page_size, log_level=level)
         except ApiException as e:
             print_error("Problem with LoggingAPI %s Error: %s" % (outputlog.name, str(e)))
             return 1
- 
+
         list = arr.response_list
         list.reverse()
-      
+
         for l in list:
             try:
                 data = FileDownloadApi(self.api_client)
@@ -273,13 +278,12 @@ class DxMaskingEngine(object):
                     outputlog = open(file,"a")
                     for line in s:
                         outputlog.write(line)
-                    outputlog.close()    
+                    outputlog.close()
                     f.close()
                     os.remove(f.name)
                 except Exception as e:
                     print_error("Failed to write file %s because error: %s" % (outputlog.name, str(e)))
                     return 1
-       
+
         print_message("Log saved to file %s" % outputlog.name)
         return 0
-        
