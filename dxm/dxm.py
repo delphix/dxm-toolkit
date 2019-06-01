@@ -736,7 +736,8 @@ def fetch_meta(dxm_state, connectorname, envname):
 
     Exit code will be set to non-zero value if there was an error
     """
-    exit(connector_fetch(dxm_state.engine, connectorname, envname))
+    exit(connector_fetch(dxm_state.engine, connectorname, envname,
+                         dxm_state.format))
 
 
 @ruleset.command()
@@ -1924,18 +1925,24 @@ def list(dxm_state, jobname, envname):
     '--parallel', type=int, help="Number of parallel jobs",
     default=1
 )
+@click.option(
+    '--tgt_connector', help="Name of target connector for multi tenant job")
+@click.option(
+    '--tgt_connector_env', help="Name of target connector environment "
+    "for multi tenant job")
 @click.option('--monitor', is_flag=True, help="Display progress bars")
 @common_options
 @pass_state
 def start(dxm_state, jobname, envname,
-          nowait, parallel, monitor):
+          nowait, parallel, monitor, tgt_connector, tgt_connector_env):
     """
     Start masking job. By default control is returned when job is finished.
     If --nowait flag is specified script doesn't monitor job and release
     control after job is started.
     """
     exit(profilejob_start(dxm_state.engine, jobname, envname,
-                          nowait, parallel, monitor))
+                          nowait, parallel, monitor, tgt_connector,
+                          tgt_connector_env))
 
 @profilejob.command()
 @click.option(
