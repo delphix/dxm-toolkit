@@ -44,6 +44,12 @@ class DxUser(User):
         """
         self.__dict__.update(user.__dict__)
 
+    def delete_nap(self):
+        """
+        Delete NonAdminProperties
+        """
+        self._non_admin_properties = None
+
     def add(self):
         """
         Add user to Masking engine and print status message
@@ -151,7 +157,7 @@ class DxUser(User):
     def update(self):
         """
         Update user on Masking engine and print status message
-        return a None if non error
+        return 0 if non error
         return 1 in case of error
         """
 
@@ -167,7 +173,7 @@ class DxUser(User):
             self.__logger.debug("update user response %s"
                                 % str(response))
             print_message("User %s updated" % self.user_name)
-            return None
+            return 0
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
