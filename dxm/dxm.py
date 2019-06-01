@@ -91,6 +91,7 @@ from lib.DxRole.role_worker import role_list
 from lib.DxUser.user_worker import user_list
 from lib.DxUser.user_worker import user_add
 from lib.DxUser.user_worker import user_delete
+from lib.DxUser.user_worker import user_update
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
@@ -2223,8 +2224,33 @@ def add(dxm_state, username, firstname, lastname, email, password, user_type,
 @pass_state
 def delete(dxm_state, username, force):
     """
-    Display list of users from Masking Engine
-
-    If no filter options are specified, all users will be displayed.
+    Delete an user from Masking Engine
+    To delete admin user, please use force option. Use this with care !!!
     """
     exit(user_delete(dxm_state.engine, username, force))
+
+@user.command()
+@click.option('--username', help="User name", required=True)
+@click.option('--firstname', help="User first name")
+@click.option('--lastname', help="User last name")
+@click.option('--email', help="User email")
+@click.option(
+    '--password',
+    help='Password for specified user.'
+    'If you want to hide input put '' as value and you will be propted')
+@click.option('--user_type', help="User type ( admin / nonadmin)",
+              type=click.Choice(['admin', 'nonadmin']))
+@click.option('--user_role', help="User role")
+@click.option('--user_environments', help="User environments")
+@common_options
+@pass_state
+def update(dxm_state, username, firstname, lastname, email, password, user_type,
+           user_environments, user_role):
+    """
+    Update user in Masking Engine
+    """
+    if password == '':
+        password = click.prompt('Please enter a password', hide_input=True,
+                                confirmation_prompt=True)
+    exit(user_update(dxm_state.engine, username, firstname, lastname, email,
+                     password, user_type, user_environments, user_role))

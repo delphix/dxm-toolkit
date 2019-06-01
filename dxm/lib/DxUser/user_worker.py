@@ -64,7 +64,111 @@ def user_delete(p_engine, username, force):
             print_error("User %s not found" % username)
             logger.debug("User %s not found" % username)
 
+def user_update(p_engine, username, firstname, lastname, email, password,
+             user_type, user_environments, user_role):
+    """
+    Update user in Engine
+    param1: p_engine: engine name from configuration
+    param2: username: user name to add
+    param3: firstname: user first name to add
+    param4: lastname: user last name to add
+    param5: email: user email to add
+    param6: password: user password to add
+    param7: user_type: user type (admin / nonadmin)
+    param8: user_environments: list of comma separated environments
+    param9: user_role: user role name
+    return 0 if user updated
+    """
 
+    ret = 0
+    update = 0
+    logger = logging.getLogger()
+
+    enginelist = get_list_of_engines(p_engine)
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple)
+        if engine_obj.get_session():
+            continue
+
+        userlist = DxUserList()
+        userref = userlist.get_userId_by_name(username)
+
+        if userref is None:
+            print_error("User %s not found" % username)
+            logger.debug("User %s not found" % username)
+            ret = ret + 1
+            continue
+
+        userobj = userlist.get_by_ref(userref)
+
+        if user_type is not None:
+            update = 1
+            if user_type == 'nonadmin':
+                if user_role is None:
+                    print_error("User role is required for non-admin user")
+                    return 1
+                rolelist = DxRoleList()
+                roleref = rolelist.get_roleId_by_name(user_role)
+                if roleref is None:
+                    print_error("Role name %s not found" % user_role)
+                    logger.debug("Role name %s not found" % user_role)
+                    ret = ret + 1
+                    continue
+
+                envreflist = []
+                if user_environments is not None:
+                    envlist = DxEnvironmentList()
+                    envnamelist = user_environments.split(',')
+                    for envname in envnamelist:
+                        envref = envlist.get_environmentId_by_name(envname)
+                        if envref is None:
+                            ret = ret + 1
+                            return 1
+                        else:
+                            envreflist.append(envref)
+
+
+                userobj.is_admin = False
+                nap = NonAdminProperties()
+                nap.role_id = roleref
+                nap.environment_ids = envreflist
+                userobj.non_admin_properties = nap
+            else:
+                userobj.is_admin = True
+                userobj.delete_nap()
+                print userobj
+
+        if firstname is not None:
+            update = 1
+            userobj.first_name = firstname
+
+        if lastname is not None:
+            update = 1
+            userobj.last_name = lastname
+
+        if email is not None:
+            update = 1
+            userobj.email = email
+
+        if password is not None:
+            update = 1
+            try:
+                userobj.password = password
+            except ValueError as e:
+                print str(e)
+                ret = ret + 1
+                return ret
+
+        if update == 1:
+            ret = ret + userobj.update()
+        else:
+            print_error("No values set for update.")
+            ret = ret + 1
+
+    return ret
 
 
 def user_add(p_engine, username, firstname, lastname, email, password,
@@ -142,8 +246,9 @@ def user_add(p_engine, username, firstname, lastname, email, password,
             return ret
 
         userlist = DxUserList()
-        userlist.add(userobj)
+        ret = ret + userlist.add(userobj)
 
+    return ret
 
 def user_list(p_engine, format, username):
     """
