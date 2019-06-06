@@ -112,7 +112,7 @@ class DxUser(User):
 
             self.user_id = response.user_id
             print_message("User %s added" % self.user_name)
-            return None
+            return 0
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -148,7 +148,7 @@ class DxUser(User):
             self.__logger.debug("delete user response %s"
                                 % str(response))
             print_message("User %s deleted" % self.user_name)
-            return None
+            return 0
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)

@@ -108,10 +108,15 @@ class DxSync(ExportObjectMetadata):
         try:
             api_sync = SyncApi(self.__engine.api_client)
             self.__logger.debug("Import input %s" % self)
-            api_response = api_sync.import_object(
-                            syncobj,
-                            force_overwrite=force,
-                            environment_id=environment_id)
+            if environment_id is None:
+                api_response = api_sync.import_object(
+                                syncobj,
+                                force_overwrite=force)
+            else:
+                api_response = api_sync.import_object(
+                                syncobj,
+                                force_overwrite=force,
+                                environment_id=environment_id)
             self.__logger.debug("Import response %s" % str(api_response))
             print_message("File %s was loaded or engine revision is in "
                           "sync with file" % path.name)
