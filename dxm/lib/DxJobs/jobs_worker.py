@@ -523,7 +523,8 @@ def job_selector(**kwargs):
             lock.acquire()
             dxm.lib.DxJobs.DxJobCounter.ret = \
                 dxm.lib.DxJobs.DxJobCounter.ret + 1
-
+                echo tino
+            
             lock.release()
             continue
 
