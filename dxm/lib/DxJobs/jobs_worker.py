@@ -490,7 +490,7 @@ def job_selector(**kwargs):
     envname = kwargs.get('envname')
     function_to_call = kwargs.get('function_to_call')
     joblist_class = kwargs.get('joblist_class')
-
+    lock = kwargs.get('lock')
     ret = 0
 
     enginelist = get_list_of_engines(p_engine)
@@ -517,8 +517,14 @@ def job_selector(**kwargs):
                 jobref=jobref,
                 engine_obj=engine_obj,
                 joblist=joblist, **kwargs)
+
+
         else:
-            ret = ret + 1
+            lock.acquire()
+            dxm.lib.DxJobs.DxJobCounter.ret = \
+                dxm.lib.DxJobs.DxJobCounter.ret + 1
+
+            lock.release()
             continue
 
     return ret
@@ -579,6 +585,7 @@ def job_start_worker(p_engine, jobname, envname, tgt_connector,
     param9: joblist_class - DxJobsList or DxProfileJobsList
     return 0 if environment found
     """
+
 
     job_list = [x for x in jobname]
     jobsno = len(job_list)
