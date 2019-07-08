@@ -1405,17 +1405,19 @@ def list(dxm_state, rulesetname, envname, metaname, columnname, algname,
     '--outputfile', type=click.File('wt'), required=True,
     help="Name with path of output file where masking inventory will be saved"
     " in CSV format")
+@click.option('--inventory', help="Output will compatible with GUI inventory",
+              is_flag=True)
 @sort_options()
 @common_options
 @pass_state
 def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
-         is_masked, sortby, outputfile):
+         is_masked, sortby, outputfile, inventory):
     """
     Save column masking rules (inventory) into CSV file which can be loaded
     later using toolkit.
     """
     exit(column_save(dxm_state.engine, sortby, rulesetname, envname, metaname,
-         columnname, algname, is_masked, outputfile))
+         columnname, algname, is_masked, outputfile, inventory))
 
 
 @column.command()
@@ -1519,15 +1521,15 @@ def batch(dxm_state, rulesetname, envname, inputfile):
     File format for databases rulesets is a part
     of GUI inventory export format:
 
-    Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked
+    Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked, ID method, Row Type, Date Format
 
-    Columns: Type, Parent Column Name, Data Type are IGNORED.
+    Columns: Type, Parent Column Name, Data Type, Row Type are IGNORED.
 
     Ex. database ruleset input file:
 
-    #Table Name,Type,Parent Column Name,Column name,Data Type,Domain,Algorithm,Is masked
-    EMP,,,ENAME,VARCHAR2(10),LAST_NAME,LastNameLookup,Y
-    DEPT,IX,-,DEPTNO,NUMBER(2),,,N
+    #Table Name,Type,Parent Column Name,Column name,Data Type,Domain,Algorithm,Is masked,ID Method,Row type,Date Format
+    EMP,,,ENAME,VARCHAR2(10),LAST_NAME,LastNameLookup,Y,User,All Row,yyyy-MM-dd
+    DEPT,IX,-,DEPTNO,NUMBER(2),,,N,Auto,All Row,-
 
     File format for file rulesets is a part of GUI inventory export format:
 
