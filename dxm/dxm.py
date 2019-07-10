@@ -1045,7 +1045,9 @@ def list(dxm_state, jobname, envname):
 @click.option(
     '--email', help="e-mail address used for job notification")
 @click.option(
-    '--on_the_fly_source', help="connector name for on the fly job")
+    '--on_the_fly_src_connector', help="source connector name for on the fly job")
+@click.option(
+    '--on_the_fly_src_envname', help="source environment name for on the fly job")
 @click.option(
     '--feedback_size', type=int,
     help="Feedback size of masking job")
@@ -1101,7 +1103,7 @@ def list(dxm_state, jobname, envname):
 @pass_state
 def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         max_memory, min_memory, jobdesc, num_streams, on_the_fly,
-        on_the_fly_source, commit_size, threads, multi_tenant, batch_update,
+        on_the_fly_src_connector, on_the_fly_src_envname, commit_size, threads, multi_tenant, batch_update,
         disable_constraints, drop_indexes, disable_triggers, truncate_tables,
         prescript, postscript, bulk_data):
     """
@@ -1128,7 +1130,8 @@ def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "job_description": jobdesc,
         "num_input_streams": num_streams,
         "on_the_fly_masking": on_the_fly,
-        "on_the_fly_masking_source": on_the_fly_source,
+        "on_the_fly_src_connector": on_the_fly_src_connector,
+        "on_the_fly_src_envname": on_the_fly_src_envname,
         "commit_size": commit_size,
         "num_output_threads_per_stream": threads,
         "multi_tenant": multi_tenant,
