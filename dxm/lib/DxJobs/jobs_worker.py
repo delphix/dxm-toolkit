@@ -38,6 +38,7 @@ from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
 from masking_apis.models.database_masking_options import DatabaseMaskingOptions
 from masking_apis.models.masking_job_script import MaskingJobScript
+from masking_apis.models.on_the_fly_masking_source import OnTheFlyMaskingSource
 
 from threading import Thread
 from threading import active_count
@@ -194,7 +195,24 @@ def job_add(p_engine, params):
                     value = False
                 else:
                     value = params[p]
-                setattr(job, p, value)
+                setattr(dmo, p, value)
+
+        if params["on_the_fly_masking"] == 'Y' :
+            src_env = params["on_the_fly_src_envname"]
+            src_con = params["on_the_fly_src_connector"]
+            conlist = DxConnectorsList(src_env)
+            conid = conlist.get_connectorId_by_name(src_con)
+            if not conid :
+                return 1
+            on_the_fly_maskking_srcobj = OnTheFlyMaskingSource()
+            on_the_fly_maskking_srcobj.connector_id = conid[1:]
+
+            conObj = conlist.get_by_ref(conid)
+            if conObj.is_database :
+                on_the_fly_maskking_srcobj.connector_type = "DATABASE"
+            else:
+                on_the_fly_maskking_srcobj.connector_type = "FILE"
+            job.on_the_fly_masking_source = on_the_fly_maskking_srcobj
 
         if params["prescript"]:
             prescript = MaskingJobScript()
