@@ -38,6 +38,7 @@ from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
 from masking_apis.models.database_masking_options import DatabaseMaskingOptions
 from masking_apis.models.masking_job_script import MaskingJobScript
+from masking_apis.models.on_the_fly_masking_source import OnTheFlyMaskingSource
 
 from threading import Thread
 from threading import active_count
@@ -194,7 +195,24 @@ def job_add(p_engine, params):
                     value = False
                 else:
                     value = params[p]
-                setattr(job, p, value)
+                setattr(dmo, p, value)
+
+        if params["on_the_fly_masking"] == 'Y' :
+            src_env = params["on_the_fly_src_envname"]
+            src_con = params["on_the_fly_src_connector"]
+            conlist = DxConnectorsList(src_env)
+            conid = conlist.get_connectorId_by_name(src_con)
+            if not conid :
+                return 1
+            on_the_fly_maskking_srcobj = OnTheFlyMaskingSource()
+            on_the_fly_maskking_srcobj.connector_id = conid[1:]
+
+            conObj = conlist.get_by_ref(conid)
+            if conObj.is_database :
+                on_the_fly_maskking_srcobj.connector_type = "DATABASE"
+            else:
+                on_the_fly_maskking_srcobj.connector_type = "FILE"
+            job.on_the_fly_masking_source = on_the_fly_maskking_srcobj
 
         if params["prescript"]:
             prescript = MaskingJobScript()
@@ -490,7 +508,7 @@ def job_selector(**kwargs):
     envname = kwargs.get('envname')
     function_to_call = kwargs.get('function_to_call')
     joblist_class = kwargs.get('joblist_class')
-
+    lock = kwargs.get('lock')
     ret = 0
 
     enginelist = get_list_of_engines(p_engine)
@@ -517,8 +535,14 @@ def job_selector(**kwargs):
                 jobref=jobref,
                 engine_obj=engine_obj,
                 joblist=joblist, **kwargs)
+
+
         else:
-            ret = ret + 1
+            lock.acquire()
+            dxm.lib.DxJobs.DxJobCounter.ret = \
+                dxm.lib.DxJobs.DxJobCounter.ret + 1
+
+            lock.release()
             continue
 
     return ret
@@ -579,6 +603,7 @@ def job_start_worker(p_engine, jobname, envname, tgt_connector,
     param9: joblist_class - DxJobsList or DxProfileJobsList
     return 0 if environment found
     """
+
 
     job_list = [x for x in jobname]
     jobsno = len(job_list)
