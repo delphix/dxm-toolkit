@@ -1515,9 +1515,11 @@ def replace(dxm_state, rulesetname, envname, metaname, columnname, algname,
 @click.option(
     '--inputfile', type=click.File('rt'), required=True,
     help="Input file for batch set")
+@click.option('--inventory', help="Input is compatible with GUI inventory",
+              is_flag=True)
 @common_options
 @pass_state
-def batch(dxm_state, rulesetname, envname, inputfile):
+def batch(dxm_state, rulesetname, envname, inputfile, inventory):
     """
     Set / unset masking for columns specified in CSV file.
 
@@ -1536,18 +1538,19 @@ def batch(dxm_state, rulesetname, envname, inputfile):
 
     File format for file rulesets is a part of GUI inventory export format:
 
-    File Name, Field Name, Domain, Algorithm, Is Masked
+    File Name, Field Name, Domain, Algorithm, Is Masked, Priority,Record Type,Position,Length,Date Format
 
     Ex. file ruleset input file:
 
-    #File Name,Field Name,Domain,Algorithm,Is masked
-    mask.txt,col1,ADDRESS,AddrLookup,Y
-    mask.txt,col2,,,N
-    mask.txt,col3,ADDRESS,AddrLookup,Y
+    #File Name,Field Name,Domain,Algorithm,Is masked,Priority,Record Type,Position,Length,Date Format
+    1.txt,col1,ADDRESS,AddrLookup,Y,-,All Records,1,0,
+    1.txt,col2,,,N,-,All Records,2,0,-
+    1.txt,col3,,,N,-,All Records,3,0,-
 
 
     """
-    exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile))
+    exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile,
+                      inventory))
 
 
 @algorithms.command()

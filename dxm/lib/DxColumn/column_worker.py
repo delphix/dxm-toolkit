@@ -261,7 +261,12 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Field Name", 5),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32)
+                        ("Is masked", 32),
+                        ("Priority", 8),
+                        ("Record Type", 15),
+                        ("Position", 8),
+                        ("Length", 8),
+                        ("Date Format", 32)
                       ]
         data.create_header(data_header)
         data.format_type = "csv"
@@ -476,6 +481,9 @@ def do_save_file(**kwargs):
     colobj = kwargs.get('colobj')
     metaobj = kwargs.get('metaobj')
     data = kwargs.get('data')
+    inventory = kwargs.get('inventory')
+    envobj = kwargs.get('envobj')
+    ruleobj = kwargs.get('ruleobj')
 
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
@@ -486,13 +494,40 @@ def do_save_file(**kwargs):
         print_domain = ''
         print_ismasked = 'N'
 
-    data.data_insert(
-                      metaobj.meta_name,
-                      colobj.cf_meta_name,
-                      print_domain,
-                      print_algname,
-                      print_ismasked
-                    )
+    if colobj.date_format is None:
+        print_dateformat = '-'
+    else:
+        print_dateformat = colobj.date_format
+
+
+    if inventory is True:
+        data.data_insert(
+                          envobj.environment_name,
+                          ruleobj.ruleset_name,
+                          metaobj.meta_name,
+                          colobj.cf_meta_name,
+                          print_domain,
+                          print_algname,
+                          print_ismasked,
+                          "-",
+                          "All Records",
+                          colobj.field_position_number,
+                          colobj.field_length,
+                          print_dateformat
+                        )
+    else:
+        data.data_insert(
+                          metaobj.meta_name,
+                          colobj.cf_meta_name,
+                          print_domain,
+                          print_algname,
+                          print_ismasked,
+                          "-",
+                          "All Records",
+                          colobj.field_position_number,
+                          colobj.field_length,
+                          print_dateformat
+                        )
 
     return 0
 
@@ -652,7 +687,7 @@ def update_algorithm(**kwargs):
                          colobj.cf_meta_name))
         return 0
 
-def column_batch(p_engine, rulesetname, envname, inputfile):
+def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
     """
     Update all columns defined in file
     param1: p_engine: engine name from configuration
@@ -698,22 +733,45 @@ def column_batch(p_engine, rulesetname, envname, inputfile):
                 continue
             try:
                 logger.debug("readling line %s" % line)
-                if ruleobj.type == "Database":
-                    (metaname, column_role, parent_column, column_name,
-                     type, domain_name, algname,
-                     is_masked_YN, idmethod, rowtype, dateformat) \
-                     = line.strip().split(',')
+                if inventory is False:
+                    if ruleobj.type == "Database":
+                        (metaname, column_role, parent_column, column_name,
+                         type, domain_name, algname,
+                         is_masked_YN, idmethod, rowtype, dateformat) \
+                         = line.strip().split(',')
+                    else:
+                        (metaname, column_name, domain_name, algname,
+                         is_masked_YN, priority, recordtype, position,
+                         length, dateformat) = line.strip().split(',')
                 else:
-                    (metaname, column_name, domain_name, algname,
-                     is_masked_YN) = line.strip().split(',')
-
-            except ValueError:
-                logger.error("not all columns in file have value")
-                print_error("not all columns in file have value")
-                logger.error("line %s" % line)
-                print_error("line %s" % line)
-                ret = ret + 1
-                continue
+                    if ruleobj.type == "Database":
+                        (env, ruleset, metaname, column_role, parent_column,
+                         column_name, type, domain_name, algname,
+                         is_masked_YN, idmethod, rowtype, dateformat) \
+                         = line.strip().split(',')
+                    else:
+                        (env, ruleset, metaname, column_name, domain_name,
+                         algname, is_masked_YN, priority, recordtype, position,
+                         length, dateformat) = line.strip().split(',')
+            except ValueError as e:
+                if str(e) == "too many values to unpack":
+                    logger.error("to few values in inputfile - maybe add "
+                                 "--inventory if you are loading an inventory"
+                                 "file from GUI")
+                    print_error("to few values in inputfile - maybe add "
+                                "--inventory if you are loading an inventory"
+                                "file from GUI")
+                    logger.error("line %s" % line)
+                    print_error("line %s" % line)
+                    ret = ret + 1
+                    break
+                else:
+                    logger.error("not all columns in file have value")
+                    print_error("not all columns in file have value")
+                    logger.error("line %s" % line)
+                    print_error("line %s" % line)
+                    ret = ret + 1
+                    break
 
             metaref = metalist.get_MetadataId_by_name(metaname)
             if metaref is None:
@@ -733,24 +791,25 @@ def column_batch(p_engine, rulesetname, envname, inputfile):
 
             if colref:
                 colobj = metacolumn_list[metaref].get_by_ref(colref)
-                if is_masked_YN == 'Y':
+                if is_masked_YN == 'Y' or is_masked_YN == 'true':
                     is_masked = True
                 else:
                     is_masked = False
 
-                if algname == '':
+                if algname == '' or algname == '-':
                     algname = 'None'
 
-                if domain_name == '':
+                if domain_name == '' or domain_name == '-':
                     domain_name = 'None'
 
-                if idmethod == 'Auto':
-                    colobj.is_profiler_writable = True
-                elif idmethod == 'User':
-                    colobj.is_profiler_writable = False
-                else:
-                    print_error("Wrong id method")
-                    return 1
+                if ruleobj.type == "Database":
+                    if idmethod == 'Auto':
+                        colobj.is_profiler_writable = True
+                    elif idmethod == 'User':
+                        colobj.is_profiler_writable = False
+                    else:
+                        print_error("Wrong id method")
+                        return 1
 
                 if dateformat == '-':
                     colobj.date_format = None
