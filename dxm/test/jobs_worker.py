@@ -2,7 +2,7 @@ from unittest import TestCase
 from unittest import main
 import mock
 import sys
-import datetime
+
 from dxm.lib.DxLogging import logging_est
 from masking_apis.apis.masking_job_api import MaskingJobApi
 from masking_apis.models.masking_job import MaskingJob
@@ -29,69 +29,13 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxJobs.jobs_worker import jobs_list
 from dxm.lib.DxJobs.jobs_worker import job_start
 
-def dbconnector_load(a, **kwargs):
-    """
-    Create an output for get_all_database_connectors call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    dbconnector = [DatabaseConnector(database_connector_id=1, connector_name="DB connector", environment_id=1, database_type="ORACLE")]
-    dbcpo = DatabaseConnectorList(page_info=pi, response_list=dbconnector)
-    return dbcpo
-
-def fileconnector_load(a, **kwargs):
-    """
-    Create an output for get_all_file_connectors call
-    """
-    pi = PageInfo(number_on_page=0, total=0)
-    dbrpo = FileConnectorList(page_info=pi, response_list=[])
-    return dbrpo
-
-def fileruleset_load(a, **kwargs):
-    """
-    Create an output for get_all_file_rulesets call
-    """
-    pi = PageInfo(number_on_page=0, total=0)
-    dbrpo = FileRulesetList(page_info=pi, response_list=[])
-    return dbrpo
-
-def dbruleset_load(a, **kwargs):
-    """
-    Create an output for get_all_database_rulesets call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    dbruleset = [DatabaseRuleset(database_ruleset_id=1, ruleset_name="DB Ruleset1", database_connector_id=1)]
-    dbrpo = DatabaseRulesetList(page_info=pi, response_list=dbruleset)
-    return dbrpo
-
-def job_load(a, **kwargs):
-    """
-    Create an output for get_all_application call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    joblist = [MaskingJob(masking_job_id=1, job_name="Job1", ruleset_id=1, created_by="delphix_admin", email="test@delphix.com")]
-    jpo = MaskingJobList(page_info=pi, response_list=joblist)
-    return jpo
-
-def execution_load(a, **kwargs):
-    """
-    Create an output for get_all_executions call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    execlist = [Execution(execution_id=1, job_id=1, status="SUCCEEDED", rows_masked=10, rows_total=10,
-                          start_time=datetime.datetime(2018, 9, 01, 01, 00, 00),
-                          end_time=datetime.datetime(2018, 9, 01, 01, 10, 00))]
-    epo = ExecutionList(page_info=pi, response_list=execlist)
-    return epo
-
-def env_load(a, **kwargs):
-    """
-    Create an output for get_all_environments call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    envlist = [Environment(environment_id=1, environment_name="Env1", application="App1", purpose="MASK")]
-    epo = EnvironmentList(page_info=pi, response_list=envlist)
-    return epo
-
+from engine import env_load
+from engine import dbruleset_load
+from engine import fileruleset_load
+from engine import dbconnector_load
+from engine import fileconnector_load
+from engine import execution_load
+from engine import job_load
 
 @mock.patch.object(
     DxMaskingEngine, 'get_session', return_value=None)
@@ -125,7 +69,7 @@ class TestApp(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Job name,Ruleset name,Connector name,'
-            'Environment name,Completed,Status,Runtime\r\n53,Job1,'
+            'Environment name,Completed,Status,Runtime\r\ntesteng,Job1,'
             'DB Ruleset1,DB connector,Env1,2018-09-01 01:10:00,SUCCEEDED,'
             '0:10:00')
 

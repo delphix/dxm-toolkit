@@ -23,6 +23,8 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
+from dxm.lib.DxTools.DxTools import algname_mapping_export
+from dxm.lib.DxTools.DxTools import algname_mapping_import
 
 from dxm.lib.DxColumn.DxColumnList import DxColumnList
 from dxm.lib.DxColumn.DxDBColumn import DxDBColumn
@@ -111,7 +113,20 @@ def column_unsetmasking(p_engine, rulesetname, envname, metaname, columnname):
 
 def column_replace(p_engine, rulesetname, envname, metaname, columnname,
                    algname, newalgname, newdomain):
+    """
+    Change masking algorithm from algname to newalgname for columns limited by
+    filters
+    :param1 p_engine: masking engine
+    :param2 rulesetname: name of ruleset
+    :param3 envname: name of environment
+    :param4 metaname: name of table or file
+    :param5 columnname: name of table column or file field
+    :param6 algname: algorithm name
+    :param7 newalgname: new algorithm name
+    :param8 newdomain: domain for new algorithm
 
+    Return 0 if all updates happend without issue, non-zero return for errors
+    """
     return column_worker(p_engine, None, rulesetname, envname, metaname,
                          columnname, algname, None, newalgname, True,
                          newdomain, 'update_algorithm')
@@ -119,7 +134,17 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
 
 def column_check(p_engine, rulesetname, envname, metaname, columnname,
                  algname):
+    """
+    Check if column exists for condition set by parameters
+    :param1 p_engine: masking engine
+    :param2 rulesetname: name of ruleset
+    :param3 envname: name of environment
+    :param4 metaname: name of table or file
+    :param5 columnname: name of table column or file field
+    :param6 algname: algorithm name
 
+    Return 1 if column exists, 0 if there is no column found
+    """
     return column_worker(p_engine, None, rulesetname, envname, metaname,
                          columnname, algname, None, None, None,
                          None, 'found')
@@ -172,7 +197,7 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
 
 
 def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
-                algname, is_masked, file):
+                algname, is_masked, file, inventory):
     """
     Print column list
     param1: p_engine: engine name from configuration
@@ -188,7 +213,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
     """
 
     if p_engine == 'all':
-        print_error("you can run column save command on all engines"
+        print_error("you can't run column save command on all engines"
                     "at same time")
         return 1
 
@@ -223,7 +248,10 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Data Type", 32),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32)
+                        ("Is masked", 32),
+                        ("ID Method", 32),
+                        ("Row Type", 32),
+                        ("Date Format", 32)
                       ]
         data.create_header(data_header)
         data.format_type = "csv"
@@ -235,20 +263,27 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Field Name", 5),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32)
+                        ("Is masked", 32),
+                        ("Priority", 8),
+                        ("Record Type", 15),
+                        ("Position", 8),
+                        ("Length", 8),
+                        ("Date Format", 32)
                       ]
         data.create_header(data_header)
         data.format_type = "csv"
         worker = "do_save_file"
 
+    if inventory is True:
+        data_header = [("Environment Name", 32),
+                       ("Rule Set", 32)] + data_header
 
     ret = column_worker(
         p_engine, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
-        None, worker, data=data)
+        None, worker, data=data, inventory=inventory)
 
     if ret == 0:
-
         output = data.data_output(False, sortby)
         try:
             file.write(output)
@@ -261,7 +296,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
             return 1
 
     else:
-        return 1
+        return ret
 
 
 def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
@@ -322,7 +357,6 @@ def do_print(**kwargs):
         print_algname = ''
         print_domain = ''
 
-
     if envobj:
         environment_name = envobj.environment_name
     else:
@@ -376,31 +410,74 @@ def do_save_database(**kwargs):
     """
     Put column information to data object
     for metadata save
+    param: DxColumn colobj: column object to save
+    param: DxTable metaobj: table object to save
+    param: Output data: output data object
     """
 
     colobj = kwargs.get('colobj')
     metaobj = kwargs.get('metaobj')
     data = kwargs.get('data')
+    inventory = kwargs.get('inventory')
+    envobj = kwargs.get('envobj')
+    ruleobj = kwargs.get('ruleobj')
+
+    if inventory is True:
+        mapping = algname_mapping_export()
+    else:
+        mapping = None
 
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
         print_domain = colobj.domain_name
         print_ismasked = 'Y'
+        if mapping is not None:
+            print_algname = mapping[colobj.algorithm_name]
     else:
         print_algname = ''
         print_domain = ''
         print_ismasked = 'N'
 
-    data.data_insert(
-                      metaobj.meta_name,
-                      colobj.cf_meta_column_role,
-                      "-",
-                      colobj.cf_meta_name,
-                      colobj.cf_meta_type,
-                      print_domain,
-                      print_algname,
-                      print_ismasked
-                    )
+    if colobj.is_profiler_writable:
+        print_idmethod = 'Auto'
+    else:
+        print_idmethod = 'User'
+
+    if colobj.date_format is None:
+        print_dateformat = '-'
+    else:
+        print_dateformat = colobj.date_format
+
+    if inventory is True:
+        data.data_insert(
+                          envobj.environment_name,
+                          ruleobj.ruleset_name,
+                          metaobj.meta_name,
+                          colobj.cf_meta_column_role,
+                          "-",
+                          colobj.cf_meta_name,
+                          colobj.cf_meta_type,
+                          print_domain,
+                          print_algname,
+                          print_ismasked,
+                          print_idmethod,
+                          "All Row",
+                          print_dateformat
+                        )
+    else:
+        data.data_insert(
+                          metaobj.meta_name,
+                          colobj.cf_meta_column_role,
+                          "-",
+                          colobj.cf_meta_name,
+                          colobj.cf_meta_type,
+                          print_domain,
+                          print_algname,
+                          print_ismasked,
+                          print_idmethod,
+                          "All Row",
+                          print_dateformat
+                        )
 
     return 0
 
@@ -413,29 +490,66 @@ def do_save_file(**kwargs):
     colobj = kwargs.get('colobj')
     metaobj = kwargs.get('metaobj')
     data = kwargs.get('data')
+    inventory = kwargs.get('inventory')
+    envobj = kwargs.get('envobj')
+    ruleobj = kwargs.get('ruleobj')
+
+    if inventory is True:
+        mapping = algname_mapping_export()
+    else:
+        mapping = None
 
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
         print_domain = colobj.domain_name
         print_ismasked = 'Y'
+        if mapping is not None:
+            print_algname = mapping[colobj.algorithm_name]
     else:
         print_algname = ''
         print_domain = ''
         print_ismasked = 'N'
 
-    data.data_insert(
-                      metaobj.meta_name,
-                      colobj.cf_meta_name,
-                      print_domain,
-                      print_algname,
-                      print_ismasked
-                    )
+    if colobj.date_format is None:
+        print_dateformat = '-'
+    else:
+        print_dateformat = colobj.date_format
+
+
+    if inventory is True:
+        data.data_insert(
+                          envobj.environment_name,
+                          ruleobj.ruleset_name,
+                          metaobj.meta_name,
+                          colobj.cf_meta_name,
+                          print_domain,
+                          print_algname,
+                          print_ismasked,
+                          "-",
+                          "All Records",
+                          colobj.field_position_number,
+                          colobj.field_length,
+                          print_dateformat
+                        )
+    else:
+        data.data_insert(
+                          metaobj.meta_name,
+                          colobj.cf_meta_name,
+                          print_domain,
+                          print_algname,
+                          print_ismasked,
+                          "-",
+                          "All Records",
+                          colobj.field_position_number,
+                          colobj.field_length,
+                          print_dateformat
+                        )
 
     return 0
 
 def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                   filter_algname, filter_is_masked, algname, is_masked,
-                  domainname, function_to_call, data=None):
+                  domainname, function_to_call, data=None, inventory=None):
     """
     Select a column using all filter parameters
     and run action defined in function_to_call
@@ -548,7 +662,8 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                                         envobj=envobj, ruleobj=ruleobj,
                                         metaobj=metaobj, colobj=colobj,
                                         algname=algname, is_masked=is_masked,
-                                        domainname=domainname)
+                                        domainname=domainname,
+                                        inventory=inventory)
     return ret
 
 
@@ -588,7 +703,7 @@ def update_algorithm(**kwargs):
                          colobj.cf_meta_name))
         return 0
 
-def column_batch(p_engine, rulesetname, envname, inputfile):
+def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
     """
     Update all columns defined in file
     param1: p_engine: engine name from configuration
@@ -606,6 +721,11 @@ def column_batch(p_engine, rulesetname, envname, inputfile):
 
     if enginelist is None:
         return 1
+
+    if inventory is True:
+        mapping = algname_mapping_import()
+    else:
+        mapping = None
 
     for engine_tuple in enginelist:
         engine_obj = DxMaskingEngine(engine_tuple)
@@ -634,21 +754,45 @@ def column_batch(p_engine, rulesetname, envname, inputfile):
                 continue
             try:
                 logger.debug("readling line %s" % line)
-                if ruleobj.type == "Database":
-                    (metaname, column_role, parent_column, column_name,
-                     type, domain_name, algname,
-                     is_masked_YN) = line.strip().split(',')
+                if inventory is False:
+                    if ruleobj.type == "Database":
+                        (metaname, column_role, parent_column, column_name,
+                         type, domain_name, algname,
+                         is_masked_YN, idmethod, rowtype, dateformat) \
+                         = line.strip().split(',')
+                    else:
+                        (metaname, column_name, domain_name, algname,
+                         is_masked_YN, priority, recordtype, position,
+                         length, dateformat) = line.strip().split(',')
                 else:
-                    (metaname, column_name, domain_name, algname,
-                     is_masked_YN) = line.strip().split(',')
-
-            except ValueError:
-                logger.error("not all columns in file have value")
-                print_error("not all columns in file have value")
-                logger.error("line %s" % line)
-                print_error("line %s" % line)
-                ret = ret + 1
-                continue
+                    if ruleobj.type == "Database":
+                        (env, ruleset, metaname, column_role, parent_column,
+                         column_name, type, domain_name, algname,
+                         is_masked_YN, idmethod, rowtype, dateformat) \
+                         = line.strip().split(',')
+                    else:
+                        (env, ruleset, metaname, column_name, domain_name,
+                         algname, is_masked_YN, priority, recordtype, position,
+                         length, dateformat) = line.strip().split(',')
+            except ValueError as e:
+                if str(e) == "too many values to unpack":
+                    logger.error("to few values in inputfile - maybe add "
+                                 "--inventory if you are loading an inventory"
+                                 "file from GUI")
+                    print_error("to few values in inputfile - maybe add "
+                                "--inventory if you are loading an inventory"
+                                "file from GUI")
+                    logger.error("line %s" % line)
+                    print_error("line %s" % line)
+                    ret = ret + 1
+                    break
+                else:
+                    logger.error("not all columns in file have value")
+                    print_error("not all columns in file have value")
+                    logger.error("line %s" % line)
+                    print_error("line %s" % line)
+                    ret = ret + 1
+                    break
 
             metaref = metalist.get_MetadataId_by_name(metaname)
             if metaref is None:
@@ -668,23 +812,49 @@ def column_batch(p_engine, rulesetname, envname, inputfile):
 
             if colref:
                 colobj = metacolumn_list[metaref].get_by_ref(colref)
-                if is_masked_YN == 'Y':
+                if is_masked_YN == 'Y' or is_masked_YN == 'true':
                     is_masked = True
                 else:
                     is_masked = False
 
-                if algname == '':
+                if algname == '' or algname == '-':
                     algname = 'None'
 
-                if domain_name == '':
+                if domain_name == '' or domain_name == '-':
                     domain_name = 'None'
 
-                update_algorithm(colobj=colobj,
-                                 algname=algname,
-                                 domainname=domain_name,
-                                 metaobj=metaobj,
-                                 ruleobj=ruleobj,
-                                 is_masked=is_masked)
+                if ruleobj.type == "Database":
+                    if idmethod == 'Auto':
+                        colobj.is_profiler_writable = True
+                    elif idmethod == 'User':
+                        colobj.is_profiler_writable = False
+                    else:
+                        print_error("Wrong id method")
+                        return 1
+
+                if dateformat == '-':
+                    colobj.date_format = None
+                else:
+                    colobj.date_format = dateformat
+
+                if mapping is not None and algname != 'None':
+                    try:
+                        algname = mapping[algname]
+                    except KeyError as e:
+                        logger.debug("Wrong algoritm name in input file"
+                                     ". Not an inventory file ?")
+                        logger.debug(str(e))
+                        print_error("Wrong algoritm name in input file"
+                                    ". Not an inventory file ?")
+                        return 1
+
+
+                ret = ret + update_algorithm(colobj=colobj,
+                                             algname=algname,
+                                             domainname=domain_name,
+                                             metaobj=metaobj,
+                                             ruleobj=ruleobj,
+                                             is_masked=is_masked)
             else:
                 ret = ret + 1
                 continue
