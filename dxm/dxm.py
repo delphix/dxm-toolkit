@@ -1440,17 +1440,23 @@ def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
 @click.option(
     '--domainname', required=True,
     help="Name of domain to set for column")
+@click.option(
+    '--dateformat',
+    help="Date format for DATE algorithms")
+@click.option(
+    '--idmethod', type=click.Choice(['Y', 'N']),
+    help="Can a column be overwrite by profiler")
 @common_options
 @pass_state
 def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
-               domainname):
+               domainname, dateformat, idmethod):
     """
     Setting a masking algorithm for defined column and flagging column as
     masked.
     Return non-zero return code if there was a problem with setting masking.
     """
     exit(column_setmasking(dxm_state.engine, rulesetname, envname,
-         metaname, columnname, algname, domainname))
+         metaname, columnname, algname, domainname, dateformat, idmethod))
 
 
 @column.command()
