@@ -23,6 +23,8 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
+from dxm.lib.DxTools.DxTools import algname_mapping_export
+from dxm.lib.DxTools.DxTools import algname_mapping_import
 
 from dxm.lib.DxColumn.DxColumnList import DxColumnList
 from dxm.lib.DxColumn.DxDBColumn import DxDBColumn
@@ -420,10 +422,17 @@ def do_save_database(**kwargs):
     envobj = kwargs.get('envobj')
     ruleobj = kwargs.get('ruleobj')
 
+    if inventory is True:
+        mapping = algname_mapping_export()
+    else:
+        mapping = None
+
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
         print_domain = colobj.domain_name
         print_ismasked = 'Y'
+        if mapping is not None:
+            print_algname = mapping[colobj.algorithm_name]
     else:
         print_algname = ''
         print_domain = ''
@@ -485,10 +494,17 @@ def do_save_file(**kwargs):
     envobj = kwargs.get('envobj')
     ruleobj = kwargs.get('ruleobj')
 
+    if inventory is True:
+        mapping = algname_mapping_export()
+    else:
+        mapping = None
+
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
         print_domain = colobj.domain_name
         print_ismasked = 'Y'
+        if mapping is not None:
+            print_algname = mapping[colobj.algorithm_name]
     else:
         print_algname = ''
         print_domain = ''
@@ -706,6 +722,11 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
     if enginelist is None:
         return 1
 
+    if inventory is True:
+        mapping = algname_mapping_import()
+    else:
+        mapping = None
+
     for engine_tuple in enginelist:
         engine_obj = DxMaskingEngine(engine_tuple)
 
@@ -815,6 +836,18 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
                     colobj.date_format = None
                 else:
                     colobj.date_format = dateformat
+
+                if mapping is not None and algname != 'None':
+                    try:
+                        algname = mapping[algname]
+                    except KeyError as e:
+                        logger.debug("Wrong algoritm name in input file"
+                                     ". Not an inventory file ?")
+                        logger.debug(str(e))
+                        print_error("Wrong algoritm name in input file"
+                                    ". Not an inventory file ?")
+                        return 1
+
 
                 ret = ret + update_algorithm(colobj=colobj,
                                              algname=algname,
