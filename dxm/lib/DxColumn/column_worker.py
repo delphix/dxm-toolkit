@@ -77,7 +77,7 @@ def columns_copy(engine_obj, meta_id, new_meta_id):
     return ret
 
 def column_setmasking(p_engine, rulesetname, envname, metaname, columnname,
-                      algname, domainname):
+                      algname, domainname, dateformat, idmethod):
     """
     Set masking for column
     :param1 p_engine: masking engine
@@ -87,11 +87,14 @@ def column_setmasking(p_engine, rulesetname, envname, metaname, columnname,
     :param5 columnname: name of table column or file field
     :param6 algname: algorithm name
     :param7 domainname: domain name
+    :param8 dateformat: date format for date algorithms
+    :param8 idmethod: can column be overwritten by profiler
     """
 
     return column_worker(p_engine, None, rulesetname, envname, metaname,
                          columnname, None, None, algname, True, domainname,
-                         'update_algorithm')
+                         'update_algorithm', dateformat=dateformat,
+                         idmethod=idmethod)
 
 
 def column_unsetmasking(p_engine, rulesetname, envname, metaname, columnname):
@@ -549,7 +552,8 @@ def do_save_file(**kwargs):
 
 def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                   filter_algname, filter_is_masked, algname, is_masked,
-                  domainname, function_to_call, data=None, inventory=None):
+                  domainname, function_to_call, data=None, inventory=None,
+                  **kwargs):
     """
     Select a column using all filter parameters
     and run action defined in function_to_call
@@ -663,7 +667,8 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                                         metaobj=metaobj, colobj=colobj,
                                         algname=algname, is_masked=is_masked,
                                         domainname=domainname,
-                                        inventory=inventory)
+                                        inventory=inventory,
+                                        **kwargs)
     return ret
 
 
@@ -678,8 +683,19 @@ def update_algorithm(**kwargs):
     ruleobj = kwargs.get('ruleobj')
     metaobj = kwargs.get('metaobj')
     is_masked = kwargs.get('is_masked')
+    dateformat = kwargs.get('dateformat')
+    idmethod = kwargs.get('idmethod')
 
     colobj.is_masked = is_masked
+
+    if dateformat is not None:
+        colobj.date_format = dateformat
+
+    if idmethod is not None:
+        if idmethod == 'Y':
+            colobj.is_profiler_writable = True
+        else:
+            colobj.is_profiler_writable = False
 
     if algname == 'None':
         algname = None
