@@ -35,6 +35,13 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from masking_apis.models.connection_info import ConnectionInfo
 
 
+database_types = ['oracle', 'sybase', 'mssql', 'aurora_postgres', 'db2',
+                  'db2_iseries', 'db2_mainframe', 'generic', 'mysql',
+                  'postgres', 'rds_oracle', 'rds_postgres']
+
+file_types = ['delimited', 'excel', 'fixed_width', 'xml']
+
+
 def connector_add(p_engine, params):
     """
     Add application to Masking engine
@@ -75,8 +82,17 @@ def connector_add(p_engine, params):
             continue
 
         connlist = DxConnectorsList()
-        if params['type'] == 'oracle':
-            connobj = OracleConnector(engine_obj)
+        if params['type'] in database_types:
+            if params['type'] == 'oracle':
+                connobj = OracleConnector(engine_obj)
+            elif params['type'] == 'mssql':
+                connobj = MSSQLConnector(engine_obj)
+            elif params['type'] == 'sybase':
+                connobj = SybaseConnector(engine_obj)
+            else:
+                connobj = DxConnector(engine_obj)
+                connobj.database_type = params['type'].upper()
+
             connobj.connector_name = connname
             connobj.schema_name = schemaName
             connobj.username = username
@@ -85,32 +101,10 @@ def connector_add(p_engine, params):
             connobj.port = port + 0
             connobj.sid = params['sid']
             connobj.environment_id = envref
-        elif params['type'] == 'mssql':
-            connobj = MSSQLConnector(engine_obj)
-            connobj.connector_name = connname
-            connobj.schema_name = schemaName
-            connobj.username = username
-            connobj.password = password
-            connobj.host = host
-            connobj.port = port
             connobj.instance_name = params['instancename']
             connobj.database_name = params['databasename']
-            connobj.environment_id = envref
-            print "w worker"
-            print connobj
 
-        elif params['type'] == 'sybase':
-            connobj = SybaseConnector(engine_obj)
-            connobj.connector_name = connname
-            connobj.schema_name = schemaName
-            connobj.username = username
-            connobj.password = password
-            connobj.host = host
-            connobj.port = port
-            connobj.database_name = params['databasename']
-            connobj.environment_id = envref
-        elif params['type'].upper() in ['DELIMITED', 'EXCEL', 'FIXED_WIDTH',
-                                        'XML']:
+        elif params['type'] in file_types:
             path = params['path']
             connmode = params['servertype']
             connobj = DxFileConnector(engine_obj)
@@ -321,18 +315,15 @@ def connector_update(p_engine, params):
         if params['connname']:
             connobj.connector_name = params['connname']
 
-        if connobj.database_type == 'ORACLE':
+        if hasattr(connobj, 'sid'):
             if params['sid']:
                 connobj.sid = params['sid']
 
-        if connobj.database_type == 'MSSQL':
+        if hasattr(connobj, 'instance_name'):
             if params['instancename']:
                 connobj.instance_name = params['instancename']
 
-            if params['databasename']:
-                connobj.database_name = params['databasename']
-
-        if connobj.database_type == 'SYBASE':
+        if hasattr(connobj, 'database_name'):
             if params['databasename']:
                 connobj.database_name = params['databasename']
 
@@ -366,7 +357,7 @@ def connector_list(p_engine, format, envname, connector_name, details):
                         ("Engine name", 30),
                         ("Environment name", 30),
                         ("Connector name", 30),
-                        ("Connector type", 10),
+                        ("Connector type", 15),
                         ("Hostname", 30),
                         ("Port", 5),
                         ("Schema name", 30),
@@ -377,7 +368,7 @@ def connector_list(p_engine, format, envname, connector_name, details):
                         ("Engine name", 30),
                         ("Environment name", 30),
                         ("Connector name", 30),
-                        ("Connector type", 30)
+                        ("Connector type", 15)
                       ]
 
     data.create_header(data_header)
@@ -428,7 +419,8 @@ def connector_list(p_engine, format, envname, connector_name, details):
                                   connobj.connector_name,
                                   connobj.connector_type
                                 )
-        print("")
-        print (data.data_output(False))
-        print("")
-        return ret
+
+    print("")
+    print (data.data_output(False))
+    print("")
+    return ret

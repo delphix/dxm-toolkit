@@ -29,6 +29,8 @@ from lib.DxConnector.conn_worker import connector_delete
 from lib.DxConnector.conn_worker import connector_update
 from lib.DxConnector.conn_worker import connector_test
 from lib.DxConnector.conn_worker import connector_fetch
+from lib.DxConnector.conn_worker import database_types
+from lib.DxConnector.conn_worker import file_types
 from lib.DxRuleset.rule_worker import ruleset_list
 from lib.DxRuleset.rule_worker import ruleset_add
 from lib.DxRuleset.rule_worker import ruleset_delete
@@ -526,8 +528,7 @@ def list(dxm_state, connectorname, envname, details):
     help='Environment name where connector will be added')
 @click.option(
     '--connectortype',
-    type=click.Choice(['oracle', 'sybase', 'mssql', 'delimited', 'excel',
-                      'fixed_width', 'xml']),
+    type=click.Choice(database_types + file_types),
     required=True, help='Type of the connector')
 @click.option(
     '--host', required=True, help='Host where connector will be pointed')
