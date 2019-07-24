@@ -22,6 +22,7 @@ from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
 from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
+from dxm.lib.DxConnector.DxConnector import DxConnector
 from masking_apis.apis.database_connector_api import DatabaseConnectorApi
 from masking_apis.apis.file_connector_api import FileConnectorApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
@@ -89,6 +90,8 @@ class DxConnectorsList(object):
                         connector = MSSQLConnector(self.__engine)
                     elif (c.database_type == 'SYBASE'):
                         connector = SybaseConnector(self.__engine)
+                    else:
+                        connector = DxConnector(self.__engine)
 
                     connector.from_connector(c)
                     connector.is_database = True
@@ -217,7 +220,7 @@ class DxConnectorsList(object):
         if connector.add() == 0:
             self.__logger.debug("Adding connector %s to list" % connector)
             self.__connectorsList[connector.database_connector_id] = connector
-            return None
+            return 0
         else:
             return 1
 
@@ -232,7 +235,7 @@ class DxConnectorsList(object):
         connector = self.get_by_ref(databaseConnectorId)
         if connector is not None:
             if connector.delete() == 0:
-                return None
+                return 0
             else:
                 return 1
         else:
