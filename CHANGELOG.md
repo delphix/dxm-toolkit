@@ -1,4 +1,4 @@
-## Version 0.51
+## Version 0.52
 
 ### Added:
  - Support to import and export inventory using a GUI format
@@ -9,6 +9,10 @@
  - bug fixes
 
 ## Version 0.51
+
+
+### Added:
+ - added role support (listing only)
 
 ### Changed:
  - bug fixes

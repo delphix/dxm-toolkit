@@ -98,7 +98,7 @@ from lib.DxUser.user_worker import user_update
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.51
+__version__ = 0.52
 
 class dxm_state(object):
 
