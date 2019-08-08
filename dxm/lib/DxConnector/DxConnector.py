@@ -77,8 +77,26 @@ class DxConnector(DatabaseConnector):
     def get_properties(self):
         """
         get_properties is abstract method - implement in vendor class
+        if there is no vendor class - checks will be done by API of engine
         """
-        raise NotImplementedError("Please Implement this method")
+        return {}
+
+    def get_type_properties(self):
+        """
+        Return dict with generic properties
+        """
+        props = {}
+        if hasattr(self, 'database_name'):
+            if self.database_name is not None:
+                props["database_name"] = self.database_name
+
+        if hasattr(self, 'instance_name'):
+            if self.instance_name is not None:
+                props["instance_name"] = self.instance_name
+
+        props["username"] = self.username
+
+        return props
 
     def add(self):
         """

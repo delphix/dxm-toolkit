@@ -64,7 +64,7 @@ class OracleConnector(DxConnector):
         Return dict with properties specific for connector type
         """
         props = {
-            'loginID': self.username,
+            'username': self.username,
             'SID': self.sid,
         }
         return props

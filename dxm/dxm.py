@@ -29,6 +29,8 @@ from lib.DxConnector.conn_worker import connector_delete
 from lib.DxConnector.conn_worker import connector_update
 from lib.DxConnector.conn_worker import connector_test
 from lib.DxConnector.conn_worker import connector_fetch
+from lib.DxConnector.conn_worker import database_types
+from lib.DxConnector.conn_worker import file_types
 from lib.DxRuleset.rule_worker import ruleset_list
 from lib.DxRuleset.rule_worker import ruleset_add
 from lib.DxRuleset.rule_worker import ruleset_delete
@@ -96,7 +98,7 @@ from lib.DxUser.user_worker import user_update
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.51
+__version__ = 0.52
 
 class dxm_state(object):
 
@@ -526,8 +528,7 @@ def list(dxm_state, connectorname, envname, details):
     help='Environment name where connector will be added')
 @click.option(
     '--connectortype',
-    type=click.Choice(['oracle', 'sybase', 'mssql', 'delimited', 'excel',
-                      'fixed_width', 'xml']),
+    type=click.Choice(database_types + file_types),
     required=True, help='Type of the connector')
 @click.option(
     '--host', required=True, help='Host where connector will be pointed')
@@ -1045,7 +1046,9 @@ def list(dxm_state, jobname, envname):
 @click.option(
     '--email', help="e-mail address used for job notification")
 @click.option(
-    '--on_the_fly_source', help="connector name for on the fly job")
+    '--on_the_fly_src_connector', help="source connector name for on the fly job")
+@click.option(
+    '--on_the_fly_src_envname', help="source environment name for on the fly job")
 @click.option(
     '--feedback_size', type=int,
     help="Feedback size of masking job")
@@ -1101,7 +1104,7 @@ def list(dxm_state, jobname, envname):
 @pass_state
 def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         max_memory, min_memory, jobdesc, num_streams, on_the_fly,
-        on_the_fly_source, commit_size, threads, multi_tenant, batch_update,
+        on_the_fly_src_connector, on_the_fly_src_envname, commit_size, threads, multi_tenant, batch_update,
         disable_constraints, drop_indexes, disable_triggers, truncate_tables,
         prescript, postscript, bulk_data):
     """
@@ -1128,7 +1131,8 @@ def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "job_description": jobdesc,
         "num_input_streams": num_streams,
         "on_the_fly_masking": on_the_fly,
-        "on_the_fly_masking_source": on_the_fly_source,
+        "on_the_fly_src_connector": on_the_fly_src_connector,
+        "on_the_fly_src_envname": on_the_fly_src_envname,
         "commit_size": commit_size,
         "num_output_threads_per_stream": threads,
         "multi_tenant": multi_tenant,
@@ -1405,17 +1409,19 @@ def list(dxm_state, rulesetname, envname, metaname, columnname, algname,
     '--outputfile', type=click.File('wt'), required=True,
     help="Name with path of output file where masking inventory will be saved"
     " in CSV format")
+@click.option('--inventory', help="Output will compatible with GUI inventory",
+              is_flag=True)
 @sort_options()
 @common_options
 @pass_state
 def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
-         is_masked, sortby, outputfile):
+         is_masked, sortby, outputfile, inventory):
     """
     Save column masking rules (inventory) into CSV file which can be loaded
     later using toolkit.
     """
     exit(column_save(dxm_state.engine, sortby, rulesetname, envname, metaname,
-         columnname, algname, is_masked, outputfile))
+         columnname, algname, is_masked, outputfile, inventory))
 
 
 @column.command()
@@ -1435,17 +1441,23 @@ def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
 @click.option(
     '--domainname', required=True,
     help="Name of domain to set for column")
+@click.option(
+    '--dateformat',
+    help="Date format for DATE algorithms")
+@click.option(
+    '--idmethod', type=click.Choice(['Y', 'N']),
+    help="Can a column be overwrite by profiler")
 @common_options
 @pass_state
 def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
-               domainname):
+               domainname, dateformat, idmethod):
     """
     Setting a masking algorithm for defined column and flagging column as
     masked.
     Return non-zero return code if there was a problem with setting masking.
     """
     exit(column_setmasking(dxm_state.engine, rulesetname, envname,
-         metaname, columnname, algname, domainname))
+         metaname, columnname, algname, domainname, dateformat, idmethod))
 
 
 @column.command()
@@ -1510,39 +1522,42 @@ def replace(dxm_state, rulesetname, envname, metaname, columnname, algname,
 @click.option(
     '--inputfile', type=click.File('rt'), required=True,
     help="Input file for batch set")
+@click.option('--inventory', help="Input is compatible with GUI inventory",
+              is_flag=True)
 @common_options
 @pass_state
-def batch(dxm_state, rulesetname, envname, inputfile):
+def batch(dxm_state, rulesetname, envname, inputfile, inventory):
     """
     Set / unset masking for columns specified in CSV file.
 
     File format for databases rulesets is a part
     of GUI inventory export format:
 
-    Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked
+    Table Name, Type, Parent Column Name, Column Name, Data Type, Domain, Algorithm, Is Masked, ID method, Row Type, Date Format
 
-    Columns: Type, Parent Column Name, Data Type are IGNORED.
+    Columns: Type, Parent Column Name, Data Type, Row Type are IGNORED.
 
     Ex. database ruleset input file:
 
-    #Table Name,Type,Parent Column Name,Column name,Data Type,Domain,Algorithm,Is masked
-    EMP,,,ENAME,VARCHAR2(10),LAST_NAME,LastNameLookup,Y
-    DEPT,IX,-,DEPTNO,NUMBER(2),,,N
+    #Table Name,Type,Parent Column Name,Column name,Data Type,Domain,Algorithm,Is masked,ID Method,Row type,Date Format
+    EMP,,,ENAME,VARCHAR2(10),LAST_NAME,LastNameLookup,Y,User,All Row,yyyy-MM-dd
+    DEPT,IX,-,DEPTNO,NUMBER(2),,,N,Auto,All Row,-
 
     File format for file rulesets is a part of GUI inventory export format:
 
-    File Name, Field Name, Domain, Algorithm, Is Masked
+    File Name, Field Name, Domain, Algorithm, Is Masked, Priority,Record Type,Position,Length,Date Format
 
     Ex. file ruleset input file:
 
-    #File Name,Field Name,Domain,Algorithm,Is masked
-    mask.txt,col1,ADDRESS,AddrLookup,Y
-    mask.txt,col2,,,N
-    mask.txt,col3,ADDRESS,AddrLookup,Y
+    #File Name,Field Name,Domain,Algorithm,Is masked,Priority,Record Type,Position,Length,Date Format
+    1.txt,col1,ADDRESS,AddrLookup,Y,-,All Records,1,0,
+    1.txt,col2,,,N,-,All Records,2,0,-
+    1.txt,col3,,,N,-,All Records,3,0,-
 
 
     """
-    exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile))
+    exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile,
+                      inventory))
 
 
 @algorithms.command()

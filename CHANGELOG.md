@@ -1,3 +1,22 @@
+## Version 0.52
+
+### Added:
+ - Support to import and export inventory using a GUI format
+
+### Changed:
+ - [fix for #9](https://github.com/delphix/dxm-toolkit/issues/9) - ID method change supported in batch option
+ - [fix for #18](https://github.com/delphix/dxm-toolkit/issues/18) - adding on the fly jobs
+ - bug fixes
+
+## Version 0.51
+
+
+### Added:
+ - added role support (listing only)
+
+### Changed:
+ - bug fixes
+
 ## Version 0.5
 
 ### Added:

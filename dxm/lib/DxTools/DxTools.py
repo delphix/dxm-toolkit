@@ -157,12 +157,12 @@ def convert_using_offset(timestamp, src, dst, printtz):
         ts = datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S')
 
     if (src == 'UTC'):
-        offset = re.match(r'GMT([+|-]\d\d)\:(\d\d)', dst)
+        offset = re.match(r'GMT([+": "-]\d\d)\:(\d\d)', dst)
         if offset:
             offsethours = offset.group(1)
             dst_ts = ts + timedelta(hours=int(offsethours))
     elif (dst == 'UTC'):
-        offset = re.match(r'GMT([+|-]\d\d)\:(\d\d)', src)
+        offset = re.match(r'GMT([+": "-]\d\d)\:(\d\d)', src)
         if offset:
             offsethours = offset.group(1)
             dst_ts = ts - timedelta(hours=int(offsethours))
@@ -209,7 +209,7 @@ def convert_timezone(timestamp, src, dst, printtz):
 
 
 def convert_from_utc(timestamp, timezone, printtz=None):
-    offset = re.match(r'GMT([+|-]\d\d)\:(\d\d)', timezone)
+    offset = re.match(r'GMT([+": "-]\d\d)\:(\d\d)', timezone)
     if offset:
         return convert_using_offset(timestamp, 'UTC', timezone, printtz)
     else:
@@ -217,8 +217,49 @@ def convert_from_utc(timestamp, timezone, printtz=None):
 
 
 def convert_to_utc(timestamp, timezone, printtz=None):
-    offset = re.match(r'GMT([+|-]\d\d)\:(\d\d)', timezone)
+    offset = re.match(r'GMT([+": "-]\d\d)\:(\d\d)', timezone)
     if offset:
         return convert_using_offset(timestamp, timezone, 'UTC', printtz)
     else:
         return convert_timezone(timestamp, timezone, 'UTC', printtz)
+
+
+def algname_mapping_export():
+    mapping = {
+        "AccNoLookup": "ACCOUNT SL",
+        "AccountTK": "ACCOUNT_TK",
+        "AddrLine2Lookup": "ADDRESS LINE 2 SL",
+        "AddrLookup": "ADDRESS LINE SL",
+        "BusinessLegalEntityLookup": "BUSINESS LEGAL ENTITY SL",
+        "CommentLookup": "COMMENT SL",
+        "CreditCard": "CREDIT CARD",
+        "DateShiftDiscrete": "DATE SHIFT(DISCRETE)",
+        "DateShiftFixed": "DATE SHIFT(FIXED)",
+        "DateShiftVariable": "DATE SHIFT(VARIABLE)",
+        "DrivingLicenseNoLookup": "DR LICENSE SL",
+        "DummyHospitalNameLookup": "DUMMY_HOSPITAL_NAME_SL",
+        "EmailLookup": "EMAIL SL",
+        "FirstNameLookup": "FIRST NAME SL",
+        "FullNMLookup": "FULL_NM_SL",
+        "LastNameLookup": "LAST NAME SL",
+        "LastCommaFirstLookup": "LAST_COMMA_FIRST_SL",
+        "NameTK": "NAME_TK",
+        "NullValueLookup": "NULL SL",
+        "TelephoneNoLookup": "PHONE SL",
+        "RandomValueLookup": "RANDOM_VALUE_SL",
+        "SchoolNameLookup": "SCHOOL NAME SL",
+        "SecureShuffle": "SECURE SHUFFLE",
+        "SECURED_SHIFT": "SECURED_SHIFT",
+        "SsnTK": "SSN_TK",
+        "USCountiesLookup": "US_COUNTIES_SL",
+        "USCitiesLookup": "USCITIES_SL",
+        "USstatecodesLookup": "USSTATE_CODES_SL",
+        "USstatesLookup": "USSTATES_SL",
+        "WebURLsLookup": "WEB_URLS_SL",
+        "RepeatFirstDigit": "ZIP+4",
+    }
+    return mapping
+
+def algname_mapping_import():
+    mapping = {val: key for (key, val) in algname_mapping_export().items()}
+    return mapping
