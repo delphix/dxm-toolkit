@@ -135,8 +135,7 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
                          newdomain, 'update_algorithm')
 
 
-def column_check(p_engine, rulesetname, envname, metaname, columnname,
-                 algname):
+def column_check(p_engine, rulesetname, envname, column):
     """
     Check if column exists for condition set by parameters
     :param1 p_engine: masking engine
@@ -145,15 +144,84 @@ def column_check(p_engine, rulesetname, envname, metaname, columnname,
     :param4 metaname: name of table or file
     :param5 columnname: name of table column or file field
     :param6 algname: algorithm name
+    :param7 is_masked: is masked
 
     Return 1 if column exists, 0 if there is no column found
     """
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
-                         columnname, algname, None, None, None,
-                         None, 'found')
+    metaname = column["Metadata name"]
+    columnname = column["Column name"]
+    ret = column_worker(p_engine, None, rulesetname, envname, metaname,
+                         columnname, None, None, None, None,
+                         None, 'do_compare', cmpcolumn=column)
+    if ret == 0:
+        print_error("COLUMN NOT FOUND")
+        return 1
 
-def found(**kwargs):
-    return 1
+
+    if ret == -1:
+        print_message("TAKIE SAME")
+        return 0
+
+    if ret < -1:
+        print_message("INNE")
+        return 1
+
+
+def do_compare(**kwargs):
+    cmpcolumn = kwargs.get('cmpcolumn')
+    enginecolumn = kwargs.get('colobj')
+
+    if cmpcolumn["is_masked"] == 'Y':
+        cmp_is_masked = True
+    else:
+        cmp_is_masked = False
+
+    if cmpcolumn["idmethod"] == 'Y':
+        cmp_is_profiler_writable = True
+    else:
+        cmp_is_profiler_writable = False
+
+    if cmpcolumn["Alg name"] != '':
+        cmp_algorithm_name = cmpcolumn["Alg name"]
+    else:
+        cmp_algorithm_name = None
+
+    if cmpcolumn["Domain name"] != '':
+        cmp_domain_name = cmpcolumn["Domain name"]
+    else:
+        cmp_domain_name = None
+
+    ret = -1
+
+    if cmp_is_masked != enginecolumn.is_masked:
+        print_error("Masking flag for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+
+    if cmp_is_profiler_writable != enginecolumn.is_profiler_writable:
+        print_error("ID method for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+
+    if cmp_algorithm_name != enginecolumn.algorithm_name:
+        print_error("Algorithm name for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+    if cmp_domain_name != enginecolumn.domain_name:
+        print_error("Domain name for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+    if cmpcolumn["dateformat"] != enginecolumn.date_format:
+        print_error("Date format for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+
+    return ret
 
 
 def column_list(p_engine, format, sortby, rulesetname, envname, metaname,

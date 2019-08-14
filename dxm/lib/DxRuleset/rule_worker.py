@@ -791,15 +791,9 @@ def do_check(**kwargs):
             print_message("Missing meta %s" % meta["meta_name"])
 
     for col in ruleset["Columns"]:
-        if column_check(p_engine, rulesetname, envname,
-                        col['Metadata name'],
-                        col['Column name'],
-                        col['Alg name']) == 1:
+        if column_check(p_engine, rulesetname, envname, col) != 0:
             retcol = retcol + 1
-        else:
-            print_message("Column %s of meta %s not exist or has different "
-                          "algorithm to mask"
-                          % (col["Column name"], col['Metadata name']))
+
 
     if (ruleobj.ruleset_name == rulesetname) and \
        (connector_name == connname) and \
