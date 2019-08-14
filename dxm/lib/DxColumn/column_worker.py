@@ -315,17 +315,15 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Table Name", 32),
                         ("Type", 5),
                         ("Parent Column Name", 5),
-                        ("Column name", 32),
+                        ("Column Name", 32),
                         ("Data Type", 32),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32),
+                        ("Is Masked", 32),
                         ("ID Method", 32),
                         ("Row Type", 32),
                         ("Date Format", 32)
                       ]
-        data.create_header(data_header)
-        data.format_type = "csv"
         worker = "do_save_database"
     else:
         data = DataFormatter()
@@ -334,20 +332,21 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Field Name", 5),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32),
+                        ("Is Masked", 32),
                         ("Priority", 8),
                         ("Record Type", 15),
                         ("Position", 8),
                         ("Length", 8),
                         ("Date Format", 32)
                       ]
-        data.create_header(data_header)
-        data.format_type = "csv"
         worker = "do_save_file"
 
     if inventory is True:
         data_header = [("Environment Name", 32),
                        ("Rule Set", 32)] + data_header
+
+    data.create_header(data_header, inventory)
+    data.format_type = "csv"
 
     ret = column_worker(
         p_engine, sortby, rulesetname, envname, metaname, columnname,
@@ -392,7 +391,9 @@ def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
                     ("Column name", 32),
                     ("Alg name", 32),
                     ("Domain name", 32),
-                    ("is_masked", 32)
+                    ("is_masked", 32),
+                    ("idmethod", 32),
+                    ("dateformat", 32)
                   ]
     data.create_header(data_header)
     data.format_type = "json"
@@ -467,12 +468,24 @@ def do_export(**kwargs):
         print_domain = ''
         print_ismasked = 'N'
 
+    if colobj.is_profiler_writable:
+        print_idmethod = 'Y'
+    else:
+        print_idmethod = 'N'
+
+    if colobj.date_format is None:
+        print_dateformat = None
+    else:
+        print_dateformat = colobj.date_format
+
     data.data_insert(
                       metaobj.meta_name,
                       colobj.cf_meta_name,
                       print_algname,
                       print_domain,
-                      print_ismasked
+                      print_ismasked,
+                      print_idmethod,
+                      print_dateformat
                     )
 
     return 0
