@@ -1,3 +1,9 @@
+## Version 0.53
+
+### Changed:
+ - fix for export/import ruleset
+ - fix for export inventory in GUI format
+
 ## Version 0.52
 
 ### Added:

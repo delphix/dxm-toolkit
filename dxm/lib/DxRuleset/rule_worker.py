@@ -723,7 +723,9 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
                                 column["Metadata name"],
                                 column["Column name"],
                                 column["Alg name"],
-                                column["Domain name"])
+                                column["Domain name"],
+                                column["dateformat"],
+                                column["idmethod"])
                     ret = ret + colret
                 else:
                     colret = column_unsetmasking(
@@ -788,23 +790,19 @@ def do_check(**kwargs):
         if metalist_ref:
             rettab = rettab + 1
         else:
-            print_message("Missing meta %s" % meta["meta_name"])
+            print_error("Missing meta %s" % meta["meta_name"])
 
     for col in ruleset["Columns"]:
-        if column_check(p_engine, rulesetname, envname,
-                        col['Metadata name'],
-                        col['Column name'],
-                        col['Alg name']) == 1:
+        count = [ x for x in ruleset["Columns"] if col["Metadata name"] == x["Metadata name"] ]
+        rc = column_check(p_engine, rulesetname, envname, col, len(count))
+        if rc != 0:
             retcol = retcol + 1
-        else:
-            print_message("Column %s of meta %s not exist or has different "
-                          "algorithm to mask"
-                          % (col["Column name"], col['Metadata name']))
+
 
     if (ruleobj.ruleset_name == rulesetname) and \
        (connector_name == connname) and \
        (environment_name == envname) and \
-       (len(ruleset["Columns"]) == retcol) and \
+       (retcol == 0) and \
        (rettab == len(ruleset["Metadata"])):
         print_message("Ruleset definition in engine is matching import file")
         return 0

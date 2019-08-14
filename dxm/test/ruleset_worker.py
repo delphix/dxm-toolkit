@@ -207,7 +207,7 @@ class TestRuleset(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Ruleset name,Connector name,Metadata type,'
-            'Connector type,Environent name\r\n53,DB Ruleset1,DB connector'
+            'Connector type,Environent name\r\ntesteng,DB Ruleset1,DB connector'
             ',Database,ORACLE,Env1'
         )
 
@@ -219,8 +219,8 @@ class TestRuleset(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Environent name,Ruleset name,Metadata type,'
-            'Metadata name\r\n53,Env1,DB Ruleset1,'
-            'Database,EMP\r\n53,Env1,DB Ruleset1,'
+            'Metadata name\r\ntesteng,Env1,DB Ruleset1,'
+            'Database,EMP\r\ntesteng,Env1,DB Ruleset1,'
             'Database,DEPT'
         )
 
@@ -232,7 +232,7 @@ class TestRuleset(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Environent name,Ruleset name,Metadata type,'
-            'Metadata name\r\n53,Env1,DB Ruleset1,'
+            'Metadata name\r\ntesteng,Env1,DB Ruleset1,'
             'Database,EMP'
         )
 

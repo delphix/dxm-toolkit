@@ -135,8 +135,7 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
                          newdomain, 'update_algorithm')
 
 
-def column_check(p_engine, rulesetname, envname, metaname, columnname,
-                 algname):
+def column_check(p_engine, rulesetname, envname, column, columncount):
     """
     Check if column exists for condition set by parameters
     :param1 p_engine: masking engine
@@ -145,15 +144,90 @@ def column_check(p_engine, rulesetname, envname, metaname, columnname,
     :param4 metaname: name of table or file
     :param5 columnname: name of table column or file field
     :param6 algname: algorithm name
+    :param7 is_masked: is masked
 
     Return 1 if column exists, 0 if there is no column found
     """
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
-                         columnname, algname, None, None, None,
-                         None, 'found')
+    metaname = column["Metadata name"]
+    columnname = column["Column name"]
+    colcount = []
+    ret = column_worker(p_engine, None, rulesetname, envname, metaname,
+                         columnname, None, None, None, None,
+                         None, 'do_compare', cmpcolumn=column,
+                         colcount=colcount)
 
-def found(**kwargs):
-    return 1
+
+    if columncount != len(colcount):
+        print_error("Number of columns in table {} is different than in file"
+                    .format(metaname))
+        return 2
+
+    if ret == 0:
+        print_error("Column {} not found in ruleset".format(columnname))
+        return 1
+
+    if ret == -1:
+        return 0
+
+    if ret < -1:
+        return 1
+
+
+def do_compare(**kwargs):
+    cmpcolumn = kwargs.get('cmpcolumn')
+    enginecolumn = kwargs.get('colobj')
+
+    if cmpcolumn["is_masked"] == 'Y':
+        cmp_is_masked = True
+    else:
+        cmp_is_masked = False
+
+    if cmpcolumn["idmethod"] == 'Y':
+        cmp_is_profiler_writable = True
+    else:
+        cmp_is_profiler_writable = False
+
+    if cmpcolumn["Alg name"] != '':
+        cmp_algorithm_name = cmpcolumn["Alg name"]
+    else:
+        cmp_algorithm_name = None
+
+    if cmpcolumn["Domain name"] != '':
+        cmp_domain_name = cmpcolumn["Domain name"]
+    else:
+        cmp_domain_name = None
+
+    ret = -1
+
+    if cmp_is_masked != enginecolumn.is_masked:
+        print_error("Masking flag for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+
+    if cmp_is_profiler_writable != enginecolumn.is_profiler_writable:
+        print_error("ID method for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+
+    if cmp_algorithm_name != enginecolumn.algorithm_name:
+        print_error("Algorithm name for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+    if cmp_domain_name != enginecolumn.domain_name:
+        print_error("Domain name for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+    if cmpcolumn["dateformat"] != enginecolumn.date_format:
+        print_error("Date format for table {} column {} is different"
+                    .format(cmpcolumn["Metadata name"],
+                            cmpcolumn["Column name"]))
+        ret = ret - 1
+
+    return ret
 
 
 def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
@@ -247,17 +321,15 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Table Name", 32),
                         ("Type", 5),
                         ("Parent Column Name", 5),
-                        ("Column name", 32),
+                        ("Column Name", 32),
                         ("Data Type", 32),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32),
+                        ("Is Masked", 32),
                         ("ID Method", 32),
                         ("Row Type", 32),
                         ("Date Format", 32)
                       ]
-        data.create_header(data_header)
-        data.format_type = "csv"
         worker = "do_save_database"
     else:
         data = DataFormatter()
@@ -266,20 +338,21 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Field Name", 5),
                         ("Domain", 32),
                         ("Algorithm", 32),
-                        ("Is masked", 32),
+                        ("Is Masked", 32),
                         ("Priority", 8),
                         ("Record Type", 15),
                         ("Position", 8),
                         ("Length", 8),
                         ("Date Format", 32)
                       ]
-        data.create_header(data_header)
-        data.format_type = "csv"
         worker = "do_save_file"
 
     if inventory is True:
         data_header = [("Environment Name", 32),
                        ("Rule Set", 32)] + data_header
+
+    data.create_header(data_header, inventory)
+    data.format_type = "csv"
 
     ret = column_worker(
         p_engine, sortby, rulesetname, envname, metaname, columnname,
@@ -324,7 +397,9 @@ def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
                     ("Column name", 32),
                     ("Alg name", 32),
                     ("Domain name", 32),
-                    ("is_masked", 32)
+                    ("is_masked", 32),
+                    ("idmethod", 32),
+                    ("dateformat", 32)
                   ]
     data.create_header(data_header)
     data.format_type = "json"
@@ -399,12 +474,24 @@ def do_export(**kwargs):
         print_domain = ''
         print_ismasked = 'N'
 
+    if colobj.is_profiler_writable:
+        print_idmethod = 'Y'
+    else:
+        print_idmethod = 'N'
+
+    if colobj.date_format is None:
+        print_dateformat = None
+    else:
+        print_dateformat = colobj.date_format
+
     data.data_insert(
                       metaobj.meta_name,
                       colobj.cf_meta_name,
                       print_algname,
                       print_domain,
-                      print_ismasked
+                      print_ismasked,
+                      print_idmethod,
+                      print_dateformat
                     )
 
     return 0
@@ -634,6 +721,10 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                     is_masked=filter_is_masked)
 
                 colsetref_list = []
+
+                colcount = kwargs.get("colcount")
+                if colcount is not None:
+                    colcount.extend(collist.get_allref())
 
                 if columnname:
                     colref = collist.get_column_id_by_name(columnname)
