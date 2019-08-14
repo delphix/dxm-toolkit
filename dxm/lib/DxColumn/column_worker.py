@@ -135,7 +135,7 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
                          newdomain, 'update_algorithm')
 
 
-def column_check(p_engine, rulesetname, envname, column):
+def column_check(p_engine, rulesetname, envname, column, columncount):
     """
     Check if column exists for condition set by parameters
     :param1 p_engine: masking engine
@@ -150,20 +150,26 @@ def column_check(p_engine, rulesetname, envname, column):
     """
     metaname = column["Metadata name"]
     columnname = column["Column name"]
+    colcount = []
     ret = column_worker(p_engine, None, rulesetname, envname, metaname,
                          columnname, None, None, None, None,
-                         None, 'do_compare', cmpcolumn=column)
+                         None, 'do_compare', cmpcolumn=column,
+                         colcount=colcount)
+
+
+    if columncount != len(colcount):
+        print_error("Number of columns in table {} is different than in file"
+                    .format(metaname))
+        return 2
+
     if ret == 0:
-        print_error("COLUMN NOT FOUND")
+        print_error("Column {} not found in ruleset".format(columnname))
         return 1
 
-
     if ret == -1:
-        print_message("TAKIE SAME")
         return 0
 
     if ret < -1:
-        print_message("INNE")
         return 1
 
 
@@ -715,6 +721,10 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                     is_masked=filter_is_masked)
 
                 colsetref_list = []
+
+                colcount = kwargs.get("colcount")
+                if colcount is not None:
+                    colcount.extend(collist.get_allref())
 
                 if columnname:
                     colref = collist.get_column_id_by_name(columnname)
