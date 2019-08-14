@@ -723,7 +723,9 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
                                 column["Metadata name"],
                                 column["Column name"],
                                 column["Alg name"],
-                                column["Domain name"])
+                                column["Domain name"],
+                                column["dateformat"],
+                                column["idmethod"])
                     ret = ret + colret
                 else:
                     colret = column_unsetmasking(

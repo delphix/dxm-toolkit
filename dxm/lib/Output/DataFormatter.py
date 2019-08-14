@@ -32,8 +32,9 @@ class DataFormatter(object):
         self.header_sep = []
         self.separator = separator
         self.format_type = format_type
+        self.inventory = False
 
-    def create_header(self, headers):
+    def create_header(self, headers, inventory=False):
         if isinstance(headers,list) is False:
             print("Error: Type is not list")
             exit (1)
@@ -42,6 +43,7 @@ class DataFormatter(object):
             self.results['header_length'][hdr[0]] = hdr[1]
             self.results['headers'].append(hdr[0])
 
+        self.inventory = inventory
 
 
     def data_insert(self, *args):
@@ -111,7 +113,8 @@ class DataFormatter(object):
             if nohead is False:
                 #data_out += self.data_format.format(*self.results['header_length'].keys()) + "\r\n"
                 #data_output += self.data_format.format(*self.header_sep) + "\r\n"
-                data_out += '#'
+                if not self.inventory:
+                    data_out += '#'
                 data_out += self.data_format.format(*self.results['headers']) + "\r\n"
                 #data_out += self.data_format.format(*self.header_sep) + "\r\n"
 
