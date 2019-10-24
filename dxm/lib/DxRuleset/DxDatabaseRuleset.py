@@ -18,6 +18,7 @@
 
 
 import logging
+import re
 from masking_apis.models.database_ruleset import DatabaseRuleset
 from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
 from masking_apis.models.table_metadata_bulk_input import TableMetadataBulkInput
@@ -192,6 +193,12 @@ class DxDatabaseRuleset(DatabaseRuleset):
         connobj = DxConnectorsList.get_by_ref(self.connectorId)
         table_list = []
         ret = 0
+
+        if fetchfilter:
+            fetchfilter = re.escape(fetchfilter).replace("\*",".*")
+            self.__logger.debug("fetchfilter {}".format(fetchfilter))
+            pattern = re.compile(r'^{}$'.format(fetchfilter))
+
         for table in connobj.fetch_meta():
             params = {
                 "metaname": table,
@@ -200,13 +207,18 @@ class DxDatabaseRuleset(DatabaseRuleset):
                 "having_clause": None,
                 "key_column": None
             }
-            if bulk:
-                table_list.append(params)
-            else:
-                ret = ret + self.addmeta(params)
+
+            self.__logger.debug("checking table {}".format(table))
+            if pattern.search(table):
+                self.__logger.debug("table added to bulk{}".format(table))
+                if bulk:
+                    table_list.append(params)
+                else:
+                    ret = ret + self.addmeta(params)
 
         # TODO: 
         # add check of version of fail before trying 
+
         if bulk:
             ret = self.addmeta_bulk(table_list)
         
@@ -237,11 +249,13 @@ class DxDatabaseRuleset(DatabaseRuleset):
         try:
             self.__logger.debug("create bulk %s"
                                 % self.ruleset_id)
+            self.__logger.debug("create bulk tables %s"
+                                % str(table_bulk))
             response = api_instance.bulk_table_update(
                            self.ruleset_id,
                            table_bulk,
                            _request_timeout=self.__engine.get_timeout())
-            self.__logger.debug("create buld response %s"
+            self.__logger.debug("create bulk response %s"
                                 % str(response))
             print_message("Ruleset %s update started" % self.ruleset_name)
 

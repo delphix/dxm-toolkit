@@ -47,7 +47,6 @@ class DxAsyncTask(AsyncTask):
         :param app: Application object
         """
         self.__dict__.update(task.__dict__)
-        print self
 
 
     def wait_for_task(self):
@@ -69,7 +68,7 @@ class DxAsyncTask(AsyncTask):
                 sleep(1)
                 print_message("Waiting for task %s to complete " % self.async_task_id)
 
-            if response.status == "SUCESSFUL":
+            if response.status == "SUCCEEDED":
                 print_message("Task finished sucesfully")
                 return 0
             else:

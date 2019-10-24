@@ -928,10 +928,10 @@ def checkrule(dxm_state, inputfile):
     help="Name and path of CSV file used to load metadata")
 @click.option(
     '--fromconnector', is_flag=True,
-    help="Add tables fetched from connector filtered by regex if fetchfilter is specified")
+    help="Add tables fetched from connector filtered by filter if fetchfilter is specified")
 @click.option(
     '--fetchfilter',
-    help="Regular expression to filter metadata fetched from connector")
+    help="Filter metadata fetched from connector ( * is allowed as a wildcard, ex. EMP* to load all tables started with EMP)")
 @click.option(
     '--bulk', is_flag=True,
     help="Use bulk method to add medatata from file or connector table list")
