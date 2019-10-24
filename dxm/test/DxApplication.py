@@ -12,6 +12,7 @@ from dxm.lib.DxApplication.app_worker import application_add
 from dxm.lib.DxApplication.app_worker import application_list
 
 
+
 def app_load(a, b, **kwargs):
     """
     Create an output for get_all_application call

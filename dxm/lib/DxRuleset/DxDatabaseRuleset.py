@@ -11,19 +11,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018,2019 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
 # Date    : April 2018
 
 
 import logging
+import re
 from masking_apis.models.database_ruleset import DatabaseRuleset
 from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
+from masking_apis.models.table_metadata_bulk_input import TableMetadataBulkInput
+from masking_apis.models.table_metadata import TableMetadata
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxTable.DxTable import DxTable
+from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
+from dxm.lib.DxAsyncTask.DxAsyncTask import DxAsyncTask
 
 class DxDatabaseRuleset(DatabaseRuleset):
 
@@ -145,7 +150,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
 
         return table.add()
 
-    def addmetafromfile(self, inputfile):
+    def addmetafromfile(self, inputfile, bulk):
         """
         Add tables from file to ruleset
         :param inputfile: file with tables
@@ -153,6 +158,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
         return 1 in case of error
         """
         ret = 0
+        table_list = []
         for line in inputfile:
             if line.startswith('#'):
                 continue
@@ -164,6 +170,126 @@ class DxDatabaseRuleset(DatabaseRuleset):
                 "having_clause": columns[3],
                 "key_column": columns[4]
             }
-            ret = ret + self.addmeta(params)
+            if bulk:
+                table_list.append(params)
+            else:
+                ret = ret + self.addmeta(params)
+
+        if bulk:
+            print table_list
+            ret = self.addmeta_bulk(table_list)
 
         return ret
+
+
+    def addmetafromfetch(self, fetchfilter, bulk):
+        """
+        Add tables from fetch into ruleset
+        :param fetchfilter: filter for tables
+        return a 0 if non error
+        return 1 in case of error
+        """
+        
+        connobj = DxConnectorsList.get_by_ref(self.connectorId)
+        table_list = []
+        ret = 0
+
+        if fetchfilter:
+            fetchfilter = re.escape(fetchfilter).replace("\*",".*")
+            self.__logger.debug("fetchfilter {}".format(fetchfilter))
+            pattern = re.compile(r'^{}$'.format(fetchfilter))
+
+        for table in connobj.fetch_meta():
+            params = {
+                "metaname": table,
+                "custom_sql": None,
+                "where_clause": None,
+                "having_clause": None,
+                "key_column": None
+            }
+
+            self.__logger.debug("checking table {}".format(table))
+            if pattern.search(table):
+                self.__logger.debug("table added to bulk{}".format(table))
+                if bulk:
+                    table_list.append(params)
+                else:
+                    ret = ret + self.addmeta(params)
+
+        # TODO: 
+        # add check of version of fail before trying 
+
+        if bulk:
+            ret = self.addmeta_bulk(table_list)
+        
+        return ret
+
+    def addmeta_bulk(self, table_list):
+        """
+
+        """
+        
+        table_obj_list = []
+        
+        for table_params in table_list:
+            table = TableMetadata()
+            table.table_name = table_params["metaname"]
+            table.custom_sql = table_params["custom_sql"]
+            table.having_clause = table_params["having_clause"]
+            table.key_column = table_params["key_column"]
+            table.where_clause = table_params["where_clause"]
+            table.ruleset_id = self.ruleset_id
+            table_obj_list.append(table)
+        
+        table_bulk = TableMetadataBulkInput()
+        table_bulk.table_metadata = table_obj_list
+        
+        api_instance = DatabaseRulesetApi(self.__engine.api_client)
+        
+        try:
+            self.__logger.debug("create bulk %s"
+                                % self.ruleset_id)
+            self.__logger.debug("create bulk tables %s"
+                                % str(table_bulk))
+            response = api_instance.bulk_table_update(
+                           self.ruleset_id,
+                           table_bulk,
+                           _request_timeout=self.__engine.get_timeout())
+            self.__logger.debug("create bulk response %s"
+                                % str(response))
+            print_message("Ruleset %s update started" % self.ruleset_name)
+
+            task = DxAsyncTask()
+            task.from_asynctask(response)
+            return task.wait_for_task()
+        except ApiException as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return 1
+
+    def refresh(self):
+        """
+        Refresh ruleset on the Masking engine 
+        return a None if non error
+        return 1 in case of error
+        """
+
+        api_instance = DatabaseRulesetApi(self.__engine.api_client)
+
+        try:
+            self.__logger.debug("refresh ruleset id %s"
+                                % self.ruleset_id)
+            response = api_instance.refresh_database_ruleset(
+                           self.ruleset_id,
+                           _request_timeout=self.__engine.get_timeout())
+            self.__logger.debug("refresh ruleset response %s"
+                                % str(response))
+            print_message("Ruleset %s refresh started" % self.ruleset_name)
+
+            task = DxAsyncTask()
+            task.from_asynctask(response)
+            return task.wait_for_task()
+        except ApiException as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return 1

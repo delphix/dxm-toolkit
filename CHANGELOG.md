@@ -1,3 +1,14 @@
+## Version 0.54
+
+### Added:
+ - Ruleset refresh operation added
+ - Possibility to automatically add all or filtered list of tables from connector to ruleset
+ - The bulk flag added to addmeta operaion while loading table from csv file or directly from connector list of tables 
+
+
+### Changed:
+
+
 ## Version 0.53
 
 ### Changed:
