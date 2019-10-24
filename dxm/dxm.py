@@ -2335,19 +2335,17 @@ def add(dxm_state, domainname, classification, algname):
     exit(domain_add(dxm_state.engine, domainname, classification, algname))
 
 @domain.command()
-@click.option('--domainname', help="Domain name to add", required=True)
+@click.option('--domainname', help="Domain name to delete", required=True)
 @common_options
 @pass_state
 def delete(dxm_state, domainname):
     """
-    Add a domain to the Masking Engine
-
-    If no filter options are specified, all domains will be displayed.
+    Delete the domain from the Masking Engine
     """
     exit(domain_delete(dxm_state.engine, domainname))
 
 @domain.command()
-@click.option('--domainname', help="Domain name to add", required=True)
+@click.option('--domainname', help="Domain name to update", required=True)
 @click.option('--classification', help="Domain classification",
               type=click.Choice(['CUSTOMER', 'EMPLOYEE', 'COMPANY']))
 @click.option('--algname', help="Default algorithm name")
@@ -2355,8 +2353,7 @@ def delete(dxm_state, domainname):
 @pass_state
 def update(dxm_state, domainname, classification, algname):
     """
-    Add a domain to the Masking Engine
+    Update the domain in the Masking Engine
 
-    If no filter options are specified, all domains will be displayed.
     """
     exit(domain_update(dxm_state.engine, domainname, classification, algname))
