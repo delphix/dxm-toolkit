@@ -62,17 +62,6 @@ class DxAlgorithmList(object):
             synclist = DxSyncList()
             sync = synclist.get_all_algorithms()
 
-            # print "DUPKA"
-            #
-            # sys.exit(1)
-            #
-            # api_sync = SyncApi(self.__engine.api_client)
-            # api_sync_response = api_sync.get_all_syncable_objects()
-            # sync = dict([x.object_identifier['algorithmName'], x]
-            #             for x in api_sync_response.response_list
-            #             if 'algorithmName' in x.object_identifier)
-
-
             if api_response.response_list:
                 for c in api_response.response_list:
                     alg = DxAlgorithm(self.__engine)

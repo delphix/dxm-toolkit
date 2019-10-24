@@ -43,6 +43,7 @@ class DxDomainList(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxDomainList object")
+        self.LoadDomains()
 
     @classmethod
     def LoadDomains(self):
@@ -51,6 +52,7 @@ class DxDomainList(object):
         Return None if OK
         """
 
+        self.__domainList.clear()
         try:
             api_instance = DomainApi(self.__engine.api_client)
             domain_list = paginator(
@@ -87,7 +89,7 @@ class DxDomainList(object):
             self.__logger.debug("can't find domain object"
                                 " for reference %s" % reference)
             self.__logger.debug(e)
-            sys.exit(1)
+            return None
 
     @classmethod
     def get_allref(self):
@@ -117,3 +119,37 @@ class DxDomainList(object):
             return None
 
         return domains[0]
+
+
+    @classmethod
+    def add(self, domainobj):
+        """
+        Add a domain to a list and Engine
+        :param1 domainobj: DxDomain object to add to the list and engine
+        return 0 if OK
+        """
+
+        if (domainobj.add() == 0):
+            self.__logger.debug("Adding file type %s to list" % domainobj)
+            self.__domainList[domainobj.domain_name] = domainobj
+            return 0
+        else:
+            return 1
+
+    @classmethod
+    def delete(self, domainname):
+        """
+        Delete the domain from a list and Engine
+        :param domainname: Domain name to delete
+        return 0 if OK
+        """
+
+        domainobj = self.get_by_ref(domainname)
+        if domainobj is not None:
+            if domainobj.delete() is None:
+                return 0
+            else:
+                return 1
+        else:
+            print_error("Domain name %s not found" % domainname)
+            return 1
