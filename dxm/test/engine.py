@@ -28,6 +28,8 @@ from masking_apis.models.masking_job import MaskingJob
 from masking_apis.models.masking_job_list import MaskingJobList
 from masking_apis.models.environment import Environment
 from masking_apis.models.environment_list import EnvironmentList
+from masking_apis.models.domain import Domain
+from masking_apis.models.domain_list import DomainList
 
 def env_load(a, **kwargs):
     """
@@ -201,3 +203,15 @@ def execution_load(a, **kwargs):
                           end_time=datetime.datetime(2018, 9, 01, 01, 10, 00))]
     epo = ExecutionList(page_info=pi, response_list=execlist)
     return epo
+
+def domain_load(a, **kwargs):
+    """
+    Create an output for get_all_file_formats call
+    """
+    pi = PageInfo(number_on_page=2, total=2)
+    ff = [
+            Domain(domain_name="DOMAIN1", classification="CUSTOMER", default_algorithm_code="ALG"),
+            Domain(domain_name="DOMAIN2", classification="CUSTOMER", default_algorithm_code="ALG")
+         ]
+    ffrpo = DomainList(page_info=pi, response_list=ff)
+    return ffrpo

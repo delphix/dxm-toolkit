@@ -95,6 +95,10 @@ from lib.DxUser.user_worker import user_list
 from lib.DxUser.user_worker import user_add
 from lib.DxUser.user_worker import user_delete
 from lib.DxUser.user_worker import user_update
+from lib.DxDomain.domain_worker import domain_list
+from lib.DxDomain.domain_worker import domain_add
+from lib.DxDomain.domain_worker import domain_delete
+from lib.DxDomain.domain_worker import domain_update
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
@@ -316,6 +320,13 @@ def role(dxm_state):
 def user(dxm_state):
     """
     User group allow to control users
+    """
+
+@dxm.group()
+@pass_state
+def domain(dxm_state):
+    """
+    Domain group allow to control domains
     """
 
 @engine.command()
@@ -2294,3 +2305,58 @@ def update(dxm_state, username, firstname, lastname, email, password, user_type,
                                 confirmation_prompt=True)
     exit(user_update(dxm_state.engine, username, firstname, lastname, email,
                      password, user_type, user_environments, user_role))
+
+@domain.command()
+@click.option('--domainname', help="Filter domains using a name")
+@common_options
+@pass_state
+def list(dxm_state, domainname):
+    """
+    Display list of domains from Masking Engine
+
+    If no filter options are specified, all domains will be displayed.
+    """
+    exit(domain_list(dxm_state.engine, dxm_state.format, domainname))
+
+
+@domain.command()
+@click.option('--domainname', help="Domain name to add", required=True)
+@click.option('--classification', help="Domain classification", required=True,
+              type=click.Choice(['CUSTOMER', 'EMPLOYEE', 'COMPANY']))
+@click.option('--algname', help="Default algorithm name", required=True)
+@common_options
+@pass_state
+def add(dxm_state, domainname, classification, algname):
+    """
+    Add a domain to the Masking Engine
+
+    If no filter options are specified, all domains will be displayed.
+    """
+    exit(domain_add(dxm_state.engine, domainname, classification, algname))
+
+@domain.command()
+@click.option('--domainname', help="Domain name to add", required=True)
+@common_options
+@pass_state
+def delete(dxm_state, domainname):
+    """
+    Add a domain to the Masking Engine
+
+    If no filter options are specified, all domains will be displayed.
+    """
+    exit(domain_delete(dxm_state.engine, domainname))
+
+@domain.command()
+@click.option('--domainname', help="Domain name to add", required=True)
+@click.option('--classification', help="Domain classification",
+              type=click.Choice(['CUSTOMER', 'EMPLOYEE', 'COMPANY']))
+@click.option('--algname', help="Default algorithm name")
+@common_options
+@pass_state
+def update(dxm_state, domainname, classification, algname):
+    """
+    Add a domain to the Masking Engine
+
+    If no filter options are specified, all domains will be displayed.
+    """
+    exit(domain_update(dxm_state.engine, domainname, classification, algname))
