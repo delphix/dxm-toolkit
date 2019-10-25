@@ -25,7 +25,7 @@ from engine import domain_load
 @mock.patch.object(
     DomainApi, 'delete_domain', new=retok
 )
-class TestFileFormat(TestCase):
+class TestDomain(TestCase):
     def test_domain_list(self, get_session):
         ret = domain_list(None, "csv", None)
         self.assertEquals(ret, 0)

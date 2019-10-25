@@ -543,9 +543,11 @@ def list(dxm_state, connectorname, envname, details):
     type=click.Choice(database_types + file_types),
     required=True, help='Type of the connector')
 @click.option(
-    '--host', required=True, help='Host where connector will be pointed')
+    '--host', help='Host where connector will be pointed')
 @click.option(
-    '--port', required=True, type=int,
+    '--jdbc', help='jdbc connection string for a connector (advanced option)')
+@click.option(
+    '--port', type=int,
     help='Port used by database connector')
 @click.option(
     '--username', required=True,
@@ -573,7 +575,7 @@ def list(dxm_state, connectorname, envname, details):
 @pass_state
 def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         schemaname, password, sid, instancename, databasename, path,
-        servertype):
+        servertype, jdbc):
     """
     Add connector to Masking Engine.
     List of required parameters depend on connector type:
@@ -583,11 +585,11 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
             connectorname,
             envname,
             connectortype,
-            host,
-            port,
             username,
             schemaname,
-        - database depended options:
+            host and port or jdbc connection string
+
+        - database depended options or jdbc connection string:
             sid,
             instancename,
             databasename
@@ -603,7 +605,7 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
             servertype
 
 
-    Exit code will be set to 0 if environment was added
+    Exit code will be set to 0 if connector was added
     and to non-zero value if there was an error
     """
     params = {
@@ -619,7 +621,8 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         'databasename': databasename,
         'type': connectortype,
         'path': path,
-        'servertype': servertype
+        'servertype': servertype,
+        'jdbc': jdbc
     }
     exit(connector_add(dxm_state.engine, params))
 
@@ -642,6 +645,8 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
 @click.option('--databasename',
               help='Database name for MSSQL or SYBASE connector type')
 @click.option(
+    '--jdbc', help='jdbc connection string for a connector (advanced option)')
+@click.option(
     '--envname',
     help='Environment name where connector will be added')
 @click.option(
@@ -653,37 +658,10 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
 @pass_state
 def update(dxm_state, envname, connectorname, host, port, username,
            schemaname, password, sid, instancename, databasename,
-           path, servertype):
+           path, servertype, jdbc):
     """
-    Add connector to Masking Engine.
-    List of required parameters depend on connector type:
-
-    \b
-        - database connectors:
-            connectorname,
-            envname,
-            connectortype,
-            host,
-            port,
-            username,
-            schemaname,
-        - database depended options:
-            sid,
-            instancename,
-            databasename
-
-    \b
-        - file connectors:
-            connectorname,
-            envname,
-            connectortype,
-            host,
-            username,
-            path,
-            servertype
-
-
-    Exit code will be set to 0 if environment was added
+    Update the connector inside Masking Engine.
+    Exit code will be set to 0 if connector was updated
     and to non-zero value if there was an error
     """
     if password == '':
@@ -701,7 +679,8 @@ def update(dxm_state, envname, connectorname, host, port, username,
         'databasename': databasename,
         'envname': envname,
         'servertype': servertype,
-        'path': path
+        'path': path,
+        'jdbc': jdbc
     }
     exit(connector_update(dxm_state.engine, params))
 

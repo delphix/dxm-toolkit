@@ -75,18 +75,28 @@ class OracleConnector(DxConnector):
         Return dictionaty with properties required for connector type
         """
 
-
-        props = {
-            'sid': self.sid,
-            'port': self.port,
-            'host': self.host,
-            'username': self.username,
-            'schema_name': self.schema_name,
-            'connector_name': self.connector_name,
-            'password': self.password,
-            'database_type': self.database_type,
-            'environment_id': self.environment_id
-        }
+        if self.jdbc:
+            props = {
+                'jdbc': self.jdbc,
+                'username': self.username,
+                'schema_name': self.schema_name,
+                'connector_name': self.connector_name,
+                'password': self.password,
+                'database_type': self.database_type,
+                'environment_id': self.environment_id
+            }       
+        else:
+            props = {
+                'sid': self.sid,
+                'port': self.port,
+                'host': self.host,
+                'username': self.username,
+                'schema_name': self.schema_name,
+                'connector_name': self.connector_name,
+                'password': self.password,
+                'database_type': self.database_type,
+                'environment_id': self.environment_id
+            }
 
         empty = 0
         for k in props.keys():
