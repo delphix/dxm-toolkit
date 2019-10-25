@@ -98,8 +98,10 @@ def connector_add(p_engine, params):
             connobj.username = username
             connobj.password = password
             connobj.host = host
-            connobj.port = port + 0
+            if port:
+                connobj.port = port + 0
             connobj.sid = params['sid']
+            connobj.jdbc = params['jdbc']
             connobj.environment_id = envref
             connobj.instance_name = params['instancename']
             connobj.database_name = params['databasename']
@@ -300,11 +302,36 @@ def connector_update(p_engine, params):
         if params['schemaName']:
             connobj.schema_name = params['schemaName']
 
-        if params['host']:
-            connobj.host = params['host']
 
-        if params['port']:
-            connobj.port = params['port']
+
+        if params['jdbc']:
+            connobj.host = None
+            connobj.port = None
+            if hasattr(connobj, 'sid'):
+                connobj.sid = None
+            if hasattr(connobj, 'instance_name'):
+                connobj.instance_name = None
+            if hasattr(connobj, 'database_name'):
+                connobj.database_name = None    
+            connobj.jdbc = params['jdbc']
+        else:
+            connobj.jdbc = None
+            if params['host']:
+                connobj.host = params['host']
+
+            if params['port']:
+                connobj.port = params['port']
+            if hasattr(connobj, 'sid'):
+                if params['sid']:
+                    connobj.sid = params['sid']
+
+            if hasattr(connobj, 'instance_name'):
+                if params['instancename']:
+                    connobj.instance_name = params['instancename']
+
+            if hasattr(connobj, 'database_name'):
+                if params['databasename']:
+                    connobj.database_name = params['databasename']
 
         if params['password']:
             connobj.password = params['password']
@@ -315,17 +342,7 @@ def connector_update(p_engine, params):
         if params['connname']:
             connobj.connector_name = params['connname']
 
-        if hasattr(connobj, 'sid'):
-            if params['sid']:
-                connobj.sid = params['sid']
 
-        if hasattr(connobj, 'instance_name'):
-            if params['instancename']:
-                connobj.instance_name = params['instancename']
-
-        if hasattr(connobj, 'database_name'):
-            if params['databasename']:
-                connobj.database_name = params['databasename']
 
         if connobj.update():
             ret = ret + 1

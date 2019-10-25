@@ -5,6 +5,7 @@
  - Possibility to automatically add all or filtered list of tables from connector to ruleset
  - The bulk flag added to addmeta operaion while loading table from csv file or directly from connector list of tables 
  - Supoprt for domain creation, list, update and delete
+ - support for JDBC connection string (advanced option) added to connector 
 
 ### Changed:
 

@@ -86,7 +86,7 @@ class TestConnector(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Environment name,Connector name,Connector '
-            'type\r\n53,Env1,DB connector'
+            'type\r\ntesteng,Env1,DB connector'
             ',ORACLE'
         )
 
@@ -98,9 +98,9 @@ class TestConnector(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,Environment name,Connector name,Connector '
-            'type\r\n53,Env1,DB connector'
-            ',ORACLE\r\n53,Env1,DB connector2'
-            ',SYBASE\r\n53,Env1,File connector,DELIMITED'
+            'type\r\ntesteng,Env1,DB connector'
+            ',ORACLE\r\ntesteng,Env1,DB connector2'
+            ',SYBASE\r\ntesteng,Env1,File connector,DELIMITED'
         )
 
     def test_connector_add(self, get_session):
@@ -123,7 +123,10 @@ class TestConnector(TestCase):
                     'username': 'SCOTT',
                     'connname': 'DB new',
                     'sid': 'ORCL',
-                    'type': 'oracle'
+                    'type': 'oracle',
+                    'jdbc': None,
+                    'instancename': None,
+                    'databasename': None
                 }
 
                 ret = connector_add(None, params)
