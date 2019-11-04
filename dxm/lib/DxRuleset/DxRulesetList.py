@@ -293,3 +293,21 @@ class DxRulesetList(object):
             return newruleset.ruleset_id
         else:
             return None
+
+    @classmethod
+    def refresh(self, RulesetId):
+        """
+        Refresh a ruleset on the Engine
+        :param RulesetId: Ruleset id to delete from Engine and list
+        return None if OK
+        """
+
+        ruleset = self.get_by_ref(RulesetId)
+        if ruleset is not None:
+            if ruleset.refresh() is None:
+                return None
+            else:
+                return 1
+        else:
+            print "Ruleset with id %s not found" % RulesetId
+            return 1

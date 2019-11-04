@@ -41,6 +41,7 @@ from lib.DxRuleset.rule_worker import ruleset_check
 from lib.DxRuleset.rule_worker import ruleset_addmeta
 from lib.DxRuleset.rule_worker import ruleset_listmeta
 from lib.DxRuleset.rule_worker import ruleset_deletemeta
+from lib.DxRuleset.rule_worker import ruleset_refresh
 from lib.DxEngine.eng_worker import engine_add
 from lib.DxEngine.eng_worker import engine_list
 from lib.DxEngine.eng_worker import engine_delete
@@ -94,11 +95,15 @@ from lib.DxUser.user_worker import user_list
 from lib.DxUser.user_worker import user_add
 from lib.DxUser.user_worker import user_delete
 from lib.DxUser.user_worker import user_update
+from lib.DxDomain.domain_worker import domain_list
+from lib.DxDomain.domain_worker import domain_add
+from lib.DxDomain.domain_worker import domain_delete
+from lib.DxDomain.domain_worker import domain_update
 
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.53
+__version__ = 0.6
 
 class dxm_state(object):
 
@@ -317,6 +322,13 @@ def user(dxm_state):
     User group allow to control users
     """
 
+@dxm.group()
+@pass_state
+def domain(dxm_state):
+    """
+    Domain group allow to control domains
+    """
+
 @engine.command()
 @click.option('--engine', help='Engine name (or alias)', required=True)
 @click.option('--ip',  help='IP or FQDN of engine', required=True)
@@ -531,9 +543,11 @@ def list(dxm_state, connectorname, envname, details):
     type=click.Choice(database_types + file_types),
     required=True, help='Type of the connector')
 @click.option(
-    '--host', required=True, help='Host where connector will be pointed')
+    '--host', help='Host where connector will be pointed')
 @click.option(
-    '--port', required=True, type=int,
+    '--jdbc', help='jdbc connection string for a connector (advanced option)')
+@click.option(
+    '--port', type=int,
     help='Port used by database connector')
 @click.option(
     '--username', required=True,
@@ -561,7 +575,7 @@ def list(dxm_state, connectorname, envname, details):
 @pass_state
 def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         schemaname, password, sid, instancename, databasename, path,
-        servertype):
+        servertype, jdbc):
     """
     Add connector to Masking Engine.
     List of required parameters depend on connector type:
@@ -571,11 +585,11 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
             connectorname,
             envname,
             connectortype,
-            host,
-            port,
             username,
             schemaname,
-        - database depended options:
+            host and port or jdbc connection string
+
+        - database depended options or jdbc connection string:
             sid,
             instancename,
             databasename
@@ -591,7 +605,7 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
             servertype
 
 
-    Exit code will be set to 0 if environment was added
+    Exit code will be set to 0 if connector was added
     and to non-zero value if there was an error
     """
     params = {
@@ -607,7 +621,8 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         'databasename': databasename,
         'type': connectortype,
         'path': path,
-        'servertype': servertype
+        'servertype': servertype,
+        'jdbc': jdbc
     }
     exit(connector_add(dxm_state.engine, params))
 
@@ -630,6 +645,8 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
 @click.option('--databasename',
               help='Database name for MSSQL or SYBASE connector type')
 @click.option(
+    '--jdbc', help='jdbc connection string for a connector (advanced option)')
+@click.option(
     '--envname',
     help='Environment name where connector will be added')
 @click.option(
@@ -641,37 +658,10 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
 @pass_state
 def update(dxm_state, envname, connectorname, host, port, username,
            schemaname, password, sid, instancename, databasename,
-           path, servertype):
+           path, servertype, jdbc):
     """
-    Add connector to Masking Engine.
-    List of required parameters depend on connector type:
-
-    \b
-        - database connectors:
-            connectorname,
-            envname,
-            connectortype,
-            host,
-            port,
-            username,
-            schemaname,
-        - database depended options:
-            sid,
-            instancename,
-            databasename
-
-    \b
-        - file connectors:
-            connectorname,
-            envname,
-            connectortype,
-            host,
-            username,
-            path,
-            servertype
-
-
-    Exit code will be set to 0 if environment was added
+    Update the connector inside Masking Engine.
+    Exit code will be set to 0 if connector was updated
     and to non-zero value if there was an error
     """
     if password == '':
@@ -689,7 +679,8 @@ def update(dxm_state, envname, connectorname, host, port, username,
         'databasename': databasename,
         'envname': envname,
         'servertype': servertype,
-        'path': path
+        'path': path,
+        'jdbc': jdbc
     }
     exit(connector_update(dxm_state.engine, params))
 
@@ -801,6 +792,19 @@ def delete(dxm_state, rulesetname, envname):
     """
     exit(ruleset_delete(dxm_state.engine, rulesetname, envname))
 
+@ruleset.command()
+@click.option(
+    '--rulesetname', required=True, help='Ruleset name to delete')
+@click.option(
+    '--envname', help='Environment name of ruleset to delete')
+@common_options
+@pass_state
+def refresh(dxm_state, rulesetname, envname):
+    """
+    Refresh a ruleset on the Masking engine
+    Return non-zero code if there was a problem with deleting ruleset
+    """
+    exit(ruleset_refresh(dxm_state.engine, rulesetname, envname))
 
 @ruleset.command()
 @click.option(
@@ -866,7 +870,7 @@ def exportrule(dxm_state, rulesetname, envname, outputfile,
 @pass_state
 def importrule(dxm_state, inputfile, rulesetname, envname, connectorname):
     """
-    Export
+    Import a ruleset from a JSON file created by exportrule command
     """
     exit(ruleset_import(
         dxm_state.engine, inputfile, rulesetname, connectorname, envname))
@@ -874,12 +878,13 @@ def importrule(dxm_state, inputfile, rulesetname, envname, connectorname):
 @ruleset.command()
 @click.option(
     '--inputfile', type=click.File('rt'), required=True,
-    help="Name with path of input file where ruleset(s) will be imported from")
+    help="Name with path of input file to compare")
 @common_options
 @pass_state
 def checkrule(dxm_state, inputfile):
     """
-    Check
+    Compare ruleset from file generated by exportrule command 
+    with ruleset on the Masking engine
     """
     exit(ruleset_check(dxm_state.engine, inputfile))
 
@@ -911,12 +916,21 @@ def checkrule(dxm_state, inputfile):
 @click.option(
     '--inputfile', type=click.File('rt'),
     help="Name and path of CSV file used to load metadata")
+@click.option(
+    '--fromconnector', is_flag=True,
+    help="Add tables fetched from connector filtered by filter if fetchfilter is specified")
+@click.option(
+    '--fetchfilter',
+    help="Filter metadata fetched from connector ( * is allowed as a wildcard, ex. EMP* to load all tables started with EMP)")
+@click.option(
+    '--bulk', is_flag=True,
+    help="Use bulk method to add medatata from file or connector table list")
 @common_options
 @pass_state
 def addmeta(dxm_state, rulesetname, metaname, custom_sql, where_clause,
             having_clause, key_column, inputfile, file_format,
             file_delimiter, file_eor, file_enclosure, file_name_regex,
-            file_eor_custom, envname):
+            file_eor_custom, envname, fromconnector, fetchfilter, bulk):
     """
     Add metadata (table or file) to ruleset.
 
@@ -973,9 +987,10 @@ def addmeta(dxm_state, rulesetname, metaname, custom_sql, where_clause,
         "file_enclosure": file_enclosure,
         "file_name_regex": file_name_regex,
         "file_eor_custom": file_eor_custom,
-        "envname": envname
+        "envname": envname,
+        "fetchfilter": fetchfilter
     }
-    exit(ruleset_addmeta(dxm_state.engine, params, inputfile))
+    exit(ruleset_addmeta(dxm_state.engine, params, inputfile, fromconnector, bulk))
 
 
 @ruleset.command()
@@ -2269,3 +2284,55 @@ def update(dxm_state, username, firstname, lastname, email, password, user_type,
                                 confirmation_prompt=True)
     exit(user_update(dxm_state.engine, username, firstname, lastname, email,
                      password, user_type, user_environments, user_role))
+
+@domain.command()
+@click.option('--domainname', help="Filter domains using a name")
+@common_options
+@pass_state
+def list(dxm_state, domainname):
+    """
+    Display list of domains from Masking Engine
+
+    If no filter options are specified, all domains will be displayed.
+    """
+    exit(domain_list(dxm_state.engine, dxm_state.format, domainname))
+
+
+@domain.command()
+@click.option('--domainname', help="Domain name to add", required=True)
+@click.option('--classification', help="Domain classification", required=True,
+              type=click.Choice(['CUSTOMER', 'EMPLOYEE', 'COMPANY']))
+@click.option('--algname', help="Default algorithm name", required=True)
+@common_options
+@pass_state
+def add(dxm_state, domainname, classification, algname):
+    """
+    Add a domain to the Masking Engine
+
+    If no filter options are specified, all domains will be displayed.
+    """
+    exit(domain_add(dxm_state.engine, domainname, classification, algname))
+
+@domain.command()
+@click.option('--domainname', help="Domain name to delete", required=True)
+@common_options
+@pass_state
+def delete(dxm_state, domainname):
+    """
+    Delete the domain from the Masking Engine
+    """
+    exit(domain_delete(dxm_state.engine, domainname))
+
+@domain.command()
+@click.option('--domainname', help="Domain name to update", required=True)
+@click.option('--classification', help="Domain classification",
+              type=click.Choice(['CUSTOMER', 'EMPLOYEE', 'COMPANY']))
+@click.option('--algname', help="Default algorithm name")
+@common_options
+@pass_state
+def update(dxm_state, domainname, classification, algname):
+    """
+    Update the domain in the Masking Engine
+
+    """
+    exit(domain_update(dxm_state.engine, domainname, classification, algname))

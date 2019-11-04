@@ -1,168 +1,64 @@
-from unittest import TestCase
-from unittest import main
-from mock import call
-import mock
-import sys
 import datetime
-from dxm.lib.DxLogging import logging_est
-from masking_apis.apis.masking_job_api import MaskingJobApi
-from masking_apis.models.masking_job import MaskingJob
-from masking_apis.models.masking_job_list import MaskingJobList
-from masking_apis.models.environment import Environment
-from masking_apis.models.environment_list import EnvironmentList
-from masking_apis.apis.environment_api import EnvironmentApi
-from masking_apis.models.execution import Execution
-from masking_apis.models.execution_list import ExecutionList
-from masking_apis.apis.execution_api import ExecutionApi
-from masking_apis.models.database_ruleset import DatabaseRuleset
-from masking_apis.models.file_ruleset import FileRuleset
-from masking_apis.models.database_ruleset_list import DatabaseRulesetList
-from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
-from masking_apis.apis.file_ruleset_api import FileRulesetApi
-from masking_apis.models.file_ruleset_list import FileRulesetList
-from masking_apis.models.database_connector import DatabaseConnector
-from masking_apis.models.file_connector import FileConnector
-from masking_apis.models.database_connector_list import DatabaseConnectorList
-from masking_apis.apis.database_connector_api import DatabaseConnectorApi
-from masking_apis.models.file_connector_list import FileConnectorList
-from masking_apis.apis.file_connector_api import FileConnectorApi
-from masking_apis.models.page_info import PageInfo
-from dxm.lib.DxJobs.DxJobsList import DxJobsList
-from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from dxm.lib.DxRuleset.rule_worker import ruleset_list
-from dxm.lib.DxRuleset.rule_worker import ruleset_listmeta
-from dxm.lib.DxRuleset.rule_worker import ruleset_addmeta
-from dxm.lib.DxRuleset.rule_worker import ruleset_deletemeta
-from dxm.lib.DxRuleset.rule_worker import ruleset_add
-from dxm.lib.DxRuleset.rule_worker import ruleset_delete
-from dxm.lib.DxRuleset.rule_worker import ruleset_clone
-from masking_apis.models.table_metadata import TableMetadata
-from masking_apis.models.table_metadata_list import TableMetadataList
-from masking_apis.apis.table_metadata_api import TableMetadataApi
-from masking_apis.apis.file_metadata_api import FileMetadataApi
-from masking_apis.models.file_metadata import FileMetadata
-from masking_apis.models.file_metadata_list import FileMetadataList
-from masking_apis.apis.file_format_api import FileFormatApi
-from masking_apis.models.file_format import FileFormat
-from masking_apis.models.file_format_list import FileFormatList
-from masking_apis.models.column_metadata import ColumnMetadata
-from masking_apis.models.column_metadata_list import ColumnMetadataList
+import sys
+from unittest import TestCase, main
+
+import mock
 from masking_apis.apis.column_metadata_api import ColumnMetadataApi
+from masking_apis.apis.database_connector_api import DatabaseConnectorApi
+from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
+from masking_apis.apis.environment_api import EnvironmentApi
+from masking_apis.apis.async_task_api import AsyncTaskApi
+from masking_apis.apis.execution_api import ExecutionApi
+from masking_apis.apis.file_connector_api import FileConnectorApi
+from masking_apis.apis.file_format_api import FileFormatApi
+from masking_apis.apis.file_metadata_api import FileMetadataApi
+from masking_apis.apis.file_ruleset_api import FileRulesetApi
+from masking_apis.apis.masking_job_api import MaskingJobApi
+from masking_apis.apis.table_metadata_api import TableMetadataApi
+from masking_apis.models.database_ruleset import DatabaseRuleset
+# from masking_apis.models.page_info import PageInfo
+from masking_apis.models.table_metadata import TableMetadata
+from masking_apis.models.file_metadata import FileMetadata
+from masking_apis.models.async_task import AsyncTask
+from masking_apis.rest import ApiException
+from mock import call
 
-def createtable(a, b, **kwargs):
-    b.table_metadata_id =b.table_metadata_id + b.ruleset_id
-    return b
-
-def retok(*args, **kwargs):
-    return None
-
-def meta_load(a, **kwargs):
-    """
-    Create an output for get_all_column_metadata call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    if kwargs.get('table_metadata_id') == 1:
-        columnfortable = [ColumnMetadata(
-                            column_metadata_id=1, table_metadata_id=1,
-                            column_name="ENAME", is_masked=True,
-                            algorithm_name="LastNameLookup",
-                            domain_name="LAST_NAME")]
-    elif kwargs.get('table_metadata_id') == 2:
-        columnfortable = [ColumnMetadata(
-                            column_metadata_id=1, table_metadata_id=2,
-                            column_name="DNAME", is_masked=True,
-                            algorithm_name="TestNameLookup",
-                            domain_name="TEST_NAME")]
-    elif kwargs.get('table_metadata_id') == 101:
-        columnfortable = [ColumnMetadata(
-                            column_metadata_id=1, table_metadata_id=101,
-                            column_name="ENAME", is_masked=False)]
-    elif kwargs.get('table_metadata_id') == 102:
-        columnfortable = [ColumnMetadata(
-                            column_metadata_id=1, table_metadata_id=102,
-                            column_name="DNAME", is_masked=False)]
-    clrpo = ColumnMetadataList(page_info=pi, response_list=columnfortable)
-    return clrpo
-
-def fileformat_load(a, **kwargs):
-    """
-    Create an output for get_all_file_formats call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    ff = [FileFormat(file_format_id=1, file_format_name="testformat", file_format_type="DELIMITED")]
-    ffrpo = FileFormatList(page_info=pi, response_list=ff)
-    return ffrpo
-
-def filemeta_load(a, **kwargs):
-    """
-    Create an output for get_all_file_metadata call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    # files = [FileMetadata(file_metadata_id=2, file_name="FILE", ruleset_id=2)]
-    filesrpo = FileMetadataList(page_info=pi, response_list=[])
-    return filesrpo
-
-def tablemeta_load(a, **kwargs):
-    """
-    Create an output for get_all_table_metadata call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    tables = [
-        TableMetadata(table_metadata_id=1, table_name="EMP", ruleset_id=1),
-        TableMetadata(table_metadata_id=2, table_name="DEPT", ruleset_id=1)]
-    tablesrpo = TableMetadataList(page_info=pi, response_list=tables)
-    return tablesrpo
-
-def dbconnector_load(a, **kwargs):
-    """
-    Create an output for get_all_database_connectors call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    dbconnector = [DatabaseConnector(database_connector_id=1, connector_name="DB connector", environment_id=1, database_type="ORACLE")]
-    dbcpo = DatabaseConnectorList(page_info=pi, response_list=dbconnector)
-    return dbcpo
+from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
+from dxm.lib.DxJobs.DxJobsList import DxJobsList
+from dxm.lib.DxLogging import logging_est
+from dxm.lib.DxRuleset.rule_worker import (ruleset_add, ruleset_addmeta,
+                                           ruleset_clone, ruleset_delete,
+                                           ruleset_deletemeta, ruleset_list,
+                                           ruleset_listmeta)
+from engine import (createtable, dbconnector_load, dbruleset_load, env_load,
+                    execution_load, fileconnector_load, fileformat_load,
+                    filemeta_load, fileruleset_load, job_load, meta_load,
+                    retok, tablemeta_load)
 
 
-def fileconnector_load(a, **kwargs):
-    """
-    Create an output for get_all_file_connectors call
-    """
-    pi = PageInfo(number_on_page=1, total=1)
-    fileconnector = [FileConnector(file_connector_id=1, connector_name="File connector", environment_id=1, file_type="DELIMITED")]
-    filerpo = FileConnectorList(page_info=pi, response_list=fileconnector)
-    return filerpo
+def create_table_fromfetch(a, b):
+    e = ApiException(status=500, reason="Test exception")
+    e.body = "Test"
+    raise e
+
+def fetch_table(a, b, **kwargs):
+    return ["DEPT", "EMP"]
+
+#@mock.create_autospec
+def async_return(self, a, **kwargs):
+    return AsyncTask(async_task_id=1, status="SUCESSFUL")
+
+# {'async_task_id': 11,
+#  'cancellable': True,
+#  'end_time': None,
+#  'operation': 'TABLE_BULK_UPDATE',
+#  'reference': '2',
+#  'start_time': datetime.datetime(2019, 9, 24, 8, 52, 59, 430000, tzinfo=tzutc()),
+#  'status': 'RUNNING'}
 
 
-def fileruleset_load(a, **kwargs):
-    """
-    Create an output for get_all_file_rulesets call
-    """
-    pi = PageInfo(number_on_page=1, total=1)
-    fileruleset = [FileRuleset(file_ruleset_id=2, ruleset_name="File Ruleset1", file_connector_id=1)]
-    filerpo = FileRulesetList(page_info=pi, response_list=fileruleset)
-    return filerpo
-
-
-def dbruleset_load(a, **kwargs):
-    """
-    Create an output for get_all_database_rulesets call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    dbruleset = [DatabaseRuleset(database_ruleset_id=1, ruleset_name="DB Ruleset1", database_connector_id=1)]
-    dbrpo = DatabaseRulesetList(page_info=pi, response_list=dbruleset)
-    return dbrpo
-
-
-def env_load(a, **kwargs):
-    """
-    Create an output for get_all_environments call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    envlist = [Environment(environment_id=1, environment_name="Env1", application="App1", purpose="MASK")]
-    epo = EnvironmentList(page_info=pi, response_list=envlist)
-    return epo
-
-
+@mock.patch.object(
+    AsyncTaskApi, 'get_async_task', new=async_return)
 @mock.patch.object(
     DxMaskingEngine, 'get_session', return_value=None)
 @mock.patch.object(
@@ -197,6 +93,9 @@ def env_load(a, **kwargs):
 )
 @mock.patch.object(
     ColumnMetadataApi, 'get_all_column_metadata', new=meta_load
+)
+@mock.patch.object(
+    DatabaseConnectorApi, 'fetch_table_metadata', new=fetch_table
 )
 class TestRuleset(TestCase):
     def test_ruleset_list(self, get_session):
@@ -258,13 +157,73 @@ class TestRuleset(TestCase):
                     table_metadata_id=123,
                     table_name="TESTTABLE",
                     ruleset_id=1)) as mock_method:
-            ret = ruleset_addmeta(None, params, None)
+            ret = ruleset_addmeta(None, params, None, None, False)
             name, args, kwargs = mock_method.mock_calls[0]
             print args[0]
             self.assertEqual("TESTTABLE", args[0].table_name)
             self.assertEqual("id>1000", args[0].where_clause)
             self.assertEqual(1, args[0].ruleset_id)
             self.assertEqual(0, ret)
+
+    def test_ruleset_addmetafromfetch(self, get_session):
+        params = {
+            "rulesetname": 'DB Ruleset1',
+            "metaname": None,
+            "envname": 'Env1',
+            "fetchfilter": None
+        }
+        with mock.patch.object(
+                TableMetadataApi, 'create_table_metadata') as mock_method:
+            ret = ruleset_addmeta(None, params, None, True, False)
+            retval = mock_method.call_args_list
+            self.assertEqual(retval[0][0][0].table_name, 'DEPT')
+            self.assertEqual(retval[1][0][0].table_name, 'EMP')
+            self.assertEqual(ret, 0)
+
+
+    def test_ruleset_addmetafromfetch_bulk(self, get_session):
+        params = {
+            "rulesetname": 'DB Ruleset1',
+            "metaname": None,
+            "envname": 'Env1',
+            "fetchfilter": None
+        }
+
+        c = {'table_metadata': [{'custom_sql': None,
+                     'having_clause': None,
+                     'key_column': None,
+                     'ruleset_id': 1,
+                     'table_metadata_id': None,
+                     'table_name': 'DEPT',
+                     'where_clause': None},
+                    {'custom_sql': None,
+                     'having_clause': None,
+                     'key_column': None,
+                     'ruleset_id': 1,
+                     'table_metadata_id': None,
+                     'table_name': 'EMP',
+                     'where_clause': None}]}
+
+        with mock.patch.object(
+                DatabaseRulesetApi, 'bulk_table_update',
+                return_value=AsyncTask(async_task_id=1)) as mock_method:
+            ret = ruleset_addmeta(None, params, None, True, True)
+            retval = mock_method.call_args_list
+            self.assertDictEqual(retval[0][0][1].to_dict(), c)
+            self.assertEqual(ret, 0)
+
+    def test_ruleset_addmetafromfetch_exception(self, get_session):
+        params = {
+            "rulesetname": 'DB Ruleset1',
+            "metaname": None,
+            "envname": 'Env1',
+            "fetchfilter": None
+        }
+        with mock.patch.object(
+                TableMetadataApi, 'create_table_metadata', 
+                new=create_table_fromfetch):
+            ret = ruleset_addmeta(None, params, None, True, False)
+            self.assertNotEqual(ret, 0)
 
     def test_ruleset_deletemeta(self, get_session):
         ret = ruleset_deletemeta(None, 'DB Ruleset1', 'DEPT', 'Env1')
@@ -292,7 +251,7 @@ class TestRuleset(TestCase):
                     file_metadata_id=124,
                     file_name="TESTFILE",
                     ruleset_id=1)) as mock_method:
-            ret = ruleset_addmeta(None, params, None)
+            ret = ruleset_addmeta(None, params, None, None, False)
             name, args, kwargs = mock_method.mock_calls[0]
             print args[0]
             self.assertEqual("TESTFILE", args[0].file_name)
@@ -366,3 +325,4 @@ class TestRuleset(TestCase):
 if __name__ == '__main__':
     logging_est('test.log', False)
     main(buffer=True, verbosity=2)
+

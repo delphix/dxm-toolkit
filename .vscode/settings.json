@@ -1,0 +1,13 @@
+{
+    "python.pythonPath": "bin/python2.7",
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        "./dxm/test",
+        "-p",
+        "*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.testing.nosetestsEnabled": false,
+    "python.testing.unittestEnabled": true
+}

@@ -20,6 +20,7 @@
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 import logging
 import json
+from operator import xor
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
@@ -136,7 +137,7 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
         return ret
 
 
-def ruleset_addmeta(p_engine, params, inputfile):
+def ruleset_addmeta(p_engine, params, inputfile, fromconnector, bulk):
     """
     Add matadata to Masking engine
     param1: p_engine: engine name from configuration
@@ -152,12 +153,14 @@ def ruleset_addmeta(p_engine, params, inputfile):
 
     enginelist = get_list_of_engines(p_engine)
 
-    if (params["metaname"] is None) and (inputfile is None):
-        print_error("Option metaname or inputfile is required")
+    if (params["metaname"] is None) and (inputfile is None) and (fromconnector is None):
+        print_error("Option metaname, inputfile or fromconnector is required")
         return 1
 
-    if (params["metaname"]) and (inputfile):
-        print_error("Option metaname and inputfile are mutally exclusive")
+    if ((params["metaname"]) and inputfile) or \
+       ((params["metaname"]) and fromconnector) or \
+       (inputfile and fromconnector):
+        print_error("Option metaname, fromconnector and inputfile are mutally exclusive")
         return 1
 
     if enginelist is None:
@@ -179,8 +182,12 @@ def ruleset_addmeta(p_engine, params, inputfile):
             ruleobj = rulelist.get_by_ref(ruleref)
             if (params["metaname"]):
                 ret = ret + ruleobj.addmeta(params)
+            elif inputfile:
+                ret = ret + ruleobj.addmetafromfile(inputfile, bulk)
+            elif fromconnector:
+                ret = ret + ruleobj.addmetafromfetch(params["fetchfilter"], bulk)
             else:
-                ret = ret + ruleobj.addmetafromfile(inputfile)
+                print_error("Source for add meta is not specified")
         else:
             ret = ret + 1
 
@@ -291,6 +298,18 @@ def ruleset_delete(p_engine, rulesetname, envname):
     return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
                           envname=envname, function_to_call='do_delete')
 
+
+def ruleset_refresh(p_engine, rulesetname, envname):
+    """
+    Refresh ruleset on the Masking engine
+    param1: p_engine: engine name from configuration
+    param2: rulesetname: ruleset name
+    param3: envname: environment name
+    return 0 if added, non 0 for error
+    """
+    return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
+                          envname=envname, function_to_call='do_refresh')
+
 def ruleset_clone(p_engine, rulesetname, envname, newname):
     """
     Delete ruleset from Masking engine
@@ -352,6 +371,11 @@ def do_delete(**kwargs):
     ruleref = kwargs.get('ruleref')
     return rulelist.delete(ruleref)
 
+
+def do_refresh(**kwargs):
+    rulelist = kwargs.get('rulelist')
+    ruleref = kwargs.get('ruleref')
+    return rulelist.refresh(ruleref)
 
 def do_clone(**kwargs):
     rulelist = kwargs.get('rulelist')
