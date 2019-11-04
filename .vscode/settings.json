@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "local/bin/python2.7",
+    "python.pythonPath": "bin/python2.7",
     "python.testing.unittestArgs": [
         "-v",
         "-s",
