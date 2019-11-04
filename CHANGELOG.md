@@ -8,7 +8,7 @@
  - support for JDBC connection string (advanced option) added to connector 
 
 ### Changed:
-
+ - None
 
 ## Version 0.53
 

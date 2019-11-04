@@ -103,7 +103,7 @@ from lib.DxDomain.domain_worker import domain_update
 # from lib.DxLogging import print_error
 from lib.DxLogging import logging_est
 
-__version__ = 0.53
+__version__ = 0.6
 
 class dxm_state(object):
 
