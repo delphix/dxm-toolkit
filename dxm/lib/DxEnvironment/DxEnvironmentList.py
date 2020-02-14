@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018-2020 by Delphix. All rights reserved.
 #
 # Author  : Edward de los Santos
 # Author  : Marcin Przepiorowski
@@ -21,9 +21,9 @@
 import logging
 import sys
 from dxm.lib.DxEnvironment.DxEnvironment import DxEnvironment
+from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
-from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.apis.environment_api import EnvironmentApi
+from dxm.lib.DxTools.DxTools import paginator 
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
@@ -56,8 +56,20 @@ class DxEnvironmentList(object):
         """
 
         self.__environmentList.clear()
+        appList = DxApplicationList()
+        appList.LoadApplications()
+
+
+
+        if self.__engine.get_version()<"6.0.0.0":
+            from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as Env5
+            envAPI = Env5
+        else:
+            from masking_apis.apis.environment_api import EnvironmentApi as Env6
+            envAPI = Env6
+
         try:
-            api_instance = EnvironmentApi(self.__engine.api_client)
+            api_instance = envAPI(self.__engine.api_client)
             envlist = paginator(
                         api_instance,
                         "get_all_environments",
@@ -67,6 +79,9 @@ class DxEnvironmentList(object):
                 for c in envlist.response_list:
                     environment = DxEnvironment(self.__engine)
                     environment.from_environment(c)
+                    if hasattr(c, "application_id") and environment.application_id is not None:
+                        app = appList.get_by_ref(c.application_id)
+                        environment.application = app.application_name
                     self.__environmentList[c.environment_id] = environment
             else:
                 self.__logger.error("No environments found")

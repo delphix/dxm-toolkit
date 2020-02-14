@@ -9,6 +9,10 @@ from masking_apis.models.masking_job import MaskingJob
 from masking_apis.models.masking_job_list import MaskingJobList
 from masking_apis.models.environment import Environment
 from masking_apis.models.environment_list import EnvironmentList
+from apis.v5.masking_apis.models.environment import Environment as env5
+from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
+from masking_apis.apis.application_api import ApplicationApi
 from masking_apis.apis.environment_api import EnvironmentApi
 from masking_apis.models.execution import Execution
 from masking_apis.models.execution_list import ExecutionList
@@ -23,12 +27,14 @@ from masking_apis.models.database_connector_list import DatabaseConnectorList
 from masking_apis.apis.database_connector_api import DatabaseConnectorApi
 from masking_apis.models.file_connector_list import FileConnectorList
 from masking_apis.apis.file_connector_api import FileConnectorApi
+from masking_apis.apis.system_information_api import SystemInformationApi
 from masking_apis.models.page_info import PageInfo
 from dxm.lib.DxJobs.DxJobsList import DxJobsList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxJobs.jobs_worker import jobs_list
 from dxm.lib.DxJobs.jobs_worker import job_start
 
+from engine import app_load
 from engine import env_load
 from engine import dbruleset_load
 from engine import fileruleset_load
@@ -36,14 +42,25 @@ from engine import dbconnector_load
 from engine import fileconnector_load
 from engine import execution_load
 from engine import job_load
+from engine import sysinfo_load
 
 @mock.patch.object(
-    DxMaskingEngine, 'get_session', return_value=None)
+    DxMaskingEngine, 'get_session', return_value=None
+)
 @mock.patch.object(
    MaskingJobApi, 'get_all_masking_jobs', new=job_load
 )
 @mock.patch.object(
+    SystemInformationApi, 'get_system_information', new=sysinfo_load
+)
+@mock.patch.object(
+    ApplicationApi, 'get_all_applications', new=app_load
+)
+@mock.patch.object(
     EnvironmentApi, 'get_all_environments', new=env_load
+)
+@mock.patch.object(
+    envapi5, 'get_all_environments', new=env_load
 )
 @mock.patch.object(
     DatabaseRulesetApi, 'get_all_database_rulesets', new=dbruleset_load
@@ -61,7 +78,7 @@ from engine import job_load
     ExecutionApi, 'get_all_executions', new=execution_load
 )
 class TestApp(TestCase):
-    def test_job_list(self, get_session):
+    def test_job_list(self, aaa):
         jobs_list(None, "Job1", None, "csv")
         if not hasattr(sys.stdout, "getvalue"):
             self.fail("need to run in buffered mode")

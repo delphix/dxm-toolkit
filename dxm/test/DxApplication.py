@@ -18,7 +18,7 @@ def app_load(a, b, **kwargs):
     Create an output for get_all_application call
     """
     pi = PageInfo(number_on_page=2, total=2)
-    applist = [Application("App1"), Application("App2")]
+    applist = [Application(application_name="App1"), Application(application_name="App2"), Application(application_name="App3", application_id=3)]
     apo = ApplicationList(page_info=pi, response_list=applist)
     return apo
 
@@ -55,6 +55,10 @@ class TestApp(TestCase):
 
     def test_get_applicationId_by_name(self):
         self.assertEqual("App1", self.dal.get_applicationId_by_name("App1")[0])
+
+
+    def test_get_applicationId_by_name2(self):
+        self.assertEqual(3, self.dal.get_applicationId_by_name("App3")[0])
 
 
 if __name__ == '__main__':

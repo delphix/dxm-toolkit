@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018-2020 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
 # Date    : March 2018
@@ -20,6 +20,7 @@
 import logging
 from masking_apis.models.environment import Environment
 from masking_apis.apis.environment_api import EnvironmentApi
+from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -41,11 +42,13 @@ class DxEnvironment(Environment):
         Copy properties from environemnt object into DxEnvironment
         :param env: Environment object
         """
-        self.environment_id = env.environment_id
-        self.purpose = env.purpose
-        self.application = env.application
-        self.is_workflow_enabled = env.is_workflow_enabled
-        self.environment_name = env.environment_name
+        # self.environment_id = env.environment_id
+        # self.purpose = env.purpose
+        if hasattr(env, "application"):
+            self.application = env.application
+        # self.is_workflow_enabled = env.is_workflow_enabled
+        # self.environment_name = env.environment_name
+        self.__dict__.update(env.__dict__)
 
     def add(self):
         """
@@ -69,12 +72,40 @@ class DxEnvironment(Environment):
             self.__logger.error("Purpose is required")
             return 1
 
+        appList = DxApplicationList()
+        appList.LoadApplications()
+        appobjlist = appList.get_applicationId_by_name(self.application)
+
+        if self.__engine.get_version()<"6.0.0.0":
+            from apis.v5.masking_apis.models.environment import Environment as Env5
+            from apis.v5.masking_apis.rest import ApiException
+            envobj = Env5()
+            if len(appobjlist)>0:
+                envobj.application = self.application
+            else:
+                print_error("Application {} not found".format(self.application))
+                self.__logger.error("Application {} not found".format(self.application))
+                return 1
+            
+        else:
+            from masking_apis.rest import ApiException
+            envobj = Environment()
+            if len(appobjlist)>0:
+                envobj.application_id = appobjlist[-1]
+            else:
+                print_error("Application {} not found".format(self.application))
+                self.__logger.error("Application {} not found".format(self.application))
+                return 1
+
+        envobj.environment_name = self.environment_name
+        envobj.purpose = self.purpose
+
         api_instance = EnvironmentApi(self.__engine.api_client)
 
         try:
             self.__logger.debug("create environment input %s" % str(self))
             response = api_instance.create_environment(
-                self,
+                envobj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("create environment response %s"
                                 % str(response))
@@ -82,6 +113,8 @@ class DxEnvironment(Environment):
             self.environment_id = response.environment_id
             self.purpose = response.purpose
             self.is_workflow_enabled = response.is_workflow_enabled
+            if hasattr(response, "application_id"):
+                self.application_id = response.application_id
             print_message("Environment %s added" % self.environment_name)
         except ApiException as e:
             print_error(e.body)

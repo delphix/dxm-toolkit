@@ -15,6 +15,11 @@ from masking_apis.apis.file_format_api import FileFormatApi
 from masking_apis.apis.column_metadata_api import ColumnMetadataApi
 from masking_apis.apis.file_field_metadata_api import FileFieldMetadataApi
 from dxm.lib.DxColumn.column_worker import column_list
+from apis.v5.masking_apis.models.environment import Environment as env5
+from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
+from masking_apis.apis.system_information_api import SystemInformationApi
+from masking_apis.apis.application_api import ApplicationApi
 from engine import env_load
 from engine import dbruleset_load
 from engine import fileruleset_load
@@ -26,8 +31,18 @@ from engine import retok
 from engine import meta_load
 from engine import filefieldmeta_load
 from engine import fileformat_load
+from engine import app_load
+from engine import sysinfo_load
 
-
+@mock.patch.object(
+    SystemInformationApi, 'get_system_information', new=sysinfo_load
+)
+@mock.patch.object(
+    ApplicationApi, 'get_all_applications', new=app_load
+)
+@mock.patch.object(
+    envapi5, 'get_all_environments', new=env_load
+)
 @mock.patch.object(
     DxMaskingEngine, 'get_session', return_value=None)
 @mock.patch.object(
