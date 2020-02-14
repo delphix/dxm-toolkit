@@ -41,7 +41,7 @@ class TestDomain(TestCase):
     def test_domain_add(self, get_session):
         with mock.patch.object(
                 DomainApi, 'create_domain',
-                return_value=Domain(domain_name="NEWDOMAIN", classification="CUSTOMER", default_algorithm_code="ALG")) \
+                return_value=Domain(domain_name="NEWDOMAIN", default_algorithm_code="ALG")) \
                 as mock_method:
 
             ret = domain_add(None, 'NEWDOMAIN', 'CUSTOMER', 'ALG')

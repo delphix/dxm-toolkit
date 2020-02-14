@@ -1,35 +1,54 @@
 import datetime
-from masking_apis.models.page_info import PageInfo
-from masking_apis.models.environment import Environment
-from masking_apis.models.environment_list import EnvironmentList
-from masking_apis.models.file_field_metadata import FileFieldMetadata
-from masking_apis.models.file_format import FileFormat
-from masking_apis.models.file_format_list import FileFormatList
+from apis.v5.masking_apis.models.page_info import PageInfo
+from apis.v5.masking_apis.models.application import Application
+from apis.v5.masking_apis.models.application_list import ApplicationList
+from apis.v5.masking_apis.models.environment import Environment
+from apis.v5.masking_apis.models.environment_list import EnvironmentList
+from apis.v5.masking_apis.models.file_field_metadata import FileFieldMetadata
+from apis.v5.masking_apis.models.file_format import FileFormat
+from apis.v5.masking_apis.models.file_format_list import FileFormatList
 from masking_apis.models.column_metadata import ColumnMetadata
 from masking_apis.models.column_metadata_list import ColumnMetadataList
-from masking_apis.models.file_field_metadata_list import FileFieldMetadataList
-from masking_apis.models.file_metadata import FileMetadata
-from masking_apis.models.file_metadata_list import FileMetadataList
-from masking_apis.models.table_metadata import TableMetadata
-from masking_apis.models.table_metadata_list import TableMetadataList
-from masking_apis.models.file_connector_list import FileConnectorList
-from masking_apis.models.file_ruleset_list import FileRulesetList
-from masking_apis.models.database_connector import DatabaseConnector
-from masking_apis.models.file_connector import FileConnector
-from masking_apis.models.database_connector_list import DatabaseConnectorList
-from masking_apis.models.execution import Execution
-from masking_apis.models.execution_list import ExecutionList
-from masking_apis.apis.execution_api import ExecutionApi
-from masking_apis.models.database_ruleset import DatabaseRuleset
-from masking_apis.models.file_ruleset import FileRuleset
-from masking_apis.models.database_ruleset_list import DatabaseRulesetList
-from masking_apis.apis.masking_job_api import MaskingJobApi
-from masking_apis.models.masking_job import MaskingJob
-from masking_apis.models.masking_job_list import MaskingJobList
-from masking_apis.models.environment import Environment
-from masking_apis.models.environment_list import EnvironmentList
-from masking_apis.models.domain import Domain
-from masking_apis.models.domain_list import DomainList
+from apis.v5.masking_apis.models.file_field_metadata_list import FileFieldMetadataList
+from apis.v5.masking_apis.models.file_metadata import FileMetadata
+from apis.v5.masking_apis.models.file_metadata_list import FileMetadataList
+from apis.v5.masking_apis.models.table_metadata import TableMetadata
+from apis.v5.masking_apis.models.table_metadata_list import TableMetadataList
+from apis.v5.masking_apis.models.file_connector_list import FileConnectorList
+from apis.v5.masking_apis.models.file_ruleset_list import FileRulesetList
+from apis.v5.masking_apis.models.database_connector import DatabaseConnector
+from apis.v5.masking_apis.models.file_connector import FileConnector
+from apis.v5.masking_apis.models.database_connector_list import DatabaseConnectorList
+from apis.v5.masking_apis.models.execution import Execution
+from apis.v5.masking_apis.models.execution_list import ExecutionList
+from apis.v5.masking_apis.apis.execution_api import ExecutionApi
+from apis.v5.masking_apis.models.database_ruleset import DatabaseRuleset
+from apis.v5.masking_apis.models.file_ruleset import FileRuleset
+from apis.v5.masking_apis.models.database_ruleset_list import DatabaseRulesetList
+from apis.v5.masking_apis.apis.masking_job_api import MaskingJobApi
+from apis.v5.masking_apis.models.masking_job import MaskingJob
+from apis.v5.masking_apis.models.masking_job_list import MaskingJobList
+from apis.v5.masking_apis.models.environment import Environment
+from apis.v5.masking_apis.models.environment_list import EnvironmentList
+from apis.v5.masking_apis.models.domain import Domain
+from apis.v5.masking_apis.models.domain_list import DomainList
+from apis.v5.masking_apis.models.system_information import SystemInformation
+
+
+def sysinfo_load(a, **kwargs):
+    """
+    Create an output for get_system_information call
+    """
+    return SystemInformation(version="5.3.0.0")
+
+def app_load(a, **kwargs):
+    """
+    Create an output for get_all_application call
+    """
+    pi = PageInfo(number_on_page=2, total=2)
+    applist = [Application(application_name="App1"), Application(application_name="App2"), Application(application_name="App3")]
+    apo = ApplicationList(page_info=pi, response_list=applist)
+    return apo
 
 def env_load(a, **kwargs):
     """

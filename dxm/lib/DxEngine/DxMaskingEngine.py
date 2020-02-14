@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018-2020 by Delphix. All rights reserved.
 #
 # Author  : Edward de los Santos
 # Author  : Marcin Przepiorowski
@@ -100,6 +100,7 @@ class DxMaskingEngine(object):
     def get_name(self):
         return self.__name
 
+
     @classmethod
     def get_session(self):
         """
@@ -107,7 +108,33 @@ class DxMaskingEngine(object):
         :return autorization key for a session
         """
 
-        self.api_client = ApiClient()
+        self.get_session_worker(version=6)
+        if self.get_version()<"6.0.0.0":
+           self.get_session_worker(version=5) 
+
+
+
+    @classmethod
+    def get_session_worker(self, version):
+        """
+        Create a session with a Masking engine
+        :return autorization key for a session
+        """
+
+
+
+        if version==5:
+            from apis.v5.masking_apis.api_client import ApiClient as ApiClient5
+            from apis.v5.masking_apis.configuration import Configuration           
+
+            config = Configuration()
+            config.host = self.__base_url
+            config.debug = False
+            self.api_client = ApiClient5()
+        else:
+            self.api_client = ApiClient()
+            
+
 
         #set number of retries to one
         # set timeout on request level as it is overwritten anyway

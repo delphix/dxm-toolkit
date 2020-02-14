@@ -34,7 +34,13 @@ from engine import (createtable, dbconnector_load, dbruleset_load, env_load,
                     execution_load, fileconnector_load, fileformat_load,
                     filemeta_load, fileruleset_load, job_load, meta_load,
                     retok, tablemeta_load)
-
+from apis.v5.masking_apis.models.environment import Environment as env5
+from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
+from masking_apis.apis.system_information_api import SystemInformationApi
+from masking_apis.apis.application_api import ApplicationApi
+from engine import app_load
+from engine import sysinfo_load
 
 def create_table_fromfetch(a, b):
     e = ApiException(status=500, reason="Test exception")
@@ -46,17 +52,17 @@ def fetch_table(a, b, **kwargs):
 
 #@mock.create_autospec
 def async_return(self, a, **kwargs):
-    return AsyncTask(async_task_id=1, status="SUCESSFUL")
+    return AsyncTask(async_task_id=1, status="SUCCEEDED")
 
-# {'async_task_id': 11,
-#  'cancellable': True,
-#  'end_time': None,
-#  'operation': 'TABLE_BULK_UPDATE',
-#  'reference': '2',
-#  'start_time': datetime.datetime(2019, 9, 24, 8, 52, 59, 430000, tzinfo=tzutc()),
-#  'status': 'RUNNING'}
-
-
+@mock.patch.object(
+    SystemInformationApi, 'get_system_information', new=sysinfo_load
+)
+@mock.patch.object(
+    ApplicationApi, 'get_all_applications', new=app_load
+)
+@mock.patch.object(
+    envapi5, 'get_all_environments', new=env_load
+)
 @mock.patch.object(
     AsyncTaskApi, 'get_async_task', new=async_return)
 @mock.patch.object(

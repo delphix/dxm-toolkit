@@ -29,47 +29,41 @@ from dxm.lib.DxJobs.DxJobsList import DxJobsList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxConnector.conn_worker import connector_list
 from dxm.lib.DxConnector.conn_worker import connector_add
+from apis.v5.masking_apis.models.environment import Environment as env5
+from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
+from masking_apis.apis.system_information_api import SystemInformationApi
+from masking_apis.apis.application_api import ApplicationApi
+from engine import env_load
+from engine import dbruleset_load
+from engine import fileruleset_load
+from engine import dbconnector_load
+from engine import fileconnector_load
+from engine import tablemeta_load
+from engine import filemeta_load
+from engine import retok
+from engine import meta_load
+from engine import filefieldmeta_load
+from engine import fileformat_load
+from engine import app_load
+from engine import sysinfo_load
 
 
 
-def dbconnector_load(a, **kwargs):
-    """
-    Create an output for get_all_database_connectors call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    dbconnector = [
-        DatabaseConnector(database_connector_id=1, connector_name="DB connector", environment_id=1, database_type="ORACLE"),
-        DatabaseConnector(database_connector_id=2, connector_name="DB connector2", environment_id=1, database_type="SYBASE")
-        ]
-    dbconnector1 = []
-    dbcpo = DatabaseConnectorList(page_info=pi, response_list=dbconnector)
-    return dbcpo
 
-
-def fileconnector_load(a, **kwargs):
-    """
-    Create an output for get_all_file_connectors call
-    """
-    pi = PageInfo(number_on_page=0, total=0)
-    fileconnector = [FileConnector(file_connector_id=1, connector_name="File connector", environment_id=1, file_type="DELIMITED")]
-    filerpo = FileConnectorList(page_info=pi, response_list=fileconnector)
-    return filerpo
-
-
-def env_load(a, **kwargs):
-    """
-    Create an output for get_all_environments call
-    """
-    pi = PageInfo(number_on_page=2, total=2)
-    envlist = [Environment(environment_id=1, environment_name="Env1", application="App1", purpose="MASK")]
-    epo = EnvironmentList(page_info=pi, response_list=envlist)
-    return epo
-
-
+@mock.patch.object(
+    SystemInformationApi, 'get_system_information', new=sysinfo_load
+)
+@mock.patch.object(
+    ApplicationApi, 'get_all_applications', new=app_load
+)
 @mock.patch.object(
     DxMaskingEngine, 'get_session', return_value=None)
 @mock.patch.object(
     EnvironmentApi, 'get_all_environments', new=env_load
+)
+@mock.patch.object(
+    envapi5, 'get_all_environments', new=env_load
 )
 @mock.patch.object(
     DatabaseConnectorApi, 'get_all_database_connectors', new=dbconnector_load
@@ -99,8 +93,7 @@ class TestConnector(TestCase):
         self.assertEquals(
             output, '#Engine name,Environment name,Connector name,Connector '
             'type\r\ntesteng,Env1,DB connector'
-            ',ORACLE\r\ntesteng,Env1,DB connector2'
-            ',SYBASE\r\ntesteng,Env1,File connector,DELIMITED'
+            ',ORACLE\r\ntesteng,Env1,File connector,DELIMITED'
         )
 
     def test_connector_add(self, get_session):

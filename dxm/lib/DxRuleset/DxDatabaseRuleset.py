@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018,2019 by Delphix. All rights reserved.
+# Copyright (c) 2018-2020 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
 # Date    : April 2018
@@ -209,12 +209,19 @@ class DxDatabaseRuleset(DatabaseRuleset):
             }
 
             self.__logger.debug("checking table {}".format(table))
-            if pattern.search(table):
-                self.__logger.debug("table added to bulk{}".format(table))
-                if bulk:
-                    table_list.append(params)
-                else:
-                    ret = ret + self.addmeta(params)
+
+            if fetchfilter:
+                if pattern.search(table):
+                    self.__logger.debug("filtered table added to bulk{}".format(table))
+                    if bulk:
+                        table_list.append(params)
+                    else:
+                        ret = ret + self.addmeta(params)
+            else:
+                    if bulk:
+                        table_list.append(params)
+                    else:
+                        ret = ret + self.addmeta(params)            
 
         # TODO: 
         # add check of version of fail before trying 

@@ -52,8 +52,8 @@ class TestFileFormat(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,File format type,File format name\r\n'
-            '53,DELIMITED,testformat\r\n'
-            '53,EXCEL,testexcel')
+            'testeng,DELIMITED,testformat\r\n'
+            'testeng,EXCEL,testexcel')
 
     def test_2_fileformat_list_by_name(self, get_session):
         ret = fileformat_list(None, "csv", None, "testformat")
@@ -64,7 +64,7 @@ class TestFileFormat(TestCase):
         output = sys.stdout.getvalue().strip()
         self.assertEquals(
             output, '#Engine name,File format type,File format name\r\n'
-            '53,DELIMITED,testformat')
+            'testeng,DELIMITED,testformat')
 
     def test_3_fileformat_list_by_name_error(self, get_session):
         ret = fileformat_list(None, "csv", None, "notfound")

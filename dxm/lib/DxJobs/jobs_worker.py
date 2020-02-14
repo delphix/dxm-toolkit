@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018-2020 by Delphix. All rights reserved.
 #
 # Author  : Marcin Przepiorowski
 # Date    : April 2018
@@ -825,9 +825,26 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
 
         for jobref in jobs:
             jobobj = joblist.get_by_ref(jobref)
+
             rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
-            connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
-            envobj = envlist.get_by_ref(connectorobj.environment_id)
+            # those test are requierd for 5.X engies where API is not showing all types of connectors
+            if rulesetobj is not None:
+                rulename = rulesetobj.ruleset_name
+                connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
+                if connectorobj is not None:
+                    connectorname = connectorobj.connector_name
+                    envobj = envlist.get_by_ref(connectorobj.environment_id)
+                    if envobj is not None:
+                        envobjname = envobj.environment_name
+                    else:
+                         envobjname = "N/A"   
+                else:
+                    connectorname = "N/A"
+                    envobjname = "N/A"
+            else:
+                rulename = "N/A"
+                connectorname = "N/A"
+                envobjname = "N/A"
 
             if jobobj.lastExec is not None:
                 status = jobobj.lastExec.status
@@ -849,9 +866,9 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
             data.data_insert(
                               engine_tuple[0],
                               jobobj.job_name,
-                              rulesetobj.ruleset_name,
-                              connectorobj.connector_name,
-                              envobj.environment_name,
+                              rulename,
+                              connectorname,
+                              envobjname,
                               endtime,
                               status,
                               runtime
