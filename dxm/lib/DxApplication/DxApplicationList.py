@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-# Copyright (c) 2018 by Delphix. All rights reserved.
+# Copyright (c) 2018-2020 by Delphix. All rights reserved.
 #
 # Author  : Edward de los Santos
 # Author  : Marcin Przepiorowski
@@ -65,7 +65,10 @@ class DxApplicationList(object):
                 for c in a.response_list:
                     application = DxApplication(self.__engine)
                     application.application_name = c.application_name
-                    self.__applicationList[c.application_name] = application
+                    if hasattr(c, "application_id") and c.application_id is not None:
+                        self.__applicationList[c.application_id] = application
+                    else:
+                        self.__applicationList[c.application_name] = application
             else:
                 print_error("No applications found")
                 return 1
