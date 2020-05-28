@@ -1,3 +1,8 @@
+## Version 0.71
+
+### Added:
+ - Added Job Report [ dxmc job report --engine <enginename>]
+ 
 ## Version 0.6
 
 ### Added:
