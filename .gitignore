@@ -110,6 +110,9 @@ local/
 bin/
 pip-selfcheck.json
 
+# mac
+*.DS_Store
+
 # dxmc
 
 dxm.log.*
