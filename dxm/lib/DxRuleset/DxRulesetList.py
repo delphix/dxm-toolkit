@@ -24,9 +24,6 @@ from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
-from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
-from masking_apis.apis.file_ruleset_api import FileRulesetApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 
@@ -36,6 +33,7 @@ class DxRulesetList(object):
     __rulesetList = {}
     __engine = None
     __logger = None
+    __loaded_engine = None
 
     @classmethod
     def __init__(self, environment_name=None):
@@ -71,11 +69,35 @@ class DxRulesetList(object):
         Return None if OK
         """
 
+        if self.__loaded_engine is None:
+            self.__loaded_engine = self.__engine.get_name()
+
+        
+        if self.__loaded_engine == self.__engine.get_name() and self.__rulesetList != {}:
+           return None
+        else:
+            # delete a list as we can have multi engines
+            self.__rulesetList.clear()
+            self.__loaded_engine = self.__engine.get_name()
+
         DxConnectorsList(environment_name)
-        self.__rulesetList = {}
+
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
+            from masking_api_60.api.file_ruleset_api import FileRulesetApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.database_ruleset_api import DatabaseRulesetApi
+            from masking_api_53.api.file_ruleset_api import FileRulesetApi
+            from masking_api_53.rest import ApiException
+
+
+        self.__api = DatabaseRulesetApi
+        self.__fileapi = FileRulesetApi
+        self.__apiexc = ApiException
 
         try:
-            api_instance = DatabaseRulesetApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
 
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
@@ -117,7 +139,7 @@ class DxRulesetList(object):
                 else:
                     self.__logger.error("No database ruleset found")
 
-            api_instance = FileRulesetApi(self.__engine.api_client)
+            api_instance = self.__fileapi(self.__engine.api_client)
 
             if environment_id:
                 file_rulesets = paginator(
@@ -142,7 +164,7 @@ class DxRulesetList(object):
                 else:
                     self.__logger.error("No file ruleset found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error("Can't load ruleset %s" % e.body)
             return 1
 
@@ -264,7 +286,7 @@ class DxRulesetList(object):
             else:
                 return 1
         else:
-            print "Ruleset with id %s not found" % RulesetId
+            print_error("Ruleset with id %s not found" % RulesetId)
             return 1
 
     @classmethod
@@ -309,5 +331,5 @@ class DxRulesetList(object):
             else:
                 return 1
         else:
-            print "Ruleset with id %s not found" % RulesetId
+            print_error("Ruleset with id %s not found" % RulesetId)
             return 1

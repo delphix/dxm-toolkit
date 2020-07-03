@@ -18,14 +18,11 @@
 
 
 import logging
-from masking_apis.models.file_format import FileFormat
-from masking_apis.apis.file_format_api import FileFormatApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxFileFormat(FileFormat):
+class DxFileFormat(object):
 
     def __init__(self, engine):
         """
@@ -33,17 +30,65 @@ class DxFileFormat(FileFormat):
         :param1 engine: DxMaskingEngine object
         :param2 execList: list of job executions
         """
-        FileFormat.__init__(self)
+        #FileFormat.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFileFormat object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.file_format import FileFormat
+            from masking_api_60.api.file_format_api import FileFormatApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.file_format import FileFormat
+            from masking_api_53.api.file_format_api import FileFormatApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = FileFormatApi
+        self.__model = FileFormat
+        self.__apiexc = ApiException
+        self.__obj = None
 
     def from_filetype(self, filetype):
+        self.__obj = filetype
+
+    def create_fileformat(self, file_format_name, file_format_type):
         """
-        Copy properties from MaskingJob object into DxFiletype
-        :param con: MaskingJob object
-        """
-        self.__dict__.update(filetype.__dict__)
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = self.__model(file_format_name=file_format_name, file_format_type=file_format_type)
+
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+    @property
+    def file_format_id(self):
+        if self.obj is not None:
+            return self.obj.file_format_id
+        else:
+            return None
+
+    @property
+    def file_format_name(self):
+        if self.obj is not None:
+            return self.obj.file_format_name
+        else:
+            return None
+
+    @property
+    def file_format_type(self):
+        if self.obj is not None:
+            return self.obj.file_format_type
+        else:
+            return None
 
     def add(self):
         """
@@ -52,30 +97,30 @@ class DxFileFormat(FileFormat):
         return 1 in case of error
         """
 
-        if (self.file_format_name is None):
+        if (self.obj.file_format_name is None):
             print_error("File format name is required")
             self.__logger.error("File format name is required")
             return 1
 
-        if (self.file_format_type is None):
+        if (self.obj.file_format_type is None):
             print_error("File format type is required")
             self.__logger.error("File format type is required")
             return 1
 
         try:
             self.__logger.debug("create filetype input %s" % str(self))
-            api_instance = FileFormatApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("API instance created")
-            response = api_instance.create_file_format(self.file_format_name,
-                                                       self.file_format_type)
+            response = api_instance.create_file_format(self.obj.file_format_name,
+                                                       self.obj.file_format_type)
             self.from_filetype(response)
 
             self.__logger.debug("filetype response %s"
                                 % str(response))
 
-            print_message("Filetype %s added" % self.file_format_name)
+            print_message("Filetype %s added" % self.obj.file_format_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -87,16 +132,16 @@ class DxFileFormat(FileFormat):
         return 1 in case of error
         """
 
-        api_instance = FileFormatApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("delete file format id %s"
-                                % self.file_format_id)
-            response = api_instance.delete_file_format(self.file_format_id)
+                                % self.obj.file_format_id)
+            response = api_instance.delete_file_format(self.obj.file_format_id)
             self.__logger.debug("delete file format response %s"
                                 % str(response))
-            print_message("File format %s deleted" % self.file_format_name)
-        except ApiException as e:
+            print_message("File format %s deleted" % self.obj.file_format_name)
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

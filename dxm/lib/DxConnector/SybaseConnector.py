@@ -20,6 +20,8 @@
 
 import logging
 from dxm.lib.DxConnector.DxConnector import DxConnector
+from dxm.lib.DxLogging import print_error
+from dxm.lib.DxLogging import print_message
 
 
 class SybaseConnector(DxConnector):
@@ -30,7 +32,6 @@ class SybaseConnector(DxConnector):
         :param engine: DxMaskingEngine object
         """
         DxConnector.__init__(self, engine)
-        self.database_type = 'SYBASE'
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating SybaseConnector object")
@@ -67,7 +68,7 @@ class SybaseConnector(DxConnector):
         empty = 0
         for k in props.keys():
             if (props[k] is None):
-                print "Property %s can't be empty" % k
+                print_error("Property %s can't be empty" % k)
                 empty = empty + 1
 
         if empty == 0:

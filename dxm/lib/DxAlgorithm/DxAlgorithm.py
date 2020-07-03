@@ -20,33 +20,53 @@
 import logging
 import pickle
 import json
-from masking_apis.models.algorithm import Algorithm
-from masking_apis.apis.sync_api import SyncApi
-from masking_apis.rest import ApiException
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxAlgorithm(Algorithm):
+class DxAlgorithm(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        Algorithm.__init__(self)
+        #Algorithm.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__domain_name = None
         self.__sync = None
         self.__logger.debug("creating DxAlgorithm object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.algorithm import Algorithm
+            from masking_api_60.api.sync_api import SyncApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.algorithm import Algorithm
+            from masking_api_53.api.sync_api import SyncApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = SyncApi
+        self.__model = Algorithm
+        self.__apiexc = ApiException
+        self.__obj = None
+
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
 
     def from_alg(self, alg):
         """
-        Copy properties from algorithm object into DxAlgorithm
+        Set obj properties with a Algorithm object
         :param column: Algorithm object
         """
-        self.__dict__.update(alg.__dict__)
+        self.__obj = alg
 
     @property
     def domain_name(self):
@@ -63,6 +83,20 @@ class DxAlgorithm(Algorithm):
     @sync.setter
     def sync(self, sync):
         self.__sync = sync
+
+    @property
+    def algorithm_name(self):
+        if self.obj is not None:
+            return self.obj.algorithm_name
+        else:
+            return None
+
+    @property
+    def algorithm_type(self):
+        if self.obj is not None:
+            return self.obj.algorithm_type
+        else:
+            return None
 
     # def export(self, path=None):
     #     """

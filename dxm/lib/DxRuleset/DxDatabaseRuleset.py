@@ -19,30 +19,54 @@
 
 import logging
 import re
-from masking_apis.models.database_ruleset import DatabaseRuleset
-from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
-from masking_apis.models.table_metadata_bulk_input import TableMetadataBulkInput
-from masking_apis.models.table_metadata import TableMetadata
-from masking_apis.rest import ApiException
+
+
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxTable.DxTable import DxTable
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxAsyncTask.DxAsyncTask import DxAsyncTask
 
-class DxDatabaseRuleset(DatabaseRuleset):
+class DxDatabaseRuleset():
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        DatabaseRuleset.__init__(self)
+        #DatabaseRuleset.__init__(self)
         self.__engine = engine
         self.__type = 'Database'
         self.__tableList = None
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxRuleset object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.database_ruleset import DatabaseRuleset
+            from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
+            from masking_api_60.models.table_metadata_bulk_input import TableMetadataBulkInput
+            from masking_api_60.models.table_metadata import TableMetadata
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.database_ruleset import DatabaseRuleset
+            from masking_api_53.api.database_ruleset_api import DatabaseRulesetApi
+            from masking_api_53.models.table_metadata_bulk_input import TableMetadataBulkInput
+            from masking_api_53.models.table_metadata import TableMetadata
+            from masking_api_53.rest import ApiException
+
+        self.__api = DatabaseRulesetApi
+        self.__model = DatabaseRuleset
+        self.__modeltable = TableMetadata
+        self.__modeltablebulk = TableMetadataBulkInput
+        self.__apiexc = ApiException
+        self.__obj = None
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
 
     @property
     def type(self):
@@ -50,18 +74,45 @@ class DxDatabaseRuleset(DatabaseRuleset):
 
     @property
     def ruleset_id(self):
-        return self.database_ruleset_id
+        return self.obj.database_ruleset_id
+
+    @property
+    def ruleset_name(self):
+        return self.obj.ruleset_name
+
+    @ruleset_name.setter
+    def ruleset_name(self, ruleset_name):
+        self.obj.ruleset_name = ruleset_name
 
     @property
     def connectorId(self):
-        return 'd' + str(self.database_connector_id)
+        return 'd' + str(self.obj.database_connector_id)
 
     def from_ruleset(self, ruleset):
         """
-        Copy properties from Ruleset object into DxRuleset
+        Set obj object with real ruleset object
         :param con: DatabaseConnector object
         """
-        self.__dict__.update(ruleset.__dict__)
+        self.__obj = ruleset
+
+    @property
+    def logger(self):
+        return self.__logger
+
+    @property
+    def engine(self):
+        return self.__engine
+
+    def create_database_ruleset(self, ruleset_name, database_connector_id, refresh_drops_tables):
+        """
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = self.__model(ruleset_name=ruleset_name, database_connector_id=database_connector_id, refresh_drops_tables=refresh_drops_tables)
+
 
     def add(self):
         """
@@ -70,33 +121,33 @@ class DxDatabaseRuleset(DatabaseRuleset):
         return 1 in case of error
         """
 
-        if (self.ruleset_name is None):
-            print "Ruleset name is required"
+        if (self.obj.ruleset_name is None):
+            print_error("Ruleset name is required")
             self.__logger.error("Ruleset name is required")
             return 1
 
-        if (self.database_connector_id is None):
-            print "Database connector Id is required"
+        if (self.obj.database_connector_id is None):
+            print_error("Database connector Id is required")
             self.__logger.error("Database connector ID is required")
             return 1
 
         try:
-            self.__logger.debug("create database ruleset input %s" % str(self))
+            self.logger.debug("create database ruleset input %s" % str(self))
 
-            api_instance = DatabaseRulesetApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_database_ruleset(
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
-            self.database_ruleset_id = response.database_ruleset_id
+            self.__obj = response
 
-            self.__logger.debug("ruleset response %s"
+            self.logger.debug("ruleset response %s"
                                 % str(response))
 
             print_message("Ruleset %s added" % self.ruleset_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
-            self.__logger.error(e)
+            self.logger.error(e)
             return 1
 
     def delete(self):
@@ -106,21 +157,21 @@ class DxDatabaseRuleset(DatabaseRuleset):
         return 1 in case of error
         """
 
-        api_instance = DatabaseRulesetApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
-            self.__logger.debug("delete ruleset id %s"
+            self.logger.debug("delete ruleset id %s"
                                 % self.ruleset_id)
             response = api_instance.delete_database_ruleset(
                            self.ruleset_id,
                            _request_timeout=self.__engine.get_timeout())
-            self.__logger.debug("delete ruleset response %s"
+            self.logger.debug("delete ruleset response %s"
                                 % str(response))
             print_message("Ruleset %s deleted" % self.ruleset_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
-            self.__logger.error(e)
+            self.logger.error(e)
             return 1
 
     def addmeta(self, table_params):
@@ -141,12 +192,14 @@ class DxDatabaseRuleset(DatabaseRuleset):
             return 1
 
         table = DxTable(self.__engine)
-        table.table_name = tablename
-        table.ruleset_id = self.database_ruleset_id
-        table.custom_sql = custom_sql
-        table.where_clause = where_clause
-        table.having_clause = having_clause
-        table.key_column = key_column
+        table.create_table(
+            table_name = tablename,
+            ruleset_id = self.ruleset_id,
+            custom_sql = custom_sql,
+            where_clause = where_clause,
+            having_clause = having_clause,
+            key_column = key_column
+        )
 
         return table.add()
 
@@ -176,7 +229,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
                 ret = ret + self.addmeta(params)
 
         if bulk:
-            print table_list
+            print_message(table_list)
             ret = self.addmeta_bulk(table_list)
 
         return ret
@@ -196,7 +249,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
 
         if fetchfilter:
             fetchfilter = re.escape(fetchfilter).replace("\*",".*")
-            self.__logger.debug("fetchfilter {}".format(fetchfilter))
+            self.logger.debug("fetchfilter {}".format(fetchfilter))
             pattern = re.compile(r'^{}$'.format(fetchfilter))
 
         for table in connobj.fetch_meta():
@@ -208,11 +261,11 @@ class DxDatabaseRuleset(DatabaseRuleset):
                 "key_column": None
             }
 
-            self.__logger.debug("checking table {}".format(table))
+            self.logger.debug("checking table {}".format(table))
 
             if fetchfilter:
                 if pattern.search(table):
-                    self.__logger.debug("filtered table added to bulk{}".format(table))
+                    self.logger.debug("filtered table added to bulk{}".format(table))
                     if bulk:
                         table_list.append(params)
                     else:
@@ -239,39 +292,40 @@ class DxDatabaseRuleset(DatabaseRuleset):
         table_obj_list = []
         
         for table_params in table_list:
-            table = TableMetadata()
-            table.table_name = table_params["metaname"]
-            table.custom_sql = table_params["custom_sql"]
-            table.having_clause = table_params["having_clause"]
-            table.key_column = table_params["key_column"]
-            table.where_clause = table_params["where_clause"]
-            table.ruleset_id = self.ruleset_id
-            table_obj_list.append(table)
+            table = DxTable(self.engine)
+            table.create_table(
+                table_name = table_params["metaname"],
+                ruleset_id = self.ruleset_id,
+                custom_sql = table_params["custom_sql"],
+                where_clause = table_params["where_clause"],
+                having_clause = table_params["having_clause"],
+                key_column = table_params["key_column"]
+            )
+
+            table_obj_list.append(table.obj)
         
-        table_bulk = TableMetadataBulkInput()
-        table_bulk.table_metadata = table_obj_list
-        
-        api_instance = DatabaseRulesetApi(self.__engine.api_client)
+        table_bulk = self.__modeltablebulk(table_metadata = table_obj_list)        
+        api_instance = self.__api(self.__engine.api_client)
         
         try:
-            self.__logger.debug("create bulk %s"
+            self.logger.debug("create bulk %s"
                                 % self.ruleset_id)
-            self.__logger.debug("create bulk tables %s"
+            self.logger.debug("create bulk tables %s"
                                 % str(table_bulk))
             response = api_instance.bulk_table_update(
                            self.ruleset_id,
                            table_bulk,
                            _request_timeout=self.__engine.get_timeout())
-            self.__logger.debug("create bulk response %s"
+            self.logger.debug("create bulk response %s"
                                 % str(response))
             print_message("Ruleset %s update started" % self.ruleset_name)
 
             task = DxAsyncTask()
             task.from_asynctask(response)
             return task.wait_for_task()
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
-            self.__logger.error(e)
+            self.logger.error(e)
             return 1
 
     def refresh(self):
@@ -281,7 +335,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
         return 1 in case of error
         """
 
-        api_instance = DatabaseRulesetApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("refresh ruleset id %s"
@@ -296,7 +350,7 @@ class DxDatabaseRuleset(DatabaseRuleset):
             task = DxAsyncTask()
             task.from_asynctask(response)
             return task.wait_for_task()
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

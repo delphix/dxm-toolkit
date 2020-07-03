@@ -48,7 +48,7 @@ def application_add(p_engine, appname):
         applist = DxApplicationList()
         appnew = DxApplication(engine_obj)
         # set a name
-        appnew.application_name = appname
+        appnew.create_application(application_name=appname)
 
         # add Application to engine and list
         # rc is None all is OK

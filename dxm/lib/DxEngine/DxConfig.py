@@ -308,7 +308,7 @@ class DxConfig(object):
                 self.__logger.debug("Error %s:" % e.args)
                 return -1
         else:
-            print "No connection"
+            print_error("No connection")
             sys.exit(-1)
 
 
@@ -360,7 +360,7 @@ class DxConfig(object):
                 self.__logger.debug("Error %s:" % e.args)
                 return -1
         else:
-            print "No connection"
+            print_error("No connection")
             sys.exit(-1)
 
 
@@ -404,5 +404,5 @@ class DxConfig(object):
                 self.__logger.debug("Error %s:" % e.args)
                 return None
         else:
-            print "No connection"
+            print_error("No connection")
             sys.exit(-1)

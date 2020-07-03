@@ -55,7 +55,7 @@ def exception_handler(etype, value, tb):
         print_exception("".join(traceback.format_exception_only(etype, value)))
 
 
-def logging_est(logfile_path, debug=False):
+def logging_est(logfile_path, debug=0):
     """
     Establish Logging
 
@@ -67,7 +67,14 @@ def logging_est(logfile_path, debug=False):
         return
 
     logger = logging.getLogger()
-    logger.setLevel(logging.DEBUG)
+
+    if debug == 0:
+        logger.setLevel(logging.INFO)
+    elif debug == 1:
+        logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(9)
+    
     debugfile = TimedRotatingFileHandler(logfile_path,
                                          when="D",
                                          interval=1)
@@ -76,14 +83,19 @@ def logging_est(logfile_path, debug=False):
                                   '%(lineno)s - %(funcName)s()] %(message)s')
     debugfile.setFormatter(formatter)
 
-    if debug is True:
+    if debug == 0:
+        debugfile.setLevel(logging.ERROR)
+    elif debug == 1:
         debugfile.setLevel(logging.DEBUG)
     else:
-        debugfile.setLevel(logging.ERROR)
+        debugfile.setLevel(9)
 
     logger.addHandler(debugfile)
 
     sys.excepthook = exception_handler
+
+
+
 
 
 def print_exception(print_obj):

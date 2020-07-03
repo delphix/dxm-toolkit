@@ -29,7 +29,7 @@ from dxm.lib.DxUser.DxUserList import DxUserList
 from dxm.lib.DxRole.DxRoleList import DxRoleList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxAppSetting.DxAppSettingList import DxAppSettingList
-from masking_apis.models.non_admin_properties import NonAdminProperties
+from masking_api_60.models.non_admin_properties import NonAdminProperties
 
 def user_delete(p_engine, username, force):
     """
@@ -139,7 +139,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
             else:
                 userobj.is_admin = True
                 userobj.delete_nap()
-                print userobj
+                print_message(userobj)
 
         if firstname is not None:
             update = 1
@@ -158,7 +158,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
             try:
                 userobj.password = password
             except ValueError as e:
-                print str(e)
+                print_error(str(e))
                 ret = ret + 1
                 return ret
 
@@ -241,7 +241,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
         try:
             userobj.password = password
         except ValueError as e:
-            print str(e)
+            print_error(str(e))
             ret = ret + 1
             return ret
 

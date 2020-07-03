@@ -22,9 +22,7 @@ import sys
 from dxm.lib.DxAppSetting.DxAppSetting import DxAppSetting
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.apis.application_settings_api import ApplicationSettingsApi
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 
 
@@ -54,9 +52,19 @@ class DxAppSettingList(object):
         return 1 if error
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.application_settings_api import ApplicationSettingsApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.application_settings_api import ApplicationSettingsApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = ApplicationSettingsApi
+        self.__apiexc = ApiException
+
         self.__appSettingGroupList.clear()
         try:
-            api_instance = ApplicationSettingsApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             applist = paginator(
                         api_instance,
                         "get_all_application_settings",
@@ -73,7 +81,7 @@ class DxAppSettingList(object):
                 self.__logger.error("No application settings found")
                 print_error("No application settings found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             self.__logger.error("Can't load application settings %s" % e.body)
             print_error("Can't load application settings %s" % e.body)
             return 1

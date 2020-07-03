@@ -18,30 +18,59 @@
 
 
 import logging
-from masking_apis.models.role import Role
-from masking_apis.apis.role_api import RoleApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxRole(Role):
+class DxRole(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        Role.__init__(self)
+        #Role.__init__(self)
         self.__logger = logging.getLogger()
         self.__engine = engine
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.role import Role
+            from masking_api_60.api.role_api import RoleApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.role import Role
+            from masking_api_53.api.role_api import RoleApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = RoleApi
+        self.__model = Role
+        self.__apiexc = ApiException
+        self.__obj = None
 
     def from_role(self, role):
-        """
-        Copy properties from Role object into DxRole
-        :param role: Role object
-        """
-        self.__dict__.update(role.__dict__)
+        self.__obj = role
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+
+    @property
+    def role_name(self):
+        if self.obj is not None:
+            return self.obj.role_name
+        else:
+            return None
+
+    @role_name.setter
+    def role_name(self, role_name):
+        if self.__obj is not None:
+            self.__obj.role_name = role_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+    
 
     # def add(self):
     #     """

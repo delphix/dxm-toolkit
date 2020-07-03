@@ -59,9 +59,9 @@ def do_export(**kwargs):
     syncobj = kwargs.get('object')
     name = kwargs.get('name')
     path = kwargs.get('path')
-    print(name)
-    print(path)
-    print(kwargs)
+    # print(name)
+    # print(path)
+    # print(kwargs)
     return syncobj.export(name, path)
 
 

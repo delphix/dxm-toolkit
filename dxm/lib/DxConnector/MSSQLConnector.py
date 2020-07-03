@@ -20,6 +20,8 @@
 
 import logging
 from dxm.lib.DxConnector.DxConnector import DxConnector
+from dxm.lib.DxLogging import print_error
+from dxm.lib.DxLogging import print_message
 
 
 class MSSQLConnector(DxConnector):
@@ -31,7 +33,6 @@ class MSSQLConnector(DxConnector):
         """
         DxConnector.__init__(self, engine)
         self.__engine = engine
-        self.database_type = 'MSSQL'
         self.__logger = logging.getLogger()
         self.__logger.debug("creating MSSQLConnector object")
 
@@ -66,12 +67,10 @@ class MSSQLConnector(DxConnector):
             'instance_name': self.instance_name
         }
 
-        print props
-
         empty = 0
         for k in props.keys():
             if (props[k] is None):
-                print "Property %s can't be empty" % k
+                print_error("Property %s can't be empty" % k)
                 empty = empty + 1
 
         if empty == 0:
