@@ -1,3 +1,14 @@
+## Version 0.8
+
+### Changed:
+ - Support for 5.3.X and 6.0.X in single build
+ - [fix for #32](https://github.com/delphix/dxm-toolkit/issues/32) - Unable to call pre and post script with script Path
+
+## Version 0.7
+
+### Changed:
+ - initial support for 6.0
+
 ## Version 0.6
 
 ### Added:

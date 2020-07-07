@@ -60,11 +60,36 @@ Check a [documentation](https://github.com/delphix/dxm-toolkit/wiki) for more de
 
 ### Source version
 
-Python 2.7.X
+Python 3.7.X
 
 **Required packages**
-- Delphix Masking API libraries are required.
 - Check setup.py for list standard Python packages
+- Delphix Masking Engine Swagger SDK is required
+
+To generate Masking SDK version 6.0.X run the following commands where _myengine_ is a name or IP of Delphix Masking Engine
+
+```
+mkdir masking_api_60
+
+docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_60 -DpackageName=masking_api_60
+
+cd masking_api_60
+
+python setup.py install
+```
+
+To generate Masking SDK version 5.3.X run the following commands where _myengine_ is a name or IP of Delphix Masking Engine:
+
+```
+mkdir masking_api_53
+
+docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_53 -DpackageName=masking_api_53
+
+cd masking_api_53
+
+python setup.py install
+```
+
 
 ## Legalness
 ```
