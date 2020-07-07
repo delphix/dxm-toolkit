@@ -21,49 +21,96 @@ import logging
 import pickle
 import json
 import os
-from masking_apis.models.export_object_metadata import ExportObjectMetadata
-from masking_apis.apis.sync_api import SyncApi
-from masking_apis.rest import ApiException
+import re
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxSync(ExportObjectMetadata):
+class DxSync(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        ExportObjectMetadata.__init__(self)
+        #ExportObjectMetadata.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__synctype = None
         self.__logger.debug("creating DxSync object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.export_object_metadata import ExportObjectMetadata
+            from masking_api_60.api.sync_api import SyncApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.export_object_metadata import ExportObjectMetadata
+            from masking_api_53.api.sync_api import SyncApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = SyncApi
+        self.__model = ExportObjectMetadata
+        self.__apiexc = ApiException
+        self.__obj = None
 
 
     def from_sync(self, sync):
         """
-        Copy properties from algorithm object into DxAlgorithm
-        :param column: Algorithm object
+        Set obj properties with Sync object
+        :param sync: Sync object
         """
-        self.__dict__.update(sync.__dict__)
+        self.__obj = sync
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+    @property
+    def object_type(self):
+        if self.obj is not None:
+            return self.obj.object_type
+        else:
+            return None
+
+    @property
+    def object_identifier(self):
+        if self.obj is not None:
+            return self.obj.object_identifier
+        else:
+            return None
+            
+    @property
+    def revision_hash(self):
+        if self.obj is not None:
+            return self.obj.revision_hash
+        else:
+            return None
+
 
     def export(self, name, path=None):
         """
         Export algorithm into file
         :param path: path to save algorithm
         """
-        api_sync = SyncApi(self.__engine.api_client)
+        api_sync = self.__api(self.__engine.api_client)
         self.__logger.debug("Export input %s" % self)
+
+
+        check = re.match(r'Not Syncable: (.*)', self.revision_hash)
+        
+        if check:
+            print_error("Can't export - {}".format(check.groups()[0]))
+            return 1
+
         export_list = []
-        export_list.append(self)
+        export_list.append(self.obj)
         api_response = api_sync.export(export_list)
         self.__logger.debug("Export response (without blob) %s"
                             % str(api_response.export_response_metadata))
-        print(path)
         filename = os.path.join(path, '{0}.bin'.format(name))
-        print(filename)
         self.__logger.debug("saving to %s" % filename)
         dependencylist = [
             b["objectType"]
@@ -106,7 +153,7 @@ class DxSync(ExportObjectMetadata):
             return 1
 
         try:
-            api_sync = SyncApi(self.__engine.api_client)
+            api_sync = self.__api(self.__engine.api_client)
             self.__logger.debug("Import input %s" % self)
             if environment_id is None:
                 api_response = api_sync.import_object(
@@ -123,7 +170,7 @@ class DxSync(ExportObjectMetadata):
             self.__logger.debug("File %s was loaded or engine revision is in "
                                 "sync with file" % path.name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             if e.status == 404 or e.status == 409:
                 print_error("Problem with depended objects")
                 errpyt = json.loads(e.body)

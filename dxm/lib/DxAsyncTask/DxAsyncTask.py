@@ -21,52 +21,71 @@ import logging
 
 from time import sleep
 
-from masking_apis.models.async_task import AsyncTask
-from masking_apis.apis.async_task_api import AsyncTaskApi
-from masking_apis.rest import ApiException
+from masking_api_60.models.async_task import AsyncTask
+from masking_api_60.api.async_task_api import AsyncTaskApi
+from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 
 
-class DxAsyncTask(AsyncTask):
+class DxAsyncTask(object):
 
     def __init__(self):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        AsyncTask.__init__(self)
+        #AsyncTask.__init__(self)
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
-        self.__logger.debug("creating DxApplication object")
+        self.__logger.debug("creating DxAsyncTask object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.async_task import AsyncTask
+            from masking_api_60.api.async_task_api import AsyncTaskApi
+        else:
+            from masking_api_53.models.async_task import AsyncTask
+            from masking_api_53.api.async_task_api import AsyncTaskApi
+
+        self.__api = AsyncTaskApi
+        self.__model = AsyncTask
+        self.__obj = None
+    
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
 
     def from_asynctask(self, task):
         """
-        Copy properties from application object into DxApplication
-        :param app: Application object
+        Set a obj property using a AsyncTask
+        :param con: DatabaseConnector object
         """
-        self.__dict__.update(task.__dict__)
+        self.__obj = task
 
 
     def wait_for_task(self):
         """
         """
 
-        api_instance = AsyncTaskApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
         try:
             running = True
             while(running):
                 self.__logger.debug("wait async input %s" % str(self))
                 response = api_instance.get_async_task(
-                    self.async_task_id,
+                    self.obj.async_task_id,
                     _request_timeout=self.__engine.get_timeout())
                 self.__logger.debug("wait async response %s"
                                     % str(response))
                 if response.status != "RUNNING":
                     running = False
                 sleep(1)
-                print_message("Waiting for task %s to complete " % self.async_task_id)
+                print_message("Waiting for task %s to complete " % self.obj.async_task_id)
 
             if response.status == "SUCCEEDED":
                 print_message("Task finished sucesfully")
@@ -80,30 +99,4 @@ class DxAsyncTask(AsyncTask):
             return 1
 
 
-    # def add(self):
-    #     """
-    #     Add application to Masking engine and print status message
-    #     return a None if non error
-    #     return 1 in case of error
-    #     """
 
-    #     if (self.application_name is None):
-    #         print "Application name is required"
-    #         self.__logger.error("Application name is required")
-    #         return 1
-
-    #     api_instance = ApplicationApi(self.__engine.api_client)
-
-    #     try:
-    #         self.__logger.debug("create application input %s" % str(self))
-    #         response = api_instance.create_application(
-    #             self,
-    #             _request_timeout=self.__engine.get_timeout())
-    #         self.__logger.debug("create application response %s"
-    #                             % str(response))
-
-    #         print_message("Application %s added" % self.application_name)
-    #     except ApiException as e:
-    #         print_error(e.body)
-    #         self.__logger.error(e)
-    #         return 1

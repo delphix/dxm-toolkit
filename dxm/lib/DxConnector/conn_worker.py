@@ -31,8 +31,9 @@ from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
+from masking_api_60.models.database_connector import DatabaseConnector
 
-from masking_apis.models.connection_info import ConnectionInfo
+from masking_api_60.models.connection_info import ConnectionInfo
 
 
 database_types = ['oracle', 'sybase', 'mssql', 'aurora_postgres', 'db2',
@@ -85,6 +86,7 @@ def connector_add(p_engine, params):
         if params['type'] in database_types:
             if params['type'] == 'oracle':
                 connobj = OracleConnector(engine_obj)
+                dbtype = 'ORACLE'
             elif params['type'] == 'mssql':
                 connobj = MSSQLConnector(engine_obj)
             elif params['type'] == 'sybase':
@@ -93,16 +95,22 @@ def connector_add(p_engine, params):
                 connobj = DxConnector(engine_obj)
                 connobj.database_type = params['type'].upper()
 
-            connobj.connector_name = connname
+            connobj.create_connector(
+                connector_name = connname,
+                database_type = dbtype,
+                environment_id = envref
+            )
+
+
             connobj.schema_name = schemaName
             connobj.username = username
             connobj.password = password
             connobj.host = host
+
             if port:
                 connobj.port = port + 0
             connobj.sid = params['sid']
             connobj.jdbc = params['jdbc']
-            connobj.environment_id = envref
             connobj.instance_name = params['instancename']
             connobj.database_name = params['databasename']
 
@@ -111,17 +119,18 @@ def connector_add(p_engine, params):
             connmode = params['servertype']
             connobj = DxFileConnector(engine_obj)
             connobj.is_database = False
-            connobj.connector_name = connname
-            connobj.environment_id = envref
-            connobj.file_type = params['type'].upper()
-            ci = ConnectionInfo()
-            ci.host = host
-            ci.port = port
-            ci.login_name = username
-            ci.password = password
-            ci.path = path
-            ci.connection_mode = connmode.upper()
-            connobj.connection_info = ci
+            connobj.create_connector(
+                connector_name = connname,
+                file_type = params['type'].upper(),
+                environment_id = envref,
+                host=host,
+                port=port,
+                login_name=username,
+                password=password,
+                path=path,
+                connection_mode=connmode.upper()
+            )
+
         else:
             print_error('Wrong connector type %s' % params['type'])
             logger.error('Wrong connector type %s' % params['type'])
@@ -339,8 +348,8 @@ def connector_update(p_engine, params):
         if params['username']:
             connobj.username = params['username']
 
-        if params['connname']:
-            connobj.connector_name = params['connname']
+        # if params['connname']:
+        #     connobj.connector_name = params['connname']
 
 
 

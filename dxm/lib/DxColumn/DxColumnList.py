@@ -19,8 +19,7 @@
 
 import logging
 import sys
-from masking_apis.apis.column_metadata_api import ColumnMetadataApi
-from masking_apis.apis.file_field_metadata_api import FileFieldMetadataApi
+
 from dxm.lib.DxTable.DxTable import DxTable
 from dxm.lib.DxTable.DxFile import DxFile
 from dxm.lib.DxColumn.DxDBColumn import DxDBColumn
@@ -29,7 +28,6 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTable.DxMetaList import DxMetaList
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
@@ -55,9 +53,24 @@ class DxColumnList(object):
 
         metaobj = DxMetaList.get_by_ref(metadata_id)
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.column_metadata_api import ColumnMetadataApi
+            from masking_api_60.api.file_field_metadata_api import FileFieldMetadataApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.column_metadata_api import ColumnMetadataApi
+            from masking_api_53.api.file_field_metadata_api import FileFieldMetadataApi
+            from masking_api_53.rest import ApiException
+
+
+        self.__api = ColumnMetadataApi
+        self.__fileapi = FileFieldMetadataApi
+        self.__apiexc = ApiException
+
+
         if ((metadata_id is None) or (type(metaobj) == DxTable)):
             try:
-                api_instance = ColumnMetadataApi(self.__engine.api_client)
+                api_instance = self.__api(self.__engine.api_client)
 
                 if is_masked:
                     if metadata_id:
@@ -91,7 +104,7 @@ class DxColumnList(object):
                     # print_error("No column metadata found")
                     self.__logger.error("No column metadata found")
 
-            except ApiException as e:
+            except self.__apiexc as e:
                 if (e.status == 404) and (metadata_id is not None):
                     notable = 1
                 else:
@@ -101,7 +114,7 @@ class DxColumnList(object):
 
         elif ((metadata_id is None) or (type(metaobj) == DxFile)):
             try:
-                api_instance = FileFieldMetadataApi(self.__engine.api_client)
+                api_instance = self.__fileapi(self.__engine.api_client)
 
                 if metadata_id and (metaobj.file_format_id is None):
                     # File doesn't have a file type set so there is no masking
@@ -139,7 +152,7 @@ class DxColumnList(object):
                     print_error("No field metadata found")
                     self.__logger.error("No field metadata found")
 
-            except ApiException as e:
+            except self.__apiexc as e:
                 if (e.status == 404) and (metadata_id is not None):
                     nofile = 1
                 else:

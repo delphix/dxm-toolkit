@@ -18,40 +18,90 @@
 
 
 import logging
-from masking_apis.models.table_metadata import TableMetadata
-from masking_apis.apis.table_metadata_api import TableMetadataApi
-from masking_apis.rest import ApiException
+
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxTable(TableMetadata):
+class DxTable(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        TableMetadata.__init__(self)
+        #TableMetadata.__init__(self)
         self.__engine = engine
         self.__columnList = {}
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxTable object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.table_metadata import TableMetadata
+            from masking_api_60.api.table_metadata_api import TableMetadataApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.table_metadata import TableMetadata
+            from masking_api_53.api.table_metadata_api import TableMetadataApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = TableMetadataApi
+        self.__model = TableMetadata
+        self.__apiexc = ApiException
+        self.__obj = None
 
     def from_table(self, table):
         """
-        Copy properties from Ruleset object into DxRuleset
+        Set obj object with real table object
         :param con: DatabaseConnector object
         """
-        self.__dict__.update(table.__dict__)
+        self.__obj = table
+
+    def create_table(self, table_name, ruleset_id, custom_sql, where_clause, having_clause, key_column):
+        """
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = self.__model(table_name=table_name, ruleset_id=ruleset_id, custom_sql=custom_sql, where_clause=where_clause, having_clause=having_clause, key_column=key_column)
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
 
     @property
     def meta_name(self):
-        return self.table_name
+        return self.obj.table_name
 
     @property
     def meta_id(self):
-        return self.table_metadata_id
+        return self.obj.table_metadata_id
+
+    @property
+    def ruleset_id(self):
+        return self.obj.ruleset_id
+
+    @property
+    def key_column(self):
+        return self.obj.key_column
+
+    @property
+    def having_clause(self):
+        return self.obj.having_clause
+
+    @property
+    def where_clause(self):
+        return self.obj.where_clause
+
+    @property
+    def custom_sql(self):
+        return self.obj.custom_sql
 
     def add(self):
         """
@@ -60,29 +110,29 @@ class DxTable(TableMetadata):
         return 1 in case of error
         """
 
-        if (self.table_name is None):
-            print "Table name is required"
+        if (self.meta_name is None):
+            print_error("Table name is required")
             self.__logger.error("Table name is required")
             return 1
 
         if (self.ruleset_id is None):
-            print "ruleset_id is required"
+            print_error("ruleset_id is required")
             self.__logger.error("ruleset_id is required")
             return 1
 
         try:
             self.__logger.debug("create table input %s" % str(self))
-            api_instance = TableMetadataApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("API instance created")
-            response = api_instance.create_table_metadata(self)
+            response = api_instance.create_table_metadata(self.obj)
             self.table_metadata_id = response.table_metadata_id
 
             self.__logger.debug("table response %s"
                                 % str(response))
 
-            print_message("Table %s added" % self.table_name)
+            print_message("Table %s added" % self.meta_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -95,13 +145,13 @@ class DxTable(TableMetadata):
         """
 
         try:
-            api_instance = TableMetadataApi(self.__engine.api_client)
-            response = api_instance.delete_table_metadata(self.table_metadata_id)
+            api_instance = self.__api(self.__engine.api_client)
+            response = api_instance.delete_table_metadata(self.obj.table_metadata_id)
             self.__logger.debug("table response %s"
                                 % str(response))
-            print_message("Table %s deleted" % self.table_name)
+            print_message("Table %s deleted" % self.obj.table_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -115,16 +165,16 @@ class DxTable(TableMetadata):
 
         try:
             self.__logger.debug("update table input %s" % str(self))
-            api_instance = TableMetadataApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.update_table_metadata(
-                self.table_metadata_id,
-                self)
+                self.obj.table_metadata_id,
+                self.obj)
             self.__logger.debug("update table response %s"
                                 % str(response))
 
-            print_message("Table %s updated" % self.table_name)
+            print_message("Table %s updated" % self.obj.table_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

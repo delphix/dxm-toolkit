@@ -18,37 +18,206 @@
 
 
 import logging
-from masking_apis.models.user import User
-from masking_apis.models.non_admin_properties import NonAdminProperties
-from masking_apis.apis.user_api import UserApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxUser(User):
+class DxUser(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        User.__init__(self)
+        #User.__init__(self)
         self.__logger = logging.getLogger()
         self.__engine = engine
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.user import User
+            from masking_api_60.models.non_admin_properties import NonAdminProperties
+            from masking_api_60.api.user_api import UserApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.user import User
+            from masking_api_53.models.non_admin_properties import NonAdminProperties
+            from masking_api_53.api.user_api import UserApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = UserApi
+        self.__model = User
+        self.__apiexc = ApiException
+        self.__obj = None
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+
+    @property
+    def user_id(self):
+        if self.obj is not None:
+            return self.obj.user_id
+        else:
+            return None
+
+    @user_id.setter
+    def user_id(self, user_id):
+        if self.__obj is not None:
+            self.__obj.user_id = user_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def user_id(self):
+        if self.obj is not None:
+            return self.obj.user_id
+        else:
+            return None
+
+    @user_id.setter
+    def user_id(self, user_id):
+        if self.__obj is not None:
+            self.__obj.user_id = user_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def user_name(self):
+        if self.obj is not None:
+            return self.obj.user_name
+        else:
+            return None
+
+    @user_name.setter
+    def user_name(self, user_name):
+        if self.__obj is not None:
+            self.__obj.user_name = user_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def password(self):
+        if self.obj is not None:
+            return 'xxxxxxxxx'
+        else:
+            return None
+
+    @password.setter
+    def password(self, password):
+        if self.__obj is not None:
+            self.__obj.password = password
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def first_name(self):
+        if self.obj is not None:
+            return self.obj.first_name
+        else:
+            return None
+
+    @first_name.setter
+    def first_name(self, first_name):
+        if self.__obj is not None:
+            self.__obj.first_name = first_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def last_name(self):
+        if self.obj is not None:
+            return self.obj.last_name
+        else:
+            return None
+
+    @last_name.setter
+    def last_name(self, last_name):
+        if self.__obj is not None:
+            self.__obj.last_name = last_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def email(self):
+        if self.obj is not None:
+            return self.obj.email
+        else:
+            return None
+
+    @email.setter
+    def email(self, email):
+        if self.__obj is not None:
+            self.__obj.email = email
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def is_admin(self):
+        if self.obj is not None:
+            return self.obj.is_admin
+        else:
+            return None
+
+    @is_admin.setter
+    def is_admin(self, is_admin):
+        if self.__obj is not None:
+            self.__obj.is_admin = is_admin
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def show_welcome(self):
+        if self.obj is not None:
+            return self.obj.show_welcome
+        else:
+            return None
+
+    @show_welcome.setter
+    def show_welcome(self, show_welcome):
+        if self.__obj is not None:
+            self.__obj.show_welcome = show_welcome
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def is_locked(self):
+        if self.obj is not None:
+            return self.obj.is_locked
+        else:
+            return None
+
+    @is_locked.setter
+    def is_locked(self, is_locked):
+        if self.__obj is not None:
+            self.__obj.is_locked = is_locked
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def non_admin_properties(self):
+        if self.obj is not None:
+            return self.obj.non_admin_properties
+        else:
+            return None
+
+    @non_admin_properties.setter
+    def non_admin_properties(self, non_admin_properties):
+        if self.__obj is not None:
+            self.__obj.non_admin_properties = non_admin_properties
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def from_user(self, user):
-        """
-        Copy properties from User object into DxUser
-        :param role: User object
-        """
-        self.__dict__.update(user.__dict__)
+        self.__obj = user
 
     def delete_nap(self):
         """
         Delete NonAdminProperties
         """
-        self._non_admin_properties = None
+        self.obj._non_admin_properties = None
 
     def add(self):
         """

@@ -18,51 +18,119 @@
 
 
 import logging
-from masking_apis.models.file_field_metadata import FileFieldMetadata
-from masking_apis.apis.file_field_metadata_api import FileFieldMetadataApi
-from masking_apis.rest import ApiException
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxFileField(FileFieldMetadata):
+class DxFileField(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        FileFieldMetadata.__init__(self)
+        #FileFieldMetadata.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFile object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.file_field_metadata import FileFieldMetadata
+            from masking_api_60.api.file_field_metadata_api import FileFieldMetadataApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.file_field_metadata import FileFieldMetadata
+            from masking_api_53.api.file_field_metadata_api import FileFieldMetadataApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = FileFieldMetadataApi
+        self.__model = FileFieldMetadata
+        self.__obj = None
+        self.__apiexc = ApiException
+
+
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
 
     def from_file(self, file):
         """
-        Copy properties from file object into Dxfile
-        :param file: FileMetadata object
+        set obj property with FileMetadata object
+        :param column: FileMetadata object
         """
-        self.__dict__.update(file.__dict__)
+        self.__obj = file
 
     @property
     def cf_meta_name(self):
-        return self.field_name
+        return self.obj.field_name
 
     @property
     def cf_metadata_id(self):
-        return self.file_field_metadata_id
+        return self.obj.file_field_metadata_id
 
     @property
     def cf_meta_type(self):
-        if self.field_length == 0 or self.field_length is None:
-            return "pos {}".format(self.field_position_number)
+        if self.obj.field_length == 0 or self.obj.field_length is None:
+            return "pos {}".format(self.obj.field_position_number)
         else:
-            return "pos {} ({})".format(self.field_position_number,
-                                        self.field_length)
+            return "pos {} ({})".format(self.obj.field_position_number,
+                                        self.obj.field_length)
 
     @property
     def cf_meta_column_role(self):
         return ''
+
+    @property
+    def algorithm_name(self):
+        return self.obj.algorithm_name
+
+    @algorithm_name.setter
+    def algorithm_name(self, algorithm_name):
+        """
+        algorithm_name
+        :param algorithm_name: algorithm_name 
+        """
+
+        if self.obj is not None:
+            self.obj.algorithm_name = algorithm_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def domain_name(self):
+        return self.obj.domain_name
+
+    @domain_name.setter
+    def domain_name(self, domain_name):
+        """
+        domain_name
+        :param domain_name: domain_name 
+        """
+
+        if self.obj is not None:
+            self.obj.domain_name = domain_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def is_masked(self):
+        return self.obj.is_masked
+
+    @is_masked.setter
+    def is_masked(self, is_masked):
+        """
+        is_masked
+        :param is_masked: is_masked flag
+        """
+
+        if self.obj is not None:
+            self.obj.is_masked = is_masked
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def update(self):
         """
@@ -71,24 +139,24 @@ class DxFileField(FileFieldMetadata):
         return 1 in case of error
         """
 
-        if (self.file_field_metadata_id is None):
-            print "file_field_metadata_id is required"
+        if (self.obj.file_field_metadata_id is None):
+            print_error("file_field_metadata_id is required")
             self.__logger.error("file_field_metadata_id is required")
             return 1
 
         try:
-            if self.date_format == '':
+            if self.obj.date_format == '':
                 self.date_format = None
 
             self.__logger.debug("create field input %s" % str(self))
-            api_instance = FileFieldMetadataApi(self.__engine.api_client)
-            response = api_instance.update_file_field_metadata(self.file_field_metadata_id, self)
+            api_instance = self.__api(self.__engine.api_client)
+            response = api_instance.update_file_field_metadata(self.obj.file_field_metadata_id, self.obj)
             self.__logger.debug("field response %s"
                                 % str(response))
 
-            print_message("Field %s updated" % self.field_name)
+            print_message("Field %s updated" % self.obj.field_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

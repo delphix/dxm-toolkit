@@ -24,20 +24,58 @@ from packaging import version
 from datetime import datetime, timedelta
 #import pickle
 from dxm.lib.DxEngine.DxConfig import DxConfig
-from masking_apis.rest import ApiException
-from masking_apis.configuration import Configuration
-from masking_apis.api_client import ApiClient
-from masking_apis.models.login import Login
-from masking_apis.apis.login_api import LoginApi
+from masking_api_60.rest import ApiException
+from masking_api_60.configuration import Configuration
+from masking_api_60.api_client import ApiClient
+from masking_api_60.models.login import Login
+from masking_api_60.api.login_api import LoginApi
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-from masking_apis.apis.application_api import ApplicationApi
-from masking_apis.apis.system_information_api import SystemInformationApi
-from masking_apis.apis.logging_api import LoggingApi
-from masking_apis.apis.file_download_api import FileDownloadApi
+from masking_api_60.api.application_api import ApplicationApi
+from masking_api_60.api.system_information_api import SystemInformationApi
+from masking_api_60.api.logging_api import LoggingApi
+from masking_api_60.api.file_download_api import FileDownloadApi
 import os
 import urllib3
 
+from masking_api_53.api_client import ApiClient as ApiClient5
+
+
+def logging_file(message):
+    pass
+
+class DxApiClient(ApiClient):
+
+    def request(self, method, url, query_params=None, headers=None,
+            post_params=None, body=None, _preload_content=True,
+            _request_timeout=None):
+        
+        if logging.getLogger('debugfile').getEffectiveLevel() == 9:
+            logging_file("SAVE TO FILE {} {} {}".format(url, query_params, body))
+        response = super(DxApiClient, self).request(method, url, query_params, headers,
+                                        post_params, body, _preload_content,
+                                        _request_timeout)
+
+        if logging.getLogger('debugfile').getEffectiveLevel() == 9:
+            logging_file("SAVE TO FILE {} {} {}".format(response.status, response.reason, response.data))
+        return response
+
+
+class DxApiClient5(ApiClient5):
+
+    def request(self, method, url, query_params=None, headers=None,
+            post_params=None, body=None, _preload_content=True,
+            _request_timeout=None):
+        
+        if logging.getLogger().getEffectiveLevel() == 9:
+            logging_file("SAVE TO FILE 5 {} {} {}".format(url, query_params, body))
+        response = super(DxApiClient5, self).request(method, url, query_params, headers,
+                                        post_params, body, _preload_content,
+                                        _request_timeout)
+
+        if logging.getLogger().getEffectiveLevel() == 9:
+            logging_file("SAVE TO FILE 5 {} {} {}".format(response.status, response.reason, response.data))
+        return response
 
 class DxMaskingEngine(object):
 
@@ -70,6 +108,7 @@ class DxMaskingEngine(object):
         self.__password = engine_tuple[3]
         self.__port = engine_tuple[5]
         self.__protocol = engine_tuple[4]
+        self.__version = None
 
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxMaskingEngine object")
@@ -79,18 +118,21 @@ class DxMaskingEngine(object):
         self.__base_url = self.__protocol + "://" + self.__address + ":" \
             + str(self.__port) + "/masking/api"
 
-        config = Configuration()
-        config.host = self.__base_url
-        config.debug = False
+        self.config = Configuration()
+        self.config.host = self.__base_url
+        self.config.debug = False
+
 
         # to disable certs
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        config.verify_ssl = False
+        self.config.verify_ssl = False
 
         if self.__logger.getEffectiveLevel() == logging.DEBUG:
-            for name, logger in config.logger.items():
+            for name, logger in self.config.logger.items():
                 logger.setLevel(logging.DEBUG)
-                logger.removeHandler(config.logger_stream_handler)
+                logger.removeHandler(self.config.logger_stream_handler)
+
+
 
     @classmethod
     def get_username(self):
@@ -110,6 +152,7 @@ class DxMaskingEngine(object):
 
         self.get_session_worker(version=6)
         if self.get_version()<"6.0.0.0":
+           self.__logger.debug("Change API from 6 to 5") 
            self.get_session_worker(version=5) 
 
 
@@ -124,15 +167,9 @@ class DxMaskingEngine(object):
 
 
         if version==5:
-            from apis.v5.masking_apis.api_client import ApiClient as ApiClient5
-            from apis.v5.masking_apis.configuration import Configuration           
-
-            config = Configuration()
-            config.host = self.__base_url
-            config.debug = False
-            self.api_client = ApiClient5()
+            self.api_client = DxApiClient5(self.config)
         else:
-            self.api_client = ApiClient()
+            self.api_client = DxApiClient(self.config)
             
 
 
@@ -147,8 +184,9 @@ class DxMaskingEngine(object):
 
         try:
             self.__logger.debug("Check if old session is valid")
-            self.api_client.set_default_header(header_name='authorization',
-                                               header_value=apikey)
+            if apikey is not None:
+                self.api_client.set_default_header(header_name='authorization',
+                                                   header_value=apikey)
             app = ApplicationApi(self.api_client)
             app.get_all_applications(_request_timeout=self.get_timeout())
 
@@ -194,6 +232,10 @@ class DxMaskingEngine(object):
         Return version of engine
         return: version of engine as string. ex 5.3.0.0 or 5.2.0.0
         """
+
+        if self.__version is not None:
+            return self.__version
+
         try:
             si = SystemInformationApi(self.api_client)
             retobj = si.get_system_information()
@@ -201,6 +243,7 @@ class DxMaskingEngine(object):
         except ApiException:
             ret = "5.2.0.0"
 
+        self.__version = ret
         return ret
 
     @classmethod
@@ -314,3 +357,4 @@ class DxMaskingEngine(object):
 
         print_message("Log saved to file %s" % outputlog.name)
         return 0
+

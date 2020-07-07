@@ -18,90 +18,90 @@
 
 import click
 from sys import exit
-from lib.DxApplication.app_worker import application_list
-from lib.DxApplication.app_worker import application_add
-from lib.DxEnvironment.env_worker import environment_list
-from lib.DxEnvironment.env_worker import environment_add
-from lib.DxEnvironment.env_worker import environment_delete
-from lib.DxConnector.conn_worker import connector_list
-from lib.DxConnector.conn_worker import connector_add
-from lib.DxConnector.conn_worker import connector_delete
-from lib.DxConnector.conn_worker import connector_update
-from lib.DxConnector.conn_worker import connector_test
-from lib.DxConnector.conn_worker import connector_fetch
-from lib.DxConnector.conn_worker import database_types
-from lib.DxConnector.conn_worker import file_types
-from lib.DxRuleset.rule_worker import ruleset_list
-from lib.DxRuleset.rule_worker import ruleset_add
-from lib.DxRuleset.rule_worker import ruleset_delete
-from lib.DxRuleset.rule_worker import ruleset_clone
-from lib.DxRuleset.rule_worker import ruleset_export
-from lib.DxRuleset.rule_worker import ruleset_import
-from lib.DxRuleset.rule_worker import ruleset_check
-from lib.DxRuleset.rule_worker import ruleset_addmeta
-from lib.DxRuleset.rule_worker import ruleset_listmeta
-from lib.DxRuleset.rule_worker import ruleset_deletemeta
-from lib.DxRuleset.rule_worker import ruleset_refresh
-from lib.DxEngine.eng_worker import engine_add
-from lib.DxEngine.eng_worker import engine_list
-from lib.DxEngine.eng_worker import engine_delete
-from lib.DxEngine.eng_worker import engine_update
-from lib.DxEngine.eng_worker import engine_logout
-from lib.DxEngine.eng_worker import engine_logs
-from lib.DxJobs.jobs_worker import jobs_list
-from lib.DxJobs.jobs_worker import job_add
-from lib.DxJobs.jobs_worker import job_start
-from lib.DxJobs.jobs_worker import job_delete
-from lib.DxJobs.jobs_worker import job_copy
-from lib.DxJobs.jobs_worker import job_update
-from lib.DxJobs.jobs_worker import job_cancel
-from lib.DxColumn.column_worker import column_list
-from lib.DxColumn.column_worker import column_setmasking
-from lib.DxColumn.column_worker import column_unsetmasking
-from lib.DxColumn.column_worker import column_replace
-from lib.DxColumn.column_worker import column_batch
-from lib.DxColumn.column_worker import column_save
-from lib.DxFileFormat.fileformat_worker import fileformat_add
-from lib.DxFileFormat.fileformat_worker import fileformat_list
-from lib.DxFileFormat.fileformat_worker import fileformat_delete
-from lib.DxAlgorithm.alg_worker import algorithm_list
-from lib.DxAlgorithm.alg_worker import algorithm_export
-from lib.DxAlgorithm.alg_worker import algorithm_import
-from lib.DxTable.tab_worker import tab_listtable_details
-from lib.DxTable.tab_worker import tab_listfile_details
-from lib.DxTable.tab_worker import tab_update_meta
-from lib.DxProfile.profile_worker import profile_list
-from lib.DxProfile.profile_worker import expression_list
-from lib.DxProfile.profile_worker import expression_add
-from lib.DxProfile.profile_worker import expression_delete
-from lib.DxProfile.profile_worker import expression_update
-from lib.DxProfile.profile_worker import profile_add
-from lib.DxProfile.profile_worker import profile_delete
-from lib.DxProfile.profile_worker import profile_export
-from lib.DxProfile.profile_worker import profile_addexpression
-from lib.DxProfile.profile_worker import profile_deleteexpression
-from lib.DxJobs.jobs_worker import profilejobs_list
-from lib.DxJobs.jobs_worker import profilejob_start
-from lib.DxJobs.jobs_worker import profilejob_copy
-from lib.DxJobs.jobs_worker import profilejob_add
-from lib.DxJobs.jobs_worker import profilejob_update
-from lib.DxJobs.jobs_worker import profilejob_delete
-from lib.DxJobs.jobs_worker import profilejob_cancel
-from lib.DxSync.sync_worker import sync_list
-from lib.DxSync.sync_worker import sync_export
-from lib.DxSync.sync_worker import sync_import
-from lib.DxRole.role_worker import role_list
-from lib.DxUser.user_worker import user_list
-from lib.DxUser.user_worker import user_add
-from lib.DxUser.user_worker import user_delete
-from lib.DxUser.user_worker import user_update
-from lib.DxDomain.domain_worker import domain_list
-from lib.DxDomain.domain_worker import domain_add
-from lib.DxDomain.domain_worker import domain_delete
-from lib.DxDomain.domain_worker import domain_update
+from dxm.lib.DxApplication.app_worker import application_list
+from dxm.lib.DxApplication.app_worker import application_add
+from dxm.lib.DxEnvironment.env_worker import environment_list
+from dxm.lib.DxEnvironment.env_worker import environment_add
+from dxm.lib.DxEnvironment.env_worker import environment_delete
+from dxm.lib.DxConnector.conn_worker import connector_list
+from dxm.lib.DxConnector.conn_worker import connector_add
+from dxm.lib.DxConnector.conn_worker import connector_delete
+from dxm.lib.DxConnector.conn_worker import connector_update
+from dxm.lib.DxConnector.conn_worker import connector_test
+from dxm.lib.DxConnector.conn_worker import connector_fetch
+from dxm.lib.DxConnector.conn_worker import database_types
+from dxm.lib.DxConnector.conn_worker import file_types
+from dxm.lib.DxRuleset.rule_worker import ruleset_list
+from dxm.lib.DxRuleset.rule_worker import ruleset_add
+from dxm.lib.DxRuleset.rule_worker import ruleset_delete
+from dxm.lib.DxRuleset.rule_worker import ruleset_clone
+from dxm.lib.DxRuleset.rule_worker import ruleset_export
+from dxm.lib.DxRuleset.rule_worker import ruleset_import
+from dxm.lib.DxRuleset.rule_worker import ruleset_check
+from dxm.lib.DxRuleset.rule_worker import ruleset_addmeta
+from dxm.lib.DxRuleset.rule_worker import ruleset_listmeta
+from dxm.lib.DxRuleset.rule_worker import ruleset_deletemeta
+from dxm.lib.DxRuleset.rule_worker import ruleset_refresh
+from dxm.lib.DxEngine.eng_worker import engine_add
+from dxm.lib.DxEngine.eng_worker import engine_list
+from dxm.lib.DxEngine.eng_worker import engine_delete
+from dxm.lib.DxEngine.eng_worker import engine_update
+from dxm.lib.DxEngine.eng_worker import engine_logout
+from dxm.lib.DxEngine.eng_worker import engine_logs
+from dxm.lib.DxJobs.jobs_worker import jobs_list
+from dxm.lib.DxJobs.jobs_worker import job_add
+from dxm.lib.DxJobs.jobs_worker import job_start
+from dxm.lib.DxJobs.jobs_worker import job_delete
+from dxm.lib.DxJobs.jobs_worker import job_copy
+from dxm.lib.DxJobs.jobs_worker import job_update
+from dxm.lib.DxJobs.jobs_worker import job_cancel
+from dxm.lib.DxColumn.column_worker import column_list
+from dxm.lib.DxColumn.column_worker import column_setmasking
+from dxm.lib.DxColumn.column_worker import column_unsetmasking
+from dxm.lib.DxColumn.column_worker import column_replace
+from dxm.lib.DxColumn.column_worker import column_batch
+from dxm.lib.DxColumn.column_worker import column_save
+from dxm.lib.DxFileFormat.fileformat_worker import fileformat_add
+from dxm.lib.DxFileFormat.fileformat_worker import fileformat_list
+from dxm.lib.DxFileFormat.fileformat_worker import fileformat_delete
+from dxm.lib.DxAlgorithm.alg_worker import algorithm_list
+from dxm.lib.DxAlgorithm.alg_worker import algorithm_export
+from dxm.lib.DxAlgorithm.alg_worker import algorithm_import
+from dxm.lib.DxTable.tab_worker import tab_listtable_details
+from dxm.lib.DxTable.tab_worker import tab_listfile_details
+from dxm.lib.DxTable.tab_worker import tab_update_meta
+from dxm.lib.DxProfile.profile_worker import profile_list
+from dxm.lib.DxProfile.profile_worker import expression_list
+from dxm.lib.DxProfile.profile_worker import expression_add
+from dxm.lib.DxProfile.profile_worker import expression_delete
+from dxm.lib.DxProfile.profile_worker import expression_update
+from dxm.lib.DxProfile.profile_worker import profile_add
+from dxm.lib.DxProfile.profile_worker import profile_delete
+from dxm.lib.DxProfile.profile_worker import profile_export
+from dxm.lib.DxProfile.profile_worker import profile_addexpression
+from dxm.lib.DxProfile.profile_worker import profile_deleteexpression
+from dxm.lib.DxJobs.jobs_worker import profilejobs_list
+from dxm.lib.DxJobs.jobs_worker import profilejob_start
+from dxm.lib.DxJobs.jobs_worker import profilejob_copy
+from dxm.lib.DxJobs.jobs_worker import profilejob_add
+from dxm.lib.DxJobs.jobs_worker import profilejob_update
+from dxm.lib.DxJobs.jobs_worker import profilejob_delete
+from dxm.lib.DxJobs.jobs_worker import profilejob_cancel
+from dxm.lib.DxSync.sync_worker import sync_list
+from dxm.lib.DxSync.sync_worker import sync_export
+from dxm.lib.DxSync.sync_worker import sync_import
+from dxm.lib.DxRole.role_worker import role_list
+from dxm.lib.DxUser.user_worker import user_list
+from dxm.lib.DxUser.user_worker import user_add
+from dxm.lib.DxUser.user_worker import user_delete
+from dxm.lib.DxUser.user_worker import user_update
+from dxm.lib.DxDomain.domain_worker import domain_list
+from dxm.lib.DxDomain.domain_worker import domain_add
+from dxm.lib.DxDomain.domain_worker import domain_delete
+from dxm.lib.DxDomain.domain_worker import domain_update
 
 # from lib.DxLogging import print_error
-from lib.DxLogging import logging_est
+from dxm.lib.DxLogging import logging_est
 
 __version__ = 0.7
 
@@ -124,7 +124,8 @@ def debug_option(f):
         logging_est(state.logfile, state.debug)
         return value
     return click.option('--debug',
-                        is_flag=True,
+                        #is_flag=True,
+                        count=True,
                         expose_value=False,
                         help='Enables debug mode.',
                         callback=callback)(f)
@@ -2187,7 +2188,7 @@ def export(dxm_state, objecttype, objectname, envname, path):
 @click.option('--force', is_flag=True, default=False,
               help="Force object overwrite")
 @click.option(
-    '--inputfile', type=click.File('rt'),
+    '--inputfile', type=click.File('rb'),
     help="Name with path to imported object")
 @click.option('--inputpath', help="Path to object to load")
 @common_options

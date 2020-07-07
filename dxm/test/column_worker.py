@@ -3,23 +3,23 @@ from unittest import main
 import mock
 import sys
 from dxm.lib.DxLogging import logging_est
-from masking_apis.apis.environment_api import EnvironmentApi
-from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
-from masking_apis.apis.file_ruleset_api import FileRulesetApi
-from masking_apis.apis.database_connector_api import DatabaseConnectorApi
-from masking_apis.apis.file_connector_api import FileConnectorApi
+from masking_api_60.api.environment_api import EnvironmentApi
+from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
+from masking_api_60.api.file_ruleset_api import FileRulesetApi
+from masking_api_60.api.database_connector_api import DatabaseConnectorApi
+from masking_api_60.api.file_connector_api import FileConnectorApi
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.apis.table_metadata_api import TableMetadataApi
-from masking_apis.apis.file_metadata_api import FileMetadataApi
-from masking_apis.apis.file_format_api import FileFormatApi
-from masking_apis.apis.column_metadata_api import ColumnMetadataApi
-from masking_apis.apis.file_field_metadata_api import FileFieldMetadataApi
+from masking_api_60.api.table_metadata_api import TableMetadataApi
+from masking_api_60.api.file_metadata_api import FileMetadataApi
+from masking_api_60.api.file_format_api import FileFormatApi
+from masking_api_60.api.column_metadata_api import ColumnMetadataApi
+from masking_api_60.api.file_field_metadata_api import FileFieldMetadataApi
 from dxm.lib.DxColumn.column_worker import column_list
-from apis.v5.masking_apis.models.environment import Environment as env5
-from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
-from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
-from masking_apis.apis.system_information_api import SystemInformationApi
-from masking_apis.apis.application_api import ApplicationApi
+from apis.v5.masking_api_60.models.environment import Environment as env5
+from apis.v5.masking_api_60.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_api_60.api.environment_api import EnvironmentApi as envapi5
+from masking_api_60.api.system_information_api import SystemInformationApi
+from masking_api_60.api.application_api import ApplicationApi
 from engine import env_load
 from engine import dbruleset_load
 from engine import fileruleset_load

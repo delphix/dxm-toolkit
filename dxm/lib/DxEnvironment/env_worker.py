@@ -54,9 +54,8 @@ def environment_add(p_engine, envname, appname, purpose):
         envlist = DxEnvironmentList()
         env = DxEnvironment(engine_obj)
         # set required properties
-        env.environment_name = envname
-        env.application = appname
-        env.purpose = purpose
+        env.create_environment(environment_name = envname, application_name = appname, purpose = purpose)
+
 
         if envlist.add(env):
             ret = ret + 1
@@ -140,7 +139,7 @@ def environment_list(p_engine, format, envname):
             data.data_insert(
                               engine_tuple[0],
                               envobj.environment_name,
-                              envobj.application
+                              envobj.application_name
                             )
     print("")
     print (data.data_output(False))

@@ -4,36 +4,36 @@ import mock
 import sys
 import datetime
 from dxm.lib.DxLogging import logging_est
-from masking_apis.apis.masking_job_api import MaskingJobApi
-from masking_apis.models.masking_job import MaskingJob
-from masking_apis.models.masking_job_list import MaskingJobList
-from masking_apis.models.environment import Environment
-from masking_apis.models.environment_list import EnvironmentList
-from masking_apis.apis.environment_api import EnvironmentApi
-from masking_apis.models.execution import Execution
-from masking_apis.models.execution_list import ExecutionList
-from masking_apis.apis.execution_api import ExecutionApi
-from masking_apis.models.database_ruleset import DatabaseRuleset
-from masking_apis.models.database_ruleset_list import DatabaseRulesetList
-from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
-from masking_apis.apis.file_ruleset_api import FileRulesetApi
-from masking_apis.models.file_ruleset_list import FileRulesetList
-from masking_apis.models.database_connector import DatabaseConnector
-from masking_apis.models.file_connector import FileConnector
-from masking_apis.models.database_connector_list import DatabaseConnectorList
-from masking_apis.apis.database_connector_api import DatabaseConnectorApi
-from masking_apis.models.file_connector_list import FileConnectorList
-from masking_apis.apis.file_connector_api import FileConnectorApi
-from masking_apis.models.page_info import PageInfo
+from masking_api_60.api.masking_job_api import MaskingJobApi
+from masking_api_60.models.masking_job import MaskingJob
+from masking_api_60.models.masking_job_list import MaskingJobList
+from masking_api_60.models.environment import Environment
+from masking_api_60.models.environment_list import EnvironmentList
+from masking_api_60.api.environment_api import EnvironmentApi
+from masking_api_60.models.execution import Execution
+from masking_api_60.models.execution_list import ExecutionList
+from masking_api_60.api.execution_api import ExecutionApi
+from masking_api_60.models.database_ruleset import DatabaseRuleset
+from masking_api_60.models.database_ruleset_list import DatabaseRulesetList
+from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
+from masking_api_60.api.file_ruleset_api import FileRulesetApi
+from masking_api_60.models.file_ruleset_list import FileRulesetList
+from masking_api_60.models.database_connector import DatabaseConnector
+from masking_api_60.models.file_connector import FileConnector
+from masking_api_60.models.database_connector_list import DatabaseConnectorList
+from masking_api_60.api.database_connector_api import DatabaseConnectorApi
+from masking_api_60.models.file_connector_list import FileConnectorList
+from masking_api_60.api.file_connector_api import FileConnectorApi
+from masking_api_60.models.page_info import PageInfo
 from dxm.lib.DxJobs.DxJobsList import DxJobsList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxConnector.conn_worker import connector_list
 from dxm.lib.DxConnector.conn_worker import connector_add
-from apis.v5.masking_apis.models.environment import Environment as env5
-from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
-from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
-from masking_apis.apis.system_information_api import SystemInformationApi
-from masking_apis.apis.application_api import ApplicationApi
+from apis.v5.masking_api_60.models.environment import Environment as env5
+from apis.v5.masking_api_60.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_api_60.api.environment_api import EnvironmentApi as envapi5
+from masking_api_60.api.system_information_api import SystemInformationApi
+from masking_api_60.api.application_api import ApplicationApi
 from engine import env_load
 from engine import dbruleset_load
 from engine import fileruleset_load

@@ -22,9 +22,7 @@ import sys
 from dxm.lib.DxRole.DxRole import DxRole
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.apis.role_api import RoleApi
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 
 
@@ -54,9 +52,19 @@ class DxRoleList(object):
         return 1 if error
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.role_api import RoleApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.role_api import RoleApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = RoleApi
+        self.__apiexc = ApiException
+
         self.__roleList.clear()
         try:
-            api_instance = RoleApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             rolelist = paginator(
                         api_instance,
                         "get_all_roles",
@@ -71,7 +79,7 @@ class DxRoleList(object):
                 self.__logger.error("No roles found")
                 print_error("No roles found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             self.__logger.error("Can't load roles %s" % e.body)
             print_error("Can't load roles %s" % e.body)
             return 1

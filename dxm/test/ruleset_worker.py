@@ -3,24 +3,24 @@ import sys
 from unittest import TestCase, main
 
 import mock
-from masking_apis.apis.column_metadata_api import ColumnMetadataApi
-from masking_apis.apis.database_connector_api import DatabaseConnectorApi
-from masking_apis.apis.database_ruleset_api import DatabaseRulesetApi
-from masking_apis.apis.environment_api import EnvironmentApi
-from masking_apis.apis.async_task_api import AsyncTaskApi
-from masking_apis.apis.execution_api import ExecutionApi
-from masking_apis.apis.file_connector_api import FileConnectorApi
-from masking_apis.apis.file_format_api import FileFormatApi
-from masking_apis.apis.file_metadata_api import FileMetadataApi
-from masking_apis.apis.file_ruleset_api import FileRulesetApi
-from masking_apis.apis.masking_job_api import MaskingJobApi
-from masking_apis.apis.table_metadata_api import TableMetadataApi
-from masking_apis.models.database_ruleset import DatabaseRuleset
-# from masking_apis.models.page_info import PageInfo
-from masking_apis.models.table_metadata import TableMetadata
-from masking_apis.models.file_metadata import FileMetadata
-from masking_apis.models.async_task import AsyncTask
-from masking_apis.rest import ApiException
+from masking_api_60.api.column_metadata_api import ColumnMetadataApi
+from masking_api_60.api.database_connector_api import DatabaseConnectorApi
+from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
+from masking_api_60.api.environment_api import EnvironmentApi
+from masking_api_60.api.async_task_api import AsyncTaskApi
+from masking_api_60.api.execution_api import ExecutionApi
+from masking_api_60.api.file_connector_api import FileConnectorApi
+from masking_api_60.api.file_format_api import FileFormatApi
+from masking_api_60.api.file_metadata_api import FileMetadataApi
+from masking_api_60.api.file_ruleset_api import FileRulesetApi
+from masking_api_60.api.masking_job_api import MaskingJobApi
+from masking_api_60.api.table_metadata_api import TableMetadataApi
+from masking_api_60.models.database_ruleset import DatabaseRuleset
+# from masking_api_60.models.page_info import PageInfo
+from masking_api_60.models.table_metadata import TableMetadata
+from masking_api_60.models.file_metadata import FileMetadata
+from masking_api_60.models.async_task import AsyncTask
+from masking_api_60.rest import ApiException
 from mock import call
 
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
@@ -34,11 +34,11 @@ from engine import (createtable, dbconnector_load, dbruleset_load, env_load,
                     execution_load, fileconnector_load, fileformat_load,
                     filemeta_load, fileruleset_load, job_load, meta_load,
                     retok, tablemeta_load)
-from apis.v5.masking_apis.models.environment import Environment as env5
-from apis.v5.masking_apis.models.environment_list import EnvironmentList as envlist5
-from apis.v5.masking_apis.apis.environment_api import EnvironmentApi as envapi5
-from masking_apis.apis.system_information_api import SystemInformationApi
-from masking_apis.apis.application_api import ApplicationApi
+from apis.v5.masking_api_60.models.environment import Environment as env5
+from apis.v5.masking_api_60.models.environment_list import EnvironmentList as envlist5
+from apis.v5.masking_api_60.api.environment_api import EnvironmentApi as envapi5
+from masking_api_60.api.system_information_api import SystemInformationApi
+from masking_api_60.api.application_api import ApplicationApi
 from engine import app_load
 from engine import sysinfo_load
 
