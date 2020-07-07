@@ -102,6 +102,8 @@ from dxm.lib.DxDomain.domain_worker import domain_update
 
 # from lib.DxLogging import print_error
 from dxm.lib.DxLogging import logging_est
+from dxm.lib.DxLogging import print_error
+from dxm.lib.DxLogging import print_message
 
 __version__ = 0.7
 
@@ -1222,10 +1224,10 @@ def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     '--bulk_data', type=click.Choice(['Y', 'N']),
     help="Use bulk update for jobs. It's use by default")
 @click.option(
-    '--prescript', type=click.File('rt'),
+    '--prescript', 
     help="File name and path used as prescript")
 @click.option(
-    '--postscript', type=click.File('rt'),
+    '--postscript',
     help="File name and path used as postscript")
 @common_options
 @pass_state
@@ -1238,6 +1240,27 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     Update an existing job on Masking engine
     Return non zero code if there was problem with updating a job
     """
+
+    f_prescript = None
+    f_postscript = None
+
+    try:
+        if prescript is not None:
+            if prescript == '':
+                f_prescript = prescript
+            else:
+                f_prescript = open(prescript)
+
+        if postscript is not None:
+            if postscript == '':
+                f_postscript = postscript
+            else:
+                f_postscript = open(postscript)
+
+    except FileNotFoundError:
+        print_error("File {} not found".format(prescript))
+        exit(1)
+
 
     params = {
         "rulesetname": rulesetname,
@@ -1258,8 +1281,8 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "drop_indexes": drop_indexes,
         "disable_triggers": disable_triggers,
         "truncate_tables": truncate_tables,
-        "prescript": prescript,
-        "postscript": postscript
+        "prescript": f_prescript,
+        "postscript": f_postscript
     }
     exit(job_update(dxm_state.engine, jobname, envname, params))
 
