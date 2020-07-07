@@ -23,11 +23,9 @@ from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
 from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
 from dxm.lib.DxConnector.DxConnector import DxConnector
-from masking_apis.apis.database_connector_api import DatabaseConnectorApi
-from masking_apis.apis.file_connector_api import FileConnectorApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.rest import ApiException
+from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
@@ -38,6 +36,8 @@ class DxConnectorsList(object):
     __connectorsList = {}
     __engine = None
     __logger = None
+    __loaded_engine = None
+    __loaded_env = None
 
     @classmethod
     def __init__(self, environment_name=None):
@@ -58,10 +58,35 @@ class DxConnectorsList(object):
         :param1 environment_name: Limit load to particular environment name
         """
 
-        # delete a list as we can have multi engines
-        self.__connectorsList.clear()
+        self.__logger.debug("load connector !!!")
+
+
+
+        if self.__loaded_engine is None:
+            self.__loaded_engine = self.__engine.get_name()
+
+        
+        if self.__loaded_engine == self.__engine.get_name() and self.__connectorsList != {} \
+           and self.__loaded_env == environment_name:
+           return None
+        else:
+            # delete a list as we can have multi engines
+            self.__connectorsList.clear()
+            self.__loaded_engine = self.__engine.get_name()
+
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.database_connector_api import DatabaseConnectorApi
+            from masking_api_60.api.file_connector_api import FileConnectorApi
+        else:
+            from masking_api_53.api.database_connector_api import DatabaseConnectorApi
+            from masking_api_53.api.file_connector_api import FileConnectorApi
+
+        self.__api = DatabaseConnectorApi
+        self.__fileapi = FileConnectorApi
+        self.__loaded_env = environment_name
+
         try:
-            api_instance = DatabaseConnectorApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
 
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
@@ -100,7 +125,7 @@ class DxConnectorsList(object):
             else:
                 self.__logger.debug("No database connectors found")
 
-            api_instance = FileConnectorApi(self.__engine.api_client)
+            api_instance = self.__fileapi(self.__engine.api_client)
 
             if environment_id:
                 file_connectors = paginator(
@@ -239,5 +264,5 @@ class DxConnectorsList(object):
             else:
                 return 1
         else:
-            print "Connector with id %s not found" % databaseConnectorId
+            print_error("Connector with id %s not found" % databaseConnectorId)
             return 1

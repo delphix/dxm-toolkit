@@ -273,12 +273,15 @@ def ruleset_add(p_engine, rulesetname, connectorname, envname):
         if connobj:
             if connobj.is_database:
                 ruleset = DxDatabaseRuleset(engine_obj)
-                ruleset.ruleset_name = rulesetname
-                ruleset.database_connector_id = connobj.connectorId
+                ruleset.create_database_ruleset(
+                    ruleset_name = rulesetname,
+                    database_connector_id=connobj.connectorId,
+                    refresh_drops_tables=None)
             else:
                 ruleset = DxFileRuleset(engine_obj)
-                ruleset.ruleset_name = rulesetname
-                ruleset.file_connector_id = connobj.connectorId
+                ruleset.create_file_ruleset(
+                    ruleset_name = rulesetname,
+                    file_connector_id =connobj.connectorId)
 
             if rulelist.add(ruleset):
                 ret = ret + 1

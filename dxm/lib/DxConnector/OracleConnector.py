@@ -20,6 +20,8 @@
 
 import logging
 from dxm.lib.DxConnector.DxConnector import DxConnector
+from dxm.lib.DxLogging import print_error
+from dxm.lib.DxLogging import print_message
 
 
 class OracleConnector(DxConnector):
@@ -31,13 +33,16 @@ class OracleConnector(DxConnector):
         """
         DxConnector.__init__(self, engine)
         self.__engine = engine
-        self.database_type = 'ORACLE'
         self.__logger = logging.getLogger()
         self.__logger.debug("creating OracleConnector object")
 
+
     @property
     def schema_name(self):
-        return self._schema_name
+        if self.obj is not None:
+            return self.obj.schema_name
+        else:
+            return None  
 
     @schema_name.setter
     def schema_name(self, schema_name):
@@ -45,19 +50,31 @@ class OracleConnector(DxConnector):
         schemaName
         :param schemaName: Schema Name
         """
-        self._schema_name = schema_name.upper()
+
+        if self.obj is not None:
+            self.obj.schema_name = schema_name.upper()
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     @property
     def username(self):
-        return self._username
+        if self.obj is not None:
+            return self.obj.username
+        else:
+            return None  
 
     @username.setter
     def username(self, username):
         """
         username
-        :param username: User Name
+        :param schemaName: username Name
         """
-        self._username = username.upper()
+
+        if self.obj is not None:
+            self.obj.username = username.upper()
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def get_type_properties(self):
         """
@@ -101,7 +118,7 @@ class OracleConnector(DxConnector):
         empty = 0
         for k in props.keys():
             if (props[k] is None):
-                print "Property %s can't be empty" % k
+                print_error("Property %s can't be empty" % k)
                 empty = empty + 1
 
         if empty == 0:

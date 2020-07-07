@@ -19,12 +19,10 @@
 
 import logging
 import sys
-from masking_apis.apis.file_format_api import FileFormatApi
 from dxm.lib.DxFileFormat.DxFileFormat import DxFileFormat
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 
 
@@ -42,7 +40,7 @@ class DxFileFormatList(object):
         """
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
-        self.__logger.debug("creating DxFileFormatList object")
+        self.__logger.debug("creating DxFileFormatList object")        
         if not self.__filetypeList:
             self.LoadFileFormats()
 
@@ -53,8 +51,18 @@ class DxFileFormatList(object):
         Return None if OK
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.file_format_api import FileFormatApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.file_format_api import FileFormatApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = FileFormatApi
+        self.__apiexc = ApiException
+
         try:
-            api_instance = FileFormatApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
 
             fileformats = paginator(
                             api_instance,
@@ -69,7 +77,7 @@ class DxFileFormatList(object):
                 print_error("No file formats found")
                 self.__logger.error("No file formats found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error("Can't load file formats %s" % e.body)
             return None
 

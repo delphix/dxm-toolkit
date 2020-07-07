@@ -36,9 +36,9 @@ from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
-from masking_apis.models.database_masking_options import DatabaseMaskingOptions
-from masking_apis.models.masking_job_script import MaskingJobScript
-from masking_apis.models.on_the_fly_masking_source import OnTheFlyMaskingSource
+from masking_api_60.models.database_masking_options import DatabaseMaskingOptions
+from masking_api_60.models.masking_job_script import MaskingJobScript
+from masking_api_60.models.on_the_fly_masking_source import OnTheFlyMaskingSource
 
 from threading import Thread
 from threading import active_count
@@ -116,9 +116,7 @@ def profilejob_add(p_engine, params):
 
 
         job = DxProfileJob(engine_obj, None)
-        job.ruleset_id = rulesetref
-        job.job_name = jobname
-        job.profile_set_id = profileref
+        job.create_job(job_name=jobname, ruleset_id=rulesetref, profile_set_id=profileref)
 
         for p in masking_params_list:
             if params[p] is not None:
@@ -128,7 +126,7 @@ def profilejob_add(p_engine, params):
                     value = False
                 else:
                     value = params[p]
-                setattr(job, p, value)
+                setattr(job.obj, p, value)
 
         if joblist.add(job):
             ret = ret + 1
@@ -172,8 +170,7 @@ def job_add(p_engine, params):
         rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
 
         job = DxJob(engine_obj, None)
-        job.ruleset_id = rulesetref
-        job.job_name = jobname
+        job.create_job(job_name=jobname, ruleset_id=rulesetref)
 
         for p in optional_params_list:
             if params[p] is not None:
@@ -323,7 +320,7 @@ def do_update(**kwargs):
 
     logger = logging.getLogger()
 
-    if "rulesetname" in params:
+    if "rulesetname" in params and params['rulesetname'] != None:
         rulesetname = params['rulesetname']
         # as job is in particular environment
         # new ruleset need to be search in same environment
@@ -355,7 +352,7 @@ def do_update(**kwargs):
                     value = False
                 else:
                     value = params[p]
-                setattr(jobobj, p, value)
+                setattr(jobobj.obj, p, value)
 
         dmo = jobobj.database_masking_options
 
@@ -371,7 +368,7 @@ def do_update(**kwargs):
                 setattr(dmo, p, value)
     else:
 
-        if "profilename" in params:
+        if "profilename" in params and params['rulesetname'] != None:
             profilename = params['profilename']
 
             oldprofile = jobobj.profile_set_id
@@ -392,7 +389,7 @@ def do_update(**kwargs):
                     value = False
                 else:
                     value = params[p]
-                setattr(jobobj, p, value)
+                setattr(jobobj.obj, p, value)
 
     if update:
         return jobobj.update()
@@ -538,11 +535,13 @@ def job_selector(**kwargs):
 
 
         else:
-            lock.acquire()
+            if lock:
+                lock.acquire()
             dxm.lib.DxJobs.DxJobCounter.ret = \
                 dxm.lib.DxJobs.DxJobCounter.ret + 1
 
-            lock.release()
+            if lock:
+                lock.release()
             continue
 
     return ret
@@ -658,7 +657,7 @@ def job_start_worker(p_engine, jobname, envname, tgt_connector,
                 except IndexError:
                     pass
         except Exception:
-            print "Error: unable to start thread"
+            print_error("Error: unable to start thread")
 
         # wait 1 sec before kicking off next job
         time.sleep(1)
@@ -675,7 +674,7 @@ def job_start_worker(p_engine, jobname, envname, tgt_connector,
         jobsbar.close()
 
     logger.debug("After close")
-    print "\n" * posno
+    print_message("\n" * posno)
 
     if joblist_class == "DxJobsList":
         return dxm.lib.DxJobs.DxJobCounter.ret
@@ -805,15 +804,15 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
         # load all objects
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulesetlist = DxRulesetList()
-        connectorlist = DxConnectorsList()
+        rulesetlist = DxRulesetList(envname)
+        connectorlist = DxConnectorsList(envname)
         joblist = globals()[joblist_class]()
 
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
 
         joblist.LoadJobs(envname)
-        rulesetlist.LoadRulesets(envname)
-        connectorlist.LoadConnectors(envname)
+        #rulesetlist.LoadRulesets(envname)
+        #connectorlist.LoadConnectors(envname)
 
         if jobname is None:
             jobs = joblist.get_allref()

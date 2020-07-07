@@ -6,7 +6,7 @@ setup(
     #version=dxm.dxm.__version__,
     packages=find_packages(),
     install_requires=[
-        'click','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil", "masking_apis", "colorama", "tqdm", "packaging"
+        'click','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil", "colorama", "tqdm", "packaging"
     ],
     entry_points='''
         [console_scripts]
@@ -19,3 +19,8 @@ setup(
         "Development Status :: 2 - Beta"
     ]
 )
+
+# add swagger libs
+# docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_60 -DpackageName=masking_api_60
+# cd masking_api_60
+# python setup.py install

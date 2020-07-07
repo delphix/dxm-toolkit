@@ -21,11 +21,8 @@ import logging
 import sys
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.apis.profile_job_api import ProfileJobApi
 from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
-from masking_apis.apis.execution_api import ExecutionApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 
@@ -57,10 +54,23 @@ class DxProfileJobsList(object):
         Return None if OK
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.profile_job_api import ProfileJobApi
+            from masking_api_60.api.execution_api import ExecutionApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.profile_job_api import ProfileJobApi
+            from masking_api_53.api.execution_api import ExecutionApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = ProfileJobApi
+        self.__apiexec = ExecutionApi
+        self.__apiexc = ApiException
+
         try:
 
-            api_instance = ProfileJobApi(self.__engine.api_client)
-            execapi = ExecutionApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
+            execapi = self.__apiexec(self.__engine.api_client)
             execList = paginator(
                         execapi,
                         "get_all_executions")
@@ -209,5 +219,5 @@ class DxProfileJobsList(object):
             else:
                 return 1
         else:
-            print "Job with id %s not found" % profile_job_id
+            print_error("Job with id %s not found" % profile_job_id)
             return 1

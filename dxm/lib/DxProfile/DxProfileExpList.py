@@ -20,10 +20,8 @@
 import logging
 import sys
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.apis.profile_expression_api import ProfileExpressionApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxProfile.DxProfileExt import DxProfileExt
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 
@@ -51,9 +49,19 @@ class DxProfileExpList(object):
         Return None if OK
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.profile_expression_api import ProfileExpressionApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.profile_expression_api import ProfileExpressionApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = ProfileExpressionApi
+        self.__apiexc = ApiException
+
         try:
 
-            api_instance = ProfileExpressionApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             profileexts = paginator(
                             api_instance,
                             "get_all_profile_expressions",
@@ -70,7 +78,7 @@ class DxProfileExpList(object):
 
             self.__logger.debug("All Profile expression loaded")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error("Can't load Profile expression list %s" % e.body)
             return 1
 
@@ -144,11 +152,12 @@ class DxProfileExpList(object):
         """
 
         exp = self.get_by_ref(profile_expression_id)
+
         if exp is not None:
             if exp.delete() is None:
                 return None
             else:
                 return 1
         else:
-            print "Expression with id %s not found" % profile_expression_id
+            print_error("Expression with id %s not found" % profile_expression_id)
             return 1

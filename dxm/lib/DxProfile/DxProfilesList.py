@@ -20,10 +20,8 @@
 import logging
 import sys
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.apis.profile_set_api import ProfileSetApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxProfile.DxProfile import DxProfile
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 
@@ -52,9 +50,19 @@ class DxProfilesList(object):
         Return None if OK
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.profile_set_api import ProfileSetApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.profile_set_api import ProfileSetApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = ProfileSetApi
+        self.__apiexc = ApiException
+
         try:
 
-            api_instance = ProfileSetApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
 
             # execapi = ExecutionApi(self.__engine.api_client)
             # execList = paginator(
@@ -81,7 +89,7 @@ class DxProfilesList(object):
 
             self.__logger.debug("All Profile sets loaded")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error("Can't load Profile sets list %s" % e.body)
             return 1
 
@@ -117,6 +125,7 @@ class DxProfilesList(object):
                     name,
                     self,
                     'profile_set_name')
+
         if len(reflist) == 0:
             self.__logger.error('Profile set %s not found' % name)
             print_error('Profile set %s not found' % name)
@@ -159,5 +168,5 @@ class DxProfilesList(object):
             else:
                 return 1
         else:
-            print "Profile with id %s not found" % profile_set_id
+            print_error("Profile with id %s not found" % profile_set_id)
             return 1

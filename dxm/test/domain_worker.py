@@ -6,9 +6,9 @@ import sys
 import datetime
 from dxm.lib.DxLogging import logging_est
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.models.page_info import PageInfo
-from masking_apis.apis.domain_api import DomainApi
-from masking_apis.models.domain import Domain
+from masking_api_60.models.page_info import PageInfo
+from masking_api_60.api.domain_api import DomainApi
+from masking_api_60.models.domain import Domain
 from dxm.lib.DxDomain.domain_worker import domain_list
 from dxm.lib.DxDomain.domain_worker import domain_add
 from dxm.lib.DxDomain.domain_worker import domain_delete

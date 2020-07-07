@@ -18,30 +18,72 @@
 
 
 import logging
-from masking_apis.models.application_settings import ApplicationSettings
-from masking_apis.apis.application_settings_api import ApplicationSettingsApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxAppSetting(ApplicationSettings):
+class DxAppSetting(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        ApplicationSettings.__init__(self)
+        #ApplicationSettings.__init__(self)
         self.__logger = logging.getLogger()
         self.__engine = engine
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.application_settings import ApplicationSettings
+            from masking_api_60.api.application_settings_api import ApplicationSettingsApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.application_settings import ApplicationSettings
+            from masking_api_53.api.application_settings_api import ApplicationSettingsApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = ApplicationSettingsApi
+        self.__model = ApplicationSettings
+        self.__apiexc = ApiException
+        self.__obj = None
 
     def from_role(self, appsetting):
-        """
-        Copy properties from ApplicationSettings object into DxRole
-        :param appsetting: ApplicationSettings object
-        """
-        self.__dict__.update(appsetting.__dict__)
+        self.__obj = appsetting
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+
+    @property
+    def setting_name(self):
+        if self.obj is not None:
+            return self.obj.setting_name
+        else:
+            return None
+
+    @setting_name.setter
+    def setting_name(self, setting_name):
+        if self.__obj is not None:
+            self.__obj.setting_name = setting_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def setting_value(self):
+        if self.obj is not None:
+            return self.obj.setting_value
+        else:
+            return None
+
+    @setting_value.setter
+    def setting_value(self, setting_value):
+        if self.__obj is not None:
+            self.__obj.setting_value = setting_value
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     # def add(self):
     #     """

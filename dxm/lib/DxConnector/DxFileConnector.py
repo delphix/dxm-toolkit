@@ -20,15 +20,11 @@
 
 import logging
 from dxm.lib.DxConnector.DxConnector import DxConnector
-from masking_apis.apis.file_connector_api import FileConnectorApi
-from masking_apis.models.file_connector import FileConnector
-from masking_apis.models.connection_info import ConnectionInfo
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxFileConnector(DxConnector, FileConnector):
+class DxFileConnector(DxConnector):
 
     def __init__(self, engine):
         """
@@ -36,31 +32,92 @@ class DxFileConnector(DxConnector, FileConnector):
         :param engine: DxMaskingEngine object
         """
         DxConnector.__init__(self, engine)
-        FileConnector.__init__(self)
+        #FileConnector.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating FileConnector object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.file_connector import FileConnector
+            from masking_api_60.api.file_connector_api import FileConnectorApi
+            from masking_api_60.models.connection_info import ConnectionInfo
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.file_connector import FileConnector
+            from masking_api_53.api.file_connector_api import FileConnectorApi
+            from masking_api_53.models.connection_info import ConnectionInfo
+            from masking_api_53.rest import ApiException
+
+        self.__api = FileConnectorApi
+        self.__model = FileConnector
+        self.__model_connection_info = ConnectionInfo
+        self.__apiexc = ApiException
+        self.__obj = None
+
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
 
     @property
     def connectorId(self):
-        return self.file_connector_id
+        return self.obj.file_connector_id
 
     @property
     def host(self):
-        return self.connection_info.host
+        return self.obj.connection_info.host
 
     @property
     def port(self):
-        return self.connection_info.port
+        return self.obj.connection_info.port
+
+    @property
+    def schema_name(self):
+        return 'N/A'
+
+    @property
+    def connector_type(self):
+        """
+        connector_type
+        """
+        if self.obj is not None:
+            if self.is_database:
+                return self.obj.database_type
+            else:
+                return self.obj.file_type
+        else:
+            return None
+
+
+    def from_connector(self, con):
+        """
+        Set a obj property using a Database Connector 
+        :param con: DatabaseConnector object
+        """
+        self.__obj = con
+
+
+    def create_connector(self, connector_name, file_type, environment_id, host, port, login_name, password, path, connection_mode):
+        """
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        ci = self.__model_connection_info(connection_mode=connection_mode, path=path, host=host, login_name=login_name, password=password, port=port)
+        self.__obj = self.__model(connector_name=connector_name, file_type=file_type, environment_id=environment_id, connection_info=ci)
 
     def get_type_properties(self):
         """
         Return dict with properties specific for connector type
         """
         props = {
-            'login_name': self.connection_info.login_name,
-            'path': self.connection_info.path,
-            'connection_mode': self.connection_info.connection_mode
+            'login_name': self.obj.connection_info.login_name,
+            'path': self.obj.connection_info.path,
+            'connection_mode': self.obj.connection_info.connection_mode
         }
         return props
 
@@ -70,18 +127,18 @@ class DxFileConnector(DxConnector, FileConnector):
         """
 
         props = {
-            'host': self.connection_info.host,
-            'username': self.connection_info.login_name,
-            'connectorName': self.connector_name,
-            'password': self.connection_info.password,
-            'fileType': self.file_type,
-            'environmentId': self.environment_id,
+            'host': self.obj.connection_info.host,
+            'username': self.obj.connection_info.login_name,
+            'connectorName': self.obj.connector_name,
+            'password': self.obj.connection_info.password,
+            'fileType': self.obj.file_type,
+            'environmentId': self.obj.environment_id,
         }
 
         empty = 0
         for k in props.keys():
             if (props[k] is None):
-                print "Property %s can't be empty" % k
+                print_error("Property %s can't be empty" % k)
                 empty = empty + 1
 
         if empty == 0:
@@ -102,16 +159,16 @@ class DxFileConnector(DxConnector, FileConnector):
         try:
             self.__logger.debug("create connector input %s" % str(self))
 
-            api_instance = FileConnectorApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_file_connector(
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.file_connector_id = response.file_connector_id
 
             self.__logger.debug("connector response %s"
                                 % str(response))
 
-            print_message("Connector %s added" % self.connector_name)
+            print_message("Connector %s added" % self.obj.connector_name)
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -124,18 +181,18 @@ class DxFileConnector(DxConnector, FileConnector):
         return 1 in case of error
         """
 
-        api_instance = FileConnectorApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("delete connector id %s"
-                                % self.environment_id)
+                                % self.connectorId)
             response = api_instance.delete_file_connector(
-                self.file_connector_id,
+                self.connectorId,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("delete connector response %s"
                                 % str(response))
             print_message("Connector %s deleted" % self.connector_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -146,7 +203,7 @@ class DxFileConnector(DxConnector, FileConnector):
         Return None if OK
         """
 
-        api_instance = FileConnectorApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
         body = FileConnector()
         newci = ConnectionInfo()
 
@@ -178,7 +235,7 @@ class DxFileConnector(DxConnector, FileConnector):
         #
         #     self.file_connector_id = response.file_connector_id
         #     print_message("Connector %s updated" % self.connector_name)
-        # except ApiException as e:
+        # except self.__apiexc as e:
         #     print_error(e.body)
         #     self.__logger.error(e)
         #     return 1
@@ -189,21 +246,29 @@ class DxFileConnector(DxConnector, FileConnector):
         Return None if OK
         """
 
-        api_instance = FileConnectorApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("test connector id %s"
-                                % self.environment_id)
-            response = api_instance.test_file_connector(
-                self.file_connector_id,
-                _request_timeout=self.__engine.get_timeout())
+                                % self.connectorId)
+
+            if (self.__engine.version_ge('6.0.0')):
+                response = api_instance.test_file_connector(
+                    self.connectorId,
+                    body=self.obj,
+                    _request_timeout=self.__engine.get_timeout())
+            else:
+                response = api_instance.test_file_connector(
+                    self.connectorId,
+                    _request_timeout=self.__engine.get_timeout())
             if response.response == "Connection Failed":
                 print_error("Connector test %s failed" % self.connector_name)
                 return 1
             else:
                 print_message("Connector test %s succeeded"
                               % self.connector_name)
-        except ApiException as e:
+                return 0
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -215,17 +280,17 @@ class DxFileConnector(DxConnector, FileConnector):
         None if no objects
         """
 
-        api_instance = FileConnectorApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("fetch connector id %s"
-                                % self.environment_id)
+                                % self.connectorId)
             response = api_instance.fetch_file_metadata(
-                self.file_connector_id,
+                self.connectorId,
                 _request_timeout=self.__engine.get_timeout())
-            self.__logger.debug("list of tables" + str(response))
+            self.__logger.debug("list of files" + str(response))
             return response
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return None
