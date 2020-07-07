@@ -1,3 +1,8 @@
+## Version 0.71
+
+### Added:
+ - Added Job Report [ dxmc job report --engine <enginename>]
+ 
 ## Version 0.6
 
 ### Added:
@@ -77,6 +82,12 @@
 
 ### Changed:
  - various bug fixes
+ 
+## Version 0.22
+
+### Changed:
+ - fix for adding file into files rulesets
+ - other small bug fixs
 
 ## Version 0.21
 

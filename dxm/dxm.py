@@ -55,6 +55,7 @@ from dxm.lib.DxJobs.jobs_worker import job_delete
 from dxm.lib.DxJobs.jobs_worker import job_copy
 from dxm.lib.DxJobs.jobs_worker import job_update
 from dxm.lib.DxJobs.jobs_worker import job_cancel
+from dxm.lib.DxJobs.jobs_worker import jobs_report
 from dxm.lib.DxColumn.column_worker import column_list
 from dxm.lib.DxColumn.column_worker import column_setmasking
 from dxm.lib.DxColumn.column_worker import column_unsetmasking
@@ -1047,6 +1048,21 @@ def list(dxm_state, jobname, envname):
     """
     exit(jobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
 
+@job.command()
+@click.option('--jobname', help="Filter jobs using jobname")
+@click.option('--envname', help='Filter jobs belongs to one environment')
+@common_options
+@pass_state
+def report(dxm_state, jobname, envname):
+    """
+    Display report of jobs defined in Masking Engine
+
+    If no filter options are specified, all jobs will be displayed.
+    If --envname or --jobname is set, output list will
+    be limited by value of this option and return non-zero return code
+    if jobname is not found.
+    """
+    exit(jobs_report(dxm_state.engine, jobname, envname, dxm_state.format))
 
 @job.command()
 @click.option(

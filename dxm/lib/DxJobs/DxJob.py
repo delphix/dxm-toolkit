@@ -249,6 +249,22 @@ class DxJob(object):
         else:
             raise ValueError("Object needs to be initialized first")
 
+
+    @property
+    def ruleset_type(self):
+        if self.obj is not None:
+            return self.obj.ruleset_type
+        else:
+            return None
+
+    @ruleset_type.setter
+    def ruleset_type(self, ruleset_type):
+        if self.__obj is not None:
+            self.__obj.ruleset_type = ruleset_type
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
     @property
     def masking_job_id(self):
         if self.obj is not None:
