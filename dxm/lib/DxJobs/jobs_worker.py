@@ -43,6 +43,7 @@ from masking_api_60.models.on_the_fly_masking_source import OnTheFlyMaskingSourc
 from threading import Thread
 from threading import active_count
 import time
+import os
 from tqdm import tqdm
 from threading import RLock
 import dxm.lib.DxJobs.DxJobCounter
@@ -211,16 +212,15 @@ def job_add(p_engine, params):
                 on_the_fly_maskking_srcobj.connector_type = "FILE"
             job.on_the_fly_masking_source = on_the_fly_maskking_srcobj
 
+
         if params["prescript"]:
-            prescript = MaskingJobScript()
-            prescript.contents = ''.join(params["prescript"].readlines())
-            prescript.name = params["prescript"].name
+            scriptname = os.path.basename(params["prescript"].name)
+            prescript = MaskingJobScript(name=scriptname, contents=''.join(params["prescript"].readlines()))
             dmo.prescript = prescript
 
         if params["postscript"]:
-            postscript = MaskingJobScript()
-            postscript.contents = ''.join(params["postscript"].readlines())
-            postscript.name = params["postscript"].name
+            scriptname = os.path.basename(params["postscript"].name)
+            postscript = MaskingJobScript(name=scriptname, contents = ''.join(params["postscript"].readlines()))
             dmo.postscript = postscript
 
         job.database_masking_options = dmo
@@ -366,6 +366,20 @@ def do_update(**kwargs):
                 else:
                     value = params[p]
                 setattr(dmo, p, value)
+
+        if params["prescript"]=='':
+            dmo.prescript = None
+        elif params["prescript"]:
+            scriptname = os.path.basename(params["prescript"].name)
+            prescript = MaskingJobScript(name=scriptname, contents=''.join(params["prescript"].readlines()))
+            dmo.prescript = prescript
+
+        if params["postscript"]=='':
+            dmo.postscript = None
+        if params["postscript"]:
+            scriptname = os.path.basename(params["postscript"].name)
+            postscript = MaskingJobScript(name=scriptname, contents = ''.join(params["postscript"].readlines()))
+            dmo.postscript = postscript
     else:
 
         if "profilename" in params and params['rulesetname'] != None:
