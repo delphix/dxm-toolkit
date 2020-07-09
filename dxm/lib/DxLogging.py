@@ -49,6 +49,7 @@ def exception_handler(etype, value, tb):
     """
     exception printing handler
     """
+
     if logging.getLogger().getEffectiveLevel() < 20:
         print_exception("".join(traceback.format_exception(etype, value, tb)))
     else:

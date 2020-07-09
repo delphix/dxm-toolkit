@@ -91,7 +91,7 @@ class DxEnvironmentList(object):
                     environment.from_environment(c)
                     if hasattr(c, "application_id"):
                         app = appList.get_by_ref(c.application_id)
-                        environment.application = app.application_name
+                        environment.application_name = app.application_name
                     self.__environmentList[c.environment_id] = environment
             else:
                 self.__logger.error("No environments found")

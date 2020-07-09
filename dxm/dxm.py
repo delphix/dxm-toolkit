@@ -342,8 +342,8 @@ def domain(dxm_state):
     '--protocol', help='Communication protocol (default http)', default='http',
     required=True, type=click.Choice(['http', 'https']))
 @click.option(
-    '--username', default='delphix_admin', required=True,
-    help='Username used by toolkit (default delphix_admin)')
+    '--username', default='admin', required=True,
+    help='Username used by toolkit (default admin)')
 @click.option(
     '--default', help='Setting engine as default engine for toolkit'
     ' (Default value N)', type=click.Choice(['Y', 'N']), default='N')
@@ -352,14 +352,28 @@ def domain(dxm_state):
     confirmation_prompt=True, required=True,
     help='Engine password for specified user. If you want to hide input'
     ' don''t specify this parameter and you will be propted')
+@click.option(
+    '--proxyurl', 
+    help='Proxy URL, ex: http://proxy:3128')
+@click.option(
+    '--proxyuser', 
+    help='Username for proxy')
+@click.option(
+    '--proxypassword', help='Password for proxy'
+    'If you want to hide input put '' as value and you will be propted')
 @logfile_option
+@debug_options
 @pass_state
-def add(dxm_state, engine, ip, port, protocol, username, password, default):
+def add(dxm_state, engine, ip, port, protocol, username, password, default,
+        proxyurl, proxyuser, proxypassword):
     """
     Add engine entry to configuration database
     """
-    engine_add(engine, ip, username, password,
-               protocol, port, default)
+    if proxypassword == '':
+        proxypassword = click.prompt('Please enter a password', hide_input=True,
+                                     confirmation_prompt=True)
+    exit(engine_add(engine, ip, username, password,
+         protocol, port, default, proxyurl, proxyuser, proxypassword))
 
 
 @engine.command()
@@ -377,17 +391,30 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default):
 @click.option(
     '--password', help='Engine password for specified user. '
     'If you want to hide input put '' as value and you will be propted')
+@click.option(
+    '--proxyurl', 
+    help='Proxy URL, ex: http://proxy:3128')
+@click.option(
+    '--proxyuser', 
+    help='Username for proxy')
+@click.option(
+    '--proxypassword', help='Password for proxy'
+    'If you want to hide input put '' as value and you will be propted')
 @debug_options
 @pass_state
-def update(dxm_state, engine, ip, port, protocol, username, password, default):
+def update(dxm_state, engine, ip, port, protocol, username, password, default,
+           proxyurl, proxyuser, proxypassword):
     """
     Update engine entry in configuration database
     """
     if password == '':
         password = click.prompt('Please enter a password', hide_input=True,
                                 confirmation_prompt=True)
+    if proxypassword == '':
+        proxypassword = click.prompt('Please enter a password', hide_input=True,
+                                confirmation_prompt=True)
     exit(engine_update(engine, ip, username, password,
-                  protocol, port, default))
+         protocol, port, default, proxyurl, proxyuser, proxypassword))
 
 
 @engine.command()
