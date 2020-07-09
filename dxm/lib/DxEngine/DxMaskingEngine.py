@@ -37,6 +37,10 @@ from masking_api_60.api.logging_api import LoggingApi
 from masking_api_60.api.file_download_api import FileDownloadApi
 import os
 import urllib3
+import ssl
+import certifi
+from urllib3 import make_headers, ProxyManager, PoolManager
+
 
 from masking_api_53.api_client import ApiClient as ApiClient5
 
@@ -45,6 +49,65 @@ def logging_file(message):
     pass
 
 class DxApiClient(ApiClient):
+
+    def __init__(self, configuration=None, header_name=None, header_value=None,
+                 cookie=None):
+
+        super(DxApiClient, self).__init__(configuration=configuration, header_name=header_name, header_value=header_value,
+                                          cookie=cookie)
+
+
+        if configuration.verify_ssl:
+            cert_reqs = ssl.CERT_REQUIRED
+        else:
+            cert_reqs = ssl.CERT_NONE
+
+        # ca_certs
+        if configuration.ssl_ca_cert:
+            ca_certs = configuration.ssl_ca_cert
+        else:
+            # if not set certificate file, use Mozilla's root certificates.
+            ca_certs = certifi.where()
+
+        addition_pool_args = {}
+        if configuration.assert_hostname is not None:
+            addition_pool_args['assert_hostname'] = configuration.assert_hostname  # noqa: E501
+
+        maxsize = 4
+        if maxsize is None:
+            if configuration.connection_pool_maxsize is not None:
+                maxsize = configuration.connection_pool_maxsize
+            else:
+                maxsize = 4
+
+        # https pool manager
+        if configuration.proxy:
+            if configuration.proxyuser:
+                default_headers = make_headers(proxy_basic_auth='{}:{}'.format(configuration.proxyuser, configuration.proxypass))
+            else:
+                default_headers = make_headers()
+            self.rest_client.pool_manager = urllib3.ProxyManager(
+                num_pools=4,
+                maxsize=maxsize,
+                cert_reqs=cert_reqs,
+                ca_certs=ca_certs,
+                cert_file=configuration.cert_file,
+                key_file=configuration.key_file,
+                proxy_url=configuration.proxy,
+                proxy_headers = default_headers,
+                **addition_pool_args
+            )
+        else:
+            self.rest_client.pool_manager = urllib3.PoolManager(
+                num_pools=4,
+                maxsize=maxsize,
+                cert_reqs=cert_reqs,
+                ca_certs=ca_certs,
+                cert_file=configuration.cert_file,
+                key_file=configuration.key_file,
+                **addition_pool_args
+            )
+
 
     def request(self, method, url, query_params=None, headers=None,
             post_params=None, body=None, _preload_content=True,
@@ -108,6 +171,7 @@ class DxMaskingEngine(object):
         self.__password = engine_tuple[3]
         self.__port = engine_tuple[5]
         self.__protocol = engine_tuple[4]
+
         self.__version = None
 
         self.__logger = logging.getLogger()
@@ -121,6 +185,17 @@ class DxMaskingEngine(object):
         self.config = Configuration()
         self.config.host = self.__base_url
         self.config.debug = False
+
+        if engine_tuple[8]:
+            #proxy settings
+            config = DxConfig()
+            self.config.proxy = engine_tuple[8]
+            if engine_tuple[9]:
+                self.config.proxyuser = engine_tuple[9]
+                self.config.proxypass = config.get_proxy_password(engine_tuple[9])
+            else:
+                self.config.proxyuser = None
+                self.config.proxypass = None
 
 
         # to disable certs
