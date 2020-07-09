@@ -96,7 +96,7 @@ class DxSync(object):
         :param path: path to save algorithm
         """
         api_sync = self.__api(self.__engine.api_client)
-        self.__logger.debug("Export input %s" % self)
+        self.__logger.debug("Export input {}".format(self.obj))
 
 
         check = re.match(r'Not Syncable: (.*)', self.revision_hash)
@@ -110,7 +110,7 @@ class DxSync(object):
         api_response = api_sync.export(export_list)
         self.__logger.debug("Export response (without blob) %s"
                             % str(api_response.export_response_metadata))
-        filename = os.path.join(path, '{0}.bin'.format(name))
+        filename = os.path.join(path, '{}_{}.bin'.format(self.object_type.lower(), name))
         self.__logger.debug("saving to %s" % filename)
         dependencylist = [
             b["objectType"]
