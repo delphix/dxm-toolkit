@@ -23,8 +23,11 @@ import logging
 import sqlite3 as lite
 import sys
 import keyring
+from Crypto.Cipher import Salsa20
+from Crypto.Hash import SHA256
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+from dxm.lib.DxEngine.secret import secret
 
 
 class DxConfig(object):
@@ -114,13 +117,15 @@ class DxConfig(object):
                      proxy_password
         """
 
-        mandatory_data = [p_engine, p_ip, p_username, p_password, p_protocol, p_port, p_default]
+        password = self.encrypt_password(p_password)
+
+        mandatory_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default]
 
         if not all(mandatory_data):
             self.__logger.error("Some arguments are empty {}".format(mandatory_data))
             return -1
 
-        insert_data = [p_engine, p_ip, p_username, p_password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser]
+        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser]
 
         if self.__conn:
             try:
@@ -280,8 +285,9 @@ class DxConfig(object):
                     update = 1
 
                 if password:
+                    encpassword = self.encrypt_password(password)
                     sql = sql + ' password = ?, '
-                    data.append(password)
+                    data.append(encpassword)
                     update = 1
 
                 if protocol:
@@ -605,3 +611,46 @@ class DxConfig(object):
         else:
             print_error("No connection")
             sys.exit(-1)
+
+
+    def encrypt_password(self, password):
+        """
+        Encrypt password and hash with SHA265
+        :param password: password
+        return encryted password
+        """ 
+
+        hash_object = SHA256.new(data=password.encode())
+        hashhex = hash_object.hexdigest()
+
+        cipher = Salsa20.new(key=secret)
+        enc = cipher.nonce + cipher.encrypt(password.encode())
+        enchex = enc.hex()
+
+        return enchex + hashhex
+
+
+    def decrypt_password(self, password):
+        """
+        Encrypt password and hash with SHA265
+        :param password: password
+        return encryted password
+        """ 
+
+        hashhex = password[-64:]
+        enc = password[0:-64]
+
+        dehex = bytes.fromhex(enc)
+        msg_nonce = dehex[:8]
+        ciphertext = dehex[8:]
+        cipher = Salsa20.new(key=secret, nonce=msg_nonce)
+        password = cipher.decrypt(ciphertext)
+
+        hash_object = SHA256.new(data=password)
+        hashhex_check = hash_object.hexdigest()
+
+        if hashhex == hashhex_check:
+            return password.decode('utf-8')
+        else:
+            print_error("Password SHA265 value after decrypt is wrong")
+            return None
