@@ -25,7 +25,6 @@ from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator 
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
 
 
@@ -73,10 +72,13 @@ class DxEnvironmentList(object):
 
         if (self.__engine.version_ge('6.0.0')):
             from masking_api_60.api.environment_api import EnvironmentApi
+            from masking_api_60.rest import ApiException
         else:
             from masking_api_53.api.environment_api import EnvironmentApi
+            from masking_api_53.rest import ApiException
 
         self.__api = EnvironmentApi
+        self.__apiexc = ApiException
 
         try:
             api_instance = self.__api(self.__engine.api_client)
@@ -91,13 +93,13 @@ class DxEnvironmentList(object):
                     environment.from_environment(c)
                     if hasattr(c, "application_id"):
                         app = appList.get_by_ref(c.application_id)
-                        environment.application = app.application_name
+                        environment.application_name = app.application_name
                     self.__environmentList[c.environment_id] = environment
             else:
                 self.__logger.error("No environments found")
                 print_error("No environments found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             self.__logger.error("Can't load environment %s" % e.body)
             print_error("Can't load environment %s" % e.body)
             return 1

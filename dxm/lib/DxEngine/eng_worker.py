@@ -26,7 +26,7 @@ from dxm.lib.DxTools.DxTools import get_list_of_engines
 
 
 def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-               p_default):
+               p_default, p_proxyurl, p_proxyuser, p_proxypassword):
     """
     Add engine to a configuration
     param1: p_engine: name of Masking engine
@@ -36,13 +36,16 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     param5: p_protocol: protocol (http/https)
     param6: p_port: port
     param7: p_default: is engine default - Y/N - default value N
+    param8: p_proxyurl: Proxy URL
+    param9: p_proxyuser: proxy username
+    param10: p_proxypassword: proxy password
+
     return None if OK or integer with error
     """
     config = DxConfig()
     config.init_metadata()
-    data = [p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-            p_default]
-    if config.insert_engine_info(data):
+    if config.insert_engine_info(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
+                                 p_default, p_proxyurl, p_proxyuser, p_proxypassword):
         print_error("Problem with adding engine to database")
         config.close()
         return -1
@@ -52,7 +55,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
         return None
 
 def engine_update(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-                  p_default):
+                  p_default, p_proxyurl, p_proxyuser, p_proxypassword):
     """
     Update engine in configuration
     param1: p_engine: name of Masking engine
@@ -67,7 +70,7 @@ def engine_update(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     config = DxConfig()
     config.init_metadata()
     config.update_engine(p_engine, p_ip, p_username, p_password,
-                         p_protocol, p_port, p_default)
+                         p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword)
 
 def engine_logout(p_engine):
     """
@@ -113,7 +116,9 @@ def engine_list(p_engine, p_username, p_format):
                     ("username", 30),
                     ("protocol", 8),
                     ("port", 5),
-                    ("default", 7)
+                    ("default", 7),
+                    ("proxy URL", 30),
+                    ("proxy user", 30)
                   ]
     data.create_header(data_header)
     data.format_type = p_format
@@ -134,7 +139,9 @@ def engine_list(p_engine, p_username, p_format):
                           row[2],
                           row[4],
                           row[5],
-                          row[6]
+                          row[6],
+                          row[8],
+                          row[9]
                         )
     print("")
     print (data.data_output(False))

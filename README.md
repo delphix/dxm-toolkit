@@ -5,7 +5,7 @@
 Dxtoolkit for masking is a command line script to manipulate Delphix Masking Engine and it is delivered by Delphix professional services team.
 Dxmc script is a single command with parameters and arguments delivered as executable file with libraries. Dxm is written in Python, but no knowledge of Python is required unless you want to extend it.  In fact, no programming experience whatsoever is required to use the Dxtoolkit for masking.
 
-Supperted Delphix Engine version: >= 5.2.3
+Supperted Delphix Engine version: >= 5.3.X and 6.0.X
 
 ## What's new
 

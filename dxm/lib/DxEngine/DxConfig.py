@@ -22,8 +22,12 @@ import json
 import logging
 import sqlite3 as lite
 import sys
+import keyring
+from Crypto.Cipher import Salsa20
+from Crypto.Hash import SHA256
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+from dxm.lib.DxEngine.secret import secret
 
 
 class DxConfig(object):
@@ -76,20 +80,31 @@ class DxConfig(object):
                 port integer,
                 auth_id varchar(30),
                 defengine char(1),
+                proxy_url varchar(60),
+                proxy_user varchar(60),
                 unique(engine_name, username)
                 )"""
             try:
-                self.__cursor.execute(sql_dxm_engine_info)
+                if self.is_table():
+                    if self.get_database_version()==0:
+                        # we need to add proxy info
+                        self.__logger.debug("Adding columns to the table")
+                        self.__cursor.execute('alter table dxm_engine_info add proxy_url varchar(60)')
+                        self.__cursor.execute('alter table dxm_engine_info add proxy_user varchar(60)')
+                        self.set_database_version(1)
+                else:
+                    self.__cursor.execute(sql_dxm_engine_info)
+                    self.set_database_version(1)
             except lite.Error as e:
                 self.__logger.debug("Error %s" % e.args[0])
                 print_error("Error %s" % e.args[0])
                 sys.exit(-1)
 
 
-    def insert_engine_info(self, data):
+    def insert_engine_info(self, p_engine, p_ip, p_username, p_password, p_protocol, p_port,
+                           p_default, p_proxyurl, p_proxyuser, p_proxypassword):
         """
         insert engine data into sqllite database
-        :param data: List of 6 parameters describing engine
                      engine_name
                      ip_address
                      username
@@ -97,34 +112,42 @@ class DxConfig(object):
                      protocol
                      port
                      default
+                     proxy_url,
+                     proxy_username,
+                     proxy_password
         """
 
-        if not all(data):
-            self.__logger.debug("Some arguments are empty %s" % str(data))
+        password = self.encrypt_password(p_password)
+
+        mandatory_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default]
+
+        if not all(mandatory_data):
+            self.__logger.error("Some arguments are empty {}".format(mandatory_data))
             return -1
 
-        if len(data) != 7:
-            self.__logger.debug("Wrong number of values %s" % str(data))
-            return -1
+        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser]
 
         if self.__conn:
             try:
                 sql = "INSERT INTO dxm_engine_info(engine_name," \
                       "ip_address, username, password, protocol," \
-                      "port, defengine) VALUES (?,?,?,?,?,?,?)"
-                self.__cursor.execute(sql, data)
+                      "port, defengine, proxy_url, proxy_user) VALUES (?,?,?,?,?,?,?,?,?)"
+                self.__cursor.execute(sql, insert_data)
+                if p_proxyuser:
+                    self.set_proxy_password(p_proxyuser, p_proxypassword)
                 self.__conn.commit()
                 return None
             except lite.IntegrityError as e:
-                self.__logger.debug("Error %s" % e.args)
+                self.__logger.error("Error %s" % e.args)
                 print_error("Engine %s and username %s already added." %
-                            (data[0], data[2]))
+                            (p_engine, p_username))
                 return -1
             except lite.Error as e:
-                self.__logger.debug("Error %s" % e.args)
+                print_error("Error %s" % e.args)
+                self.__logger.error("Error %s" % e.args)
                 return -1
         else:
-            self.__logger.debug("No connection open")
+            self.__logger.error("No connection open")
             return -1
 
 
@@ -140,7 +163,7 @@ class DxConfig(object):
             try:
                 sql = "SELECT engine_name," \
                       "ip_address, username, password, protocol," \
-                      "port, defengine, auth_id from dxm_engine_info " \
+                      "port, defengine, auth_id, proxy_url, proxy_user from dxm_engine_info " \
                       "where 1=1 "
 
                 data = []
@@ -227,7 +250,7 @@ class DxConfig(object):
                       password,
                       protocol,
                       port,
-                      default):
+                      default, proxyurl, proxyuser, proxypassword):
         """
         update an engine entry
         :param1 engine_name: engine name
@@ -262,8 +285,9 @@ class DxConfig(object):
                     update = 1
 
                 if password:
+                    encpassword = self.encrypt_password(password)
                     sql = sql + ' password = ?, '
-                    data.append(password)
+                    data.append(encpassword)
                     update = 1
 
                 if protocol:
@@ -280,6 +304,33 @@ class DxConfig(object):
                     sql = sql + ' defengine = ?, '
                     data.append(default)
                     update = 1
+
+                if proxyurl:
+                    sql = sql + ' proxy_url = ?, '
+                    data.append(proxyurl)
+                    update = 1
+
+                if proxyurl == '':
+                    sql = sql + ' proxy_url = NULL, '
+                    update = 1
+
+                if proxyuser:
+                    sql = sql + ' proxy_user = ?, '
+                    data.append(proxyuser)
+                    update = 1
+
+                if proxyuser == '':
+                    sql = sql + ' proxy_user = NULL, '
+                    update = 1
+                    proxyuser = self.get_proxy_user(engine_name)
+                    self.delete_proxy_password(proxyuser)
+
+                if proxypassword:
+                    proxyuser = self.get_proxy_user(engine_name)
+                    if proxyuser is None:
+                        print_error("To change proxy password, you need to specify a user")
+                        sys.exit(-1)
+                    self.set_proxy_password(proxyuser, proxypassword)
 
                 if update:
                     data.append(engine_name)
@@ -305,11 +356,71 @@ class DxConfig(object):
                                       % engine_name)
                         return None
             except lite.Error as e:
+                self.__logger.error("Error %s:" % e.args)
+                return -1
+        else:
+            print_error("No connection")
+            sys.exit(-1)
+
+
+    def set_database_version(self, dbver):
+        """
+        set internal version of the sqllite
+        :param1 dbver: database version
+        """
+
+        if self.__conn:
+            try:   
+                self.__cursor.execute('PRAGMA user_version={}'.format(dbver))
+            except lite.Error as e:
                 self.__logger.debug("Error %s:" % e.args)
                 return -1
         else:
             print_error("No connection")
             sys.exit(-1)
+
+
+    def get_database_version(self):
+        """
+        get internal version of the sqllite
+        return database version
+        """
+
+        if self.__conn:
+            try:   
+                self.__cursor.execute('PRAGMA user_version')
+                row = self.__cursor.fetchone()
+            except lite.Error as e:
+                self.__logger.debug("Error %s:" % e.args)
+                return -1
+        else:
+            print_error("No connection")
+            sys.exit(-1)
+
+        return row[0]
+
+
+    def is_table(self):
+        """
+        Check if table exists
+        return true if table exists
+        """
+
+        if self.__conn:
+            try:   
+                self.__cursor.execute('PRAGMA table_info(dxm_engine_info)')
+                row = self.__cursor.fetchone()
+                if row:
+                    return True
+                else:
+                    return False
+            except lite.Error as e:
+                self.__logger.debug("Error %s:" % e.args)
+                sys.exit(-1)
+        else:
+            print_error("No connection")
+            sys.exit(-1)
+
 
 
     def set_key(self, engine_name, user_name, auth_key):
@@ -406,3 +517,140 @@ class DxConfig(object):
         else:
             print_error("No connection")
             sys.exit(-1)
+
+    def set_proxy_password(self, username, password):
+        """
+        set proxy user in keyring ( supported only on OSX, Windows and Linux with packages)
+        :param1 username: proxy username
+        :param2 password: password password
+        """
+
+        try:   
+            keyring.set_password('dxmc',username,password)
+            
+        except keyring.errors.NoKeyringError as e:
+            print_error("Keyring backend is not configured. Can't use authorized proxy connection from this system")
+            self.__logger.debug("Keyring backend is not configured %s:" % e.args)
+            sys.exit(-1)
+
+
+    def delete_proxy_password(self, username):
+        """
+        delete proxy password
+        :param1 username: proxy username
+        """
+
+        try:   
+            keyring.delete_password('dxmc',username)
+            
+        except keyring.errors.NoKeyringError as e:
+            print_error("Keyring backend is not configured. Can't use authorized proxy connection from this system")
+            self.__logger.debug("Keyring backend is not configured %s:" % e.args)
+            sys.exit(-1)
+
+        except keyring.errors.PasswordDeleteError:
+            pass
+
+
+
+    def get_proxy_password(self, username):
+        """
+        get proxy password for an user
+        return use password 
+        """
+
+        try:   
+            password = keyring.get_password('dxmc', username)
+            if password is None:
+                print_error("Can't find password for proxy user. Try to update engine configuration in dxmc")
+                self.__logger.debug("Can't find password for proxy user. Try to update engine configuration in dxmc")
+                sys.exit(-1)
+            
+            return password
+
+        except keyring.errors.NoKeyringError as e:
+            print_error("Keyring backend is not configured. Can't use authorized proxy connection from this system")
+            self.__logger.debug("Keyring backend is not configured %s:" % e.args)
+            sys.exit(-1)
+
+
+    def get_proxy_user(self, engine_name):
+        """
+        Get proxy user
+        :param engine_name: Engine name
+        return proxyuser
+        """
+        if self.__conn:
+            try:
+                sql = "SELECT proxy_user " \
+                      "from dxm_engine_info " \
+                      "where engine_name = ? "
+
+                if engine_name is None:
+                    print_error("Engine name has to be specify")
+                    return -1
+
+                if (str(engine_name).lower() == 'all'):
+                    print_error("Engine name can't be all. Sorry")
+                    return -1
+
+                data = []
+                data.append(engine_name)
+
+
+                self.__logger.debug(sql)
+                self.__logger.debug(tuple(data))
+
+                self.__cursor.execute(sql, tuple(data))
+                row = self.__cursor.fetchone()
+                self.__logger.debug(row)
+                return row[0]
+            except lite.Error as e:
+                self.__logger.debug("Error %s:" % e.args)
+                return None
+        else:
+            print_error("No connection")
+            sys.exit(-1)
+
+
+    def encrypt_password(self, password):
+        """
+        Encrypt password and hash with SHA265
+        :param password: password
+        return encryted password
+        """ 
+
+        hash_object = SHA256.new(data=password.encode())
+        hashhex = hash_object.hexdigest()
+
+        cipher = Salsa20.new(key=secret)
+        enc = cipher.nonce + cipher.encrypt(password.encode())
+        enchex = enc.hex()
+
+        return enchex + hashhex
+
+
+    def decrypt_password(self, password):
+        """
+        Encrypt password and hash with SHA265
+        :param password: password
+        return encryted password
+        """ 
+
+        hashhex = password[-64:]
+        enc = password[0:-64]
+
+        dehex = bytes.fromhex(enc)
+        msg_nonce = dehex[:8]
+        ciphertext = dehex[8:]
+        cipher = Salsa20.new(key=secret, nonce=msg_nonce)
+        password = cipher.decrypt(ciphertext)
+
+        hash_object = SHA256.new(data=password)
+        hashhex_check = hash_object.hexdigest()
+
+        if hashhex == hashhex_check:
+            return password.decode('utf-8')
+        else:
+            print_error("Password SHA265 value after decrypt is wrong")
+            return None
