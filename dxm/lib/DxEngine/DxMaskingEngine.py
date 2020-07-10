@@ -171,7 +171,6 @@ class DxMaskingEngine(object):
         self.__password = engine_tuple[3]
         self.__port = engine_tuple[5]
         self.__protocol = engine_tuple[4]
-
         self.__version = None
 
         self.__logger = logging.getLogger()
@@ -188,11 +187,11 @@ class DxMaskingEngine(object):
 
         if engine_tuple[8]:
             #proxy settings
-            config = DxConfig()
+            dxconfig = DxConfig()
             self.config.proxy = engine_tuple[8]
             if engine_tuple[9]:
                 self.config.proxyuser = engine_tuple[9]
-                self.config.proxypass = config.get_proxy_password(engine_tuple[9])
+                self.config.proxypass = dxconfig.get_proxy_password(engine_tuple[9])
             else:
                 self.config.proxyuser = None
                 self.config.proxypass = None
@@ -253,8 +252,6 @@ class DxMaskingEngine(object):
         # to do
         # change all requests to add timeout
         self.api_client.rest_client.pool_manager.connection_pool_kw['retries'] = 0
-
-
         apikey = self.load()
 
         try:
@@ -267,12 +264,16 @@ class DxMaskingEngine(object):
 
         except ApiException as e:
             if e.status == 401:
+                password = DxConfig().decrypt_password(self.__password)
+                if password is None:
+                    print_error("Problem with password decryption. Can't connect to engine")
+                    return 1
                 self.__logger.debug("Logging into Delphix Masking")
                 login_api = LoginApi(self.api_client)
-                login = Login(self.__username, self.__password)
+                login = Login(self.__username, password)
                 try:
                     self.__logger.debug("sending a login request. "
-                                        "Payload %s" % login)
+                                        "Username {}".format(self.__username))
                     login_response = login_api.login(
                         login,
                         _request_timeout=self.get_timeout())
