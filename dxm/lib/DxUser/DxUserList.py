@@ -154,8 +154,8 @@ class DxUserList(object):
 
         userobj = self.get_by_ref(user_id)
         if userobj is not None:
-            if userobj.delete(force) is None:
-                return None
+            if userobj.delete(force) == 0:
+                return 0
             else:
                 return 1
         else:
