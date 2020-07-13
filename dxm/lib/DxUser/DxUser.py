@@ -45,6 +45,7 @@ class DxUser(object):
 
         self.__api = UserApi
         self.__model = User
+        self.__modelnap = NonAdminProperties
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -213,6 +214,11 @@ class DxUser(object):
     def from_user(self, user):
         self.__obj = user
 
+
+    def create_user(self, user_name, password, first_name, last_name, email, is_admin, non_admin_properties):
+        self.__obj = self.__model(user_name=user_name, password=password, first_name=first_name, last_name=last_name, 
+                                 email=email, is_admin=is_admin, non_admin_properties=non_admin_properties, is_locked=False)
+
     def delete_nap(self):
         """
         Delete NonAdminProperties
@@ -261,20 +267,13 @@ class DxUser(object):
             self.__logger.error("User password is required")
             return 1
 
-        if self.is_locked is None:
-            self.__logger.error("Setting is_locked to false")
-            self.is_locked = False
 
-        if self.show_welcome is None:
-            self.__logger.error("Setting show_welcome to false")
-            self.show_welcome = False
-
-        api_instance = UserApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("create user input %s" % str(self))
             response = api_instance.create_user(
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("create user response %s"
                                 % str(response))
@@ -282,7 +281,7 @@ class DxUser(object):
             self.user_id = response.user_id
             print_message("User %s added" % self.user_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -297,16 +296,14 @@ class DxUser(object):
 
         if self.is_admin and force:
             self.is_admin = False
-            nap = NonAdminProperties()
-            nap.environment_ids = []
-            nap.role_id = 1
+            nap = self.__modelnap(environment_ids=[], role_id=1)
             self.non_admin_properties = nap
-            if self.update() is not None:
+            if self.update() != 0:
                 print_error("Can't switch to non-admin in force mode")
                 self.__logger.debug("Can't switch to non-admin in force mode")
                 return 1
 
-        api_instance = UserApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("delete user id %s"
@@ -318,7 +315,7 @@ class DxUser(object):
                                 % str(response))
             print_message("User %s deleted" % self.user_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -330,20 +327,20 @@ class DxUser(object):
         return 1 in case of error
         """
 
-        api_instance = UserApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("update user id %s"
                                 % self.user_id)
             response = api_instance.update_user_by_id(
                 self.user_id,
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("update user response %s"
                                 % str(response))
             print_message("User %s updated" % self.user_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
