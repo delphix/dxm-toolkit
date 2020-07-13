@@ -1080,9 +1080,13 @@ def list(dxm_state, jobname, envname):
 @job.command()
 @click.option('--jobname', help="Filter jobs using jobname")
 @click.option('--envname', help='Filter jobs belongs to one environment')
+@click.option('--last', help='Display only last execution', is_flag=True)
+@click.option('--details', help='Display execution details', is_flag=True, default=False)
+@click.option('--startdate', help='Display jobs started after startdate', type=click.DateTime())
+@click.option('--enddate', help='Display jobs finished before enddate', type=click.DateTime())
 @common_options
 @pass_state
-def report(dxm_state, jobname, envname):
+def report(dxm_state, jobname, envname, last, startdate, enddate, details):
     """
     Display report of jobs defined in Masking Engine
 
@@ -1091,7 +1095,8 @@ def report(dxm_state, jobname, envname):
     be limited by value of this option and return non-zero return code
     if jobname is not found.
     """
-    exit(jobs_report(dxm_state.engine, jobname, envname, dxm_state.format))
+    exit(jobs_report(dxm_state.engine, jobname, envname, dxm_state.format, 
+                     last, startdate, enddate, details))
 
 @job.command()
 @click.option(

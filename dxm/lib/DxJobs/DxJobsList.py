@@ -77,7 +77,10 @@ class DxJobsList(object):
 
             if execList.response_list:
                 for e in execList.response_list:
-                    self.__executionList[e.job_id] = e
+                    if e.job_id in self.__executionList:
+                        self.__executionList[e.job_id].append(e)
+                    else:
+                        self.__executionList[e.job_id] = [e]
 
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
@@ -101,11 +104,11 @@ class DxJobsList(object):
             if jobs.response_list:
                 for c in jobs.response_list:
                     if c.masking_job_id in self.__executionList:
-                        lastExec = self.__executionList[c.masking_job_id]
+                        jobExecList = self.__executionList[c.masking_job_id]
                     else:
-                        lastExec = None
+                        jobExecList = None
 
-                    job = DxJob(self.__engine, lastExec)
+                    job = DxJob(self.__engine, jobExecList)
                     job.from_job(c)
                     self.__jobsList[c.masking_job_id] = job
             else:

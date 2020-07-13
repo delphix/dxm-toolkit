@@ -93,7 +93,7 @@ def logging_est(logfile_path, debug=0):
 
     logger.addHandler(debugfile)
 
-    sys.excepthook = exception_handler
+    #sys.excepthook = exception_handler
 
 
 

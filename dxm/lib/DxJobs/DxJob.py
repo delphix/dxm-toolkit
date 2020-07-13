@@ -19,15 +19,17 @@
 
 import logging
 import time
+import pytz
 from tqdm import tqdm
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 import dxm.lib.DxJobs.DxJobCounter
+from dxm.lib.DxTools.DxTools import paginator
 
 
 class DxJob(object):
 
-    def __init__(self, engine, lastExec):
+    def __init__(self, engine, execList):
         """
         Constructor
         :param1 engine: DxMaskingEngine object
@@ -35,7 +37,7 @@ class DxJob(object):
         """
         #MaskingJob.__init__(self)
         self.__engine = engine
-        self.__lastExec = lastExec
+        self.__execList = execList
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJob object")
         self.__monitor = False
@@ -44,17 +46,20 @@ class DxJob(object):
             from masking_api_60.api.masking_job_api import MaskingJobApi
             from masking_api_60.api.execution_api import ExecutionApi
             from masking_api_60.models.execution import Execution
+            from masking_api_60.api.execution_component_api import ExecutionComponentApi
             from masking_api_60.rest import ApiException
         else:
             from masking_api_53.models.masking_job import MaskingJob
             from masking_api_53.api.masking_job_api import MaskingJobApi
             from masking_api_53.api.execution_api import ExecutionApi
             from masking_api_53.models.execution import Execution
+            from masking_api_53.api.execution_component_api import ExecutionComponentApi
             from masking_api_53.rest import ApiException
 
         self.__api = MaskingJobApi
         self.__model = MaskingJob
         self.__apiexec = ExecutionApi
+        self.__apicomponent = ExecutionComponentApi
         self.__modelexec = Execution
         self.__apiexc = ApiException
         self.__obj = None
@@ -69,7 +74,14 @@ class DxJob(object):
 
     @property
     def lastExec(self):
-        return self.__lastExec
+        if self.__execList:
+            return self.__execList[-1]
+        else:
+            return None
+
+    @property
+    def execList(self):
+        return self.__execList
 
     @property
     def obj(self):
@@ -530,3 +542,60 @@ class DxJob(object):
             self.__logger.error('return value %s'
                                 % dxm.lib.DxJobs.DxJobCounter.ret)
             return 1
+
+
+
+    def filter_executions(self, startdate, enddate):
+        """
+        Filter job executions using start and end date parameters
+        :param1 startdate: start date
+        :param2 enddate: end date
+        Return a list of filtered executions
+        """
+
+        if startdate:
+            startdate_tz = startdate.replace(tzinfo=pytz.UTC)
+
+        if enddate:
+            enddate_tz = enddate.replace(tzinfo=pytz.UTC)
+
+        if self.execList:
+            execlist = [ x for x in self.execList if ((startdate is None) or (x.start_time >= startdate_tz)) and ((enddate is None) or (x.end_time <= enddate_tz)) ]
+        else:
+            execlist = self.execList
+
+        return execlist
+
+
+    def list_execution_component(self, execid):
+        """
+        List an execution detalis ( tables, rows, etc)
+        :param1 execid: execution id to display
+        return a None if non error
+        return 1 in case of error
+        """
+
+        if (execid is None):
+            print_error("Execution id is required")
+            self.__logger.error("Execution id is required")
+            return 1
+
+        try:
+
+
+
+            self.__logger.debug("execute component")
+            api_instance = self.__apicomponent(self.__engine.api_client)
+            execomponents = paginator(
+                            api_instance,
+                            "get_all_execution_components",
+                            execution_id=execid,
+                            _request_timeout=self.__engine.get_timeout())
+
+            return execomponents.response_list
+
+
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return None
