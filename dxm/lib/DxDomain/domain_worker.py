@@ -113,10 +113,8 @@ def domain_add(p_engine, domain_name, classification, default_algname):
         domainlist = DxDomainList()
         domobj = DxDomain(engine_obj)
         # set required properties
-        domobj.domain_name = domain_name
-        domobj.classification = classification
-        domobj.default_algorithm_code = default_algname
-
+        domobj.create_domain(domain_name = domain_name, domain_classification=classification, default_algorithm_code = default_algname)
+        
         if domainlist.add(domobj):
             ret = ret + 1
 
