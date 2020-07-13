@@ -130,7 +130,10 @@ class DataFormatter(object):
                 #data_out += self.data_format.format(*self.header_sep) + "\r\n"
 
             for row, dt in enumerate(data_results):
-                data_out += self.data_format.format(*data_results[row]) + "\r\n"
+                #data_out += self.data_format.format(*data_results[row]) + "\r\n"
+                # conver all to utf-8
+                data = tuple(map(self.f, data_results[row]))
+                data_out += self.data_format.format(*data) + "\r\n"
 
         elif format_type == "json":
             # json_results['header'].append(self.results['header_length'].keys())

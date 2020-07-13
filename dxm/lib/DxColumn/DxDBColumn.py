@@ -143,8 +143,38 @@ class DxDBColumn(object):
             raise ValueError("Object needs to be initialized first")
 
     @property
+    def date_format(self):
+        return self.obj.date_format
+
+    @date_format.setter
+    def date_format(self, date_format):
+        """
+        date_format
+        :param date_format: date_format flag
+        """
+
+        if self.obj is not None:
+            self.obj.date_format = date_format
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+
+    @property
     def is_profiler_writable(self):
         return self.obj.is_profiler_writable
+
+    @is_profiler_writable.setter
+    def is_profiler_writable(self, is_profiler_writable):
+        """
+        is_profiler_writable
+        :param is_profiler_writable: is_profiler_writable flag
+        """
+
+        if self.obj is not None:
+            self.obj.is_profiler_writable = is_profiler_writable
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def update(self):
         """

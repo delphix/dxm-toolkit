@@ -255,6 +255,7 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
                     ("Column name", 32),
                     ("Type", 8),
                     ("Data type", 30),
+                    ("Date format", 15),
                     ("Domain name", 32),
                     ("Alg name", 32),
                   ]
@@ -306,8 +307,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
     if engine_obj.get_session():
         return 1
 
-    rulelist = DxRulesetList()
-    rulelist.LoadRulesets(envname)
+    rulelist = DxRulesetList(envname)
     ruleref = rulelist.get_rulesetId_by_name(rulesetname)
 
     ruleobj = rulelist.get_by_ref(ruleref)
@@ -440,6 +440,12 @@ def do_print(**kwargs):
     else:
         environment_name = 'N/A'
 
+
+    if colobj.date_format:
+        date_format = colobj.date_format
+    else:
+        date_format = "-"
+
     data.data_insert(
                       engine[0],
                       environment_name,
@@ -448,6 +454,7 @@ def do_print(**kwargs):
                       colobj.cf_meta_name,
                       colobj.cf_meta_column_role,
                       colobj.cf_meta_type,
+                      date_format,
                       print_domain,
                       print_algname
                     )
@@ -678,10 +685,8 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
-        connlist = DxConnectorsList()
-        connlist.LoadConnectors(envname)
+        rulelist = DxRulesetList(envname)
+        connlist = DxConnectorsList(envname)
         metalist = DxMetaList()
 
         rulesetref_list = []
@@ -842,8 +847,7 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
         metalist = DxMetaList()
 
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
