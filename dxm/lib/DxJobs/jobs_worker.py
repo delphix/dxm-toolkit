@@ -765,6 +765,17 @@ def jobs_list(p_engine, jobname, envname, p_format):
     """
     return jobs_list_worker(p_engine, jobname, envname, p_format, "DxJobsList")
 
+def jobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+    """
+    Print report of masking jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    return 0 if environment found
+    """
+    return jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details)
+
 def profilejobs_list(p_engine, jobname, envname, p_format):
     """
     Print list of profile jobs
@@ -886,6 +897,241 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
                               status,
                               runtime
                             )
+        print("")
+        print (data.data_output(False))
+        print("")
+        return ret
+
+def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+    """
+    Print report of jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    param5: joblist_class - DxJobsList, DxProfileJobslist
+    return 0 if environment found
+    """
+
+    ret = 0
+
+    logger = logging.getLogger()
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    data = DataFormatter()
+    
+    if details:
+        data_header = [
+                ("Engine name", 30),
+                ("Environment name", 30),
+                ("Job name", 30),  
+                ("ExecId", 6),               
+                ("Meta name", 12),
+                ("Masked Rows", 10),   
+                ("Started", 20),                                                              
+                ("Completed", 20),
+                ("Status", 20),
+                ("Runtime", 20)                  
+                ]
+    else:
+        data_header = [
+                        ("Engine name", 30),
+                        ("Environment name", 30),
+                        ("Job name", 30),
+                        ("Job Id", 6),                    
+                        ("Min Memory", 10),
+                        ("Max Memory", 10), 
+                        ("Streams", 7),                                              
+                        ("On The Fly", 10),
+                        ("Ruleset Type", 12),
+                        ("ExecId", 6),
+                        ("Total Rows", 10),
+                        ("Masked Rows", 10),   
+                        ("Started", 20),                                                              
+                        ("Completed", 20),
+                        ("Status", 20),
+                        ("Runtime", 20)                  
+                    ]
+    data.create_header(data_header)
+    data.format_type = p_format
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple)
+        if engine_obj.get_session():
+            continue
+
+        # load all objects
+        envlist = DxEnvironmentList()
+        envlist.LoadEnvironments()
+        rulesetlist = DxRulesetList()
+        connectorlist = DxConnectorsList()
+        joblist = DxJobsList()
+
+        logger.debug("Envname is %s, job name is %s" % (envname, jobname))
+
+        joblist.LoadJobs(envname)
+        rulesetlist.LoadRulesets(envname)
+        connectorlist.LoadConnectors(envname)
+
+        if jobname is None:
+            jobs = joblist.get_allref()
+        else:
+            jobs = joblist.get_all_jobId_by_name(jobname)
+            if jobs is None:
+                ret = ret + 1
+                continue
+
+        for jobref in jobs:
+            jobobj = joblist.get_by_ref(jobref)
+
+            rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
+            # those test are requierd for 5.X engies where API is not showing all types of connectors
+            if rulesetobj is not None:
+                rulename = rulesetobj.ruleset_name
+                connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
+                if connectorobj is not None:
+                    connectorname = connectorobj.connector_name
+                    envobj = envlist.get_by_ref(connectorobj.environment_id)
+                    if envobj is not None:
+                        envobjname = envobj.environment_name
+                    else:
+                        envobjname = "N/A"   
+                else:
+                    connectorname = "N/A"
+                    envobjname = "N/A"
+            else:
+                rulename = "N/A"
+                connectorname = "N/A"
+                envobjname = "N/A"
+
+
+            if last:
+                lastonly = True
+            else:
+                lastonly = False
+
+
+            if lastonly:
+                execlist = [ jobobj.lastExec ]
+            else:
+                if startdate or enddate:
+                    execlist = jobobj.filter_executions(startdate, enddate)
+                else:
+                    execlist = jobobj.execList
+
+            if execlist:
+
+                for jobexec in execlist:
+
+
+
+                    if details == False:
+
+                        if jobexec is not None:
+                            status = jobexec.status
+                            execid = jobexec.execution_id
+                            rowsmasked = jobexec.rows_masked
+                            rowstotal = jobexec.rows_total
+                            if jobexec.start_time is not None:
+                                starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                            else:
+                                starttime = 'N/A'
+                            if (jobexec.end_time is not None) and \
+                            (jobexec.start_time is not None):
+                                endtime = jobexec.end_time \
+                                    .strftime("%Y-%m-%d %H:%M:%S")
+                                runtimetemp = jobexec.end_time \
+                                    - jobexec.start_time
+                                runtime = str(runtimetemp)
+                            else:
+                                endtime = 'N/A'
+                                runtime = 'N/A'
+                        else:
+                            status = 'N/A'
+                            endtime = 'N/A'
+                            starttime = 'N/A'
+                            runtime = 'N/A'
+                            execid = 'N/A'
+                            rowsmasked = 'N/A'
+                            rowstotal = 'N/A'
+
+                        data.data_insert(
+                                        engine_tuple[0],
+                                        envobjname,
+                                        jobobj.job_name,
+                                        jobobj.masking_job_id,
+                                        jobobj.min_memory,
+                                        jobobj.max_memory,
+                                        jobobj.num_input_streams,
+                                        jobobj.on_the_fly_masking,
+                                        jobobj.ruleset_type,
+                                        execid,
+                                        rowstotal,
+                                        rowsmasked,
+                                        starttime,
+                                        endtime,
+                                        status,
+                                        runtime
+                                        )
+
+
+                    else:
+                        # details here      
+                        if jobexec is not None:         
+                            execid = jobexec.execution_id
+                            complist = jobobj.list_execution_component(execid)
+
+                            if complist is not None:
+                                for comp in complist:    
+                                    status = comp.status
+                                    rowsmasked = comp.rows_masked
+                                    metaname = comp.component_name
+                                    if comp.start_time is not None:
+                                        starttime = comp.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                                    else:
+                                        starttime = 'N/A'
+                                    if (comp.end_time is not None) and \
+                                    (comp.start_time is not None):
+                                        endtime = comp.end_time \
+                                            .strftime("%Y-%m-%d %H:%M:%S")
+                                        runtimetemp = comp.end_time \
+                                            - comp.start_time
+                                        runtime = str(runtimetemp)
+                                    else:
+                                        endtime = 'N/A'
+                                        runtime = 'N/A'
+
+                                    data.data_insert(
+                                                    engine_tuple[0],
+                                                    envobjname,
+                                                    jobobj.job_name,
+                                                    execid,
+                                                    metaname,
+                                                    rowsmasked,
+                                                    starttime,
+                                                    endtime,
+                                                    status,
+                                                    runtime
+                                                    )
+                        else:
+                            print("setting 1")
+                            ret = 1
+
+
+                    
+                else:
+                    # no executions
+                    ret = 1
+
+            else:
+                # no executions
+                ret = 1
+
+
         print("")
         print (data.data_output(False))
         print("")

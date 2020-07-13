@@ -1,5 +1,8 @@
 ## Version 0.8
 
+### Added:
+ - Added Job Report [ dxmc job report --engine <enginename>]
+
 ### Changed:
  - Support for 5.3.X and 6.0.X in single build
  - [fix for #32](https://github.com/delphix/dxm-toolkit/issues/32) - Unable to call pre and post script with script Path
@@ -88,6 +91,12 @@
 
 ### Changed:
  - various bug fixes
+ 
+## Version 0.22
+
+### Changed:
+ - fix for adding file into files rulesets
+ - other small bug fixs
 
 ## Version 0.21
 

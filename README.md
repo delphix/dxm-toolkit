@@ -91,18 +91,22 @@ python setup.py install
 ```
 
 
-## Legalness
-```
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+## Contributing
 
-     http://www.apache.org/licenses/LICENSE-2.0
+All contributors are required to sign the Delphix Contributor Agreement prior to contributing code to an open source
+repository. This process is handled automatically by [cla-assistant](https://cla-assistant.io/). Simply open a pull
+request and a bot will automatically check to see if you have signed the latest agreement. If not, you will be prompted
+to do so as part of the pull request process.
 
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
-```
-Copyright (c) 2018 by Delphix. All rights reserved.
+This project operates under the [Delphix Code of Conduct](https://delphix.github.io/code-of-conduct.html). By
+participating in this project you agree to abide by its terms.
+
+## Statement of Support
+
+This software is provided as-is, without warranty of any kind or commercial support through Delphix. See the associated
+license for additional details. Questions, issues, feature requests, and contributions should be directed to the
+community as outlined in the [Delphix Community Guidelines](https://delphix.github.io/community-guidelines.html).
+
+## License
+
+This is code is licensed under the Apache License 2.0. Full license is available [here](./LICENSE).

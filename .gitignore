@@ -109,6 +109,9 @@ include/
 local/
 bin/
 pip-selfcheck.json
+=6.1.0.0
+dxmtoolkit.db
+share
 
 # mac
 *.DS_Store
