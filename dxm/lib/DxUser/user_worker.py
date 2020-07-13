@@ -206,9 +206,13 @@ def user_add(p_engine, username, firstname, lastname, email, password,
         if engine_obj.get_session():
             continue
 
+        if (engine_obj.version_ge('6.0.0')):
+            from masking_api_60.models.non_admin_properties import NonAdminProperties
+        else:
+            from masking_api_53.models.non_admin_properties import NonAdminProperties
+
+
         userobj = DxUser(engine_obj)
-
-
 
         if user_type == 'nonadmin':
             rolelist = DxRoleList()
