@@ -36,9 +36,7 @@ from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
-from masking_api_60.models.database_masking_options import DatabaseMaskingOptions
-from masking_api_60.models.masking_job_script import MaskingJobScript
-from masking_api_60.models.on_the_fly_masking_source import OnTheFlyMaskingSource
+
 
 from threading import Thread
 from threading import active_count
@@ -182,6 +180,16 @@ def job_add(p_engine, params):
                 else:
                     value = params[p]
                 setattr(job, p, value)
+
+
+        if (engine_obj.version_ge('6.0.0')):
+            from masking_api_60.models.database_masking_options import DatabaseMaskingOptions
+            from masking_api_60.models.masking_job_script import MaskingJobScript
+            from masking_api_60.models.on_the_fly_masking_source import OnTheFlyMaskingSource
+        else:
+            from masking_api_53.models.database_masking_options import DatabaseMaskingOptions
+            from masking_api_53.models.masking_job_script import MaskingJobScript
+            from masking_api_53.models.on_the_fly_masking_source import OnTheFlyMaskingSource
 
         dmo = DatabaseMaskingOptions()
 

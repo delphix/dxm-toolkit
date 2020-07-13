@@ -20,7 +20,6 @@
 import logging
 #from masking_api_60.models.application import Application
 #from masking_api_60.api.application_api import ApplicationApi
-from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
@@ -44,12 +43,15 @@ class DxApplication(object):
         if (self.__engine.version_ge('6.0.0')):
             from masking_api_60.api.application_api import ApplicationApi
             from masking_api_60.models.application import Application
+            from masking_api_60.rest import ApiException
         else:
             from masking_api_53.api.application_api import ApplicationApi
             from masking_api_53.models.application import Application
+            from masking_api_53.rest import ApiException
 
         self.__api = ApplicationApi
         self.__model = Application
+        self.__apiexc = ApiException
         self.__obj = None
 
     @property
@@ -105,7 +107,7 @@ class DxApplication(object):
                                 % str(response))
 
             print_message("Application %s added" % self.application_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

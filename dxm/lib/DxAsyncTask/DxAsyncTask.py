@@ -21,9 +21,7 @@ import logging
 
 from time import sleep
 
-from masking_api_60.models.async_task import AsyncTask
-from masking_api_60.api.async_task_api import AsyncTaskApi
-from masking_api_60.rest import ApiException
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
@@ -43,13 +41,16 @@ class DxAsyncTask(object):
         if (self.__engine.version_ge('6.0.0')):
             from masking_api_60.models.async_task import AsyncTask
             from masking_api_60.api.async_task_api import AsyncTaskApi
+            from masking_api_60.rest import ApiException
         else:
             from masking_api_53.models.async_task import AsyncTask
             from masking_api_53.api.async_task_api import AsyncTaskApi
+            from masking_api_53.rest import ApiException
 
         self.__api = AsyncTaskApi
         self.__model = AsyncTask
         self.__obj = None
+        self.__apiexc = ApiException
     
 
     @property
@@ -93,7 +94,7 @@ class DxAsyncTask(object):
             else:
                 print_error("Task finished with status %s" % response.status)
                 return 1
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

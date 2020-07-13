@@ -31,9 +31,9 @@ from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
-from masking_api_60.models.database_connector import DatabaseConnector
+# from masking_api_60.models.database_connector import DatabaseConnector
 
-from masking_api_60.models.connection_info import ConnectionInfo
+# from masking_api_60.models.connection_info import ConnectionInfo
 
 
 database_types = ['oracle', 'sybase', 'mssql', 'aurora_postgres', 'db2',
@@ -89,11 +89,13 @@ def connector_add(p_engine, params):
                 dbtype = 'ORACLE'
             elif params['type'] == 'mssql':
                 connobj = MSSQLConnector(engine_obj)
+                dbtype = 'MSSQL'
             elif params['type'] == 'sybase':
                 connobj = SybaseConnector(engine_obj)
+                dbtype = 'SYBASE'
             else:
                 connobj = DxConnector(engine_obj)
-                connobj.database_type = params['type'].upper()
+                dbtype = params['type'].upper()
 
             connobj.create_connector(
                 connector_name = connname,

@@ -19,7 +19,6 @@
 
 import logging
 from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
-from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
@@ -37,12 +36,15 @@ class DxEnvironment(object):
         if (self.__engine.version_ge('6.0.0')):
             from masking_api_60.models.environment import Environment
             from masking_api_60.api.environment_api import EnvironmentApi
+            from masking_api_60.rest import ApiException
         else:
             from masking_api_53.models.environment import Environment
             from masking_api_53.api.environment_api import EnvironmentApi
+            from masking_api_53.rest import ApiException
 
         self.__api = EnvironmentApi
         self.__model = Environment
+        self.__apiexc = ApiException
         self.__obj = None
         self.__application_name = None
 
@@ -136,7 +138,7 @@ class DxEnvironment(object):
 
             self.__obj = response
             print_message("Environment %s added" % self.environment_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -159,7 +161,7 @@ class DxEnvironment(object):
             self.__logger.debug("delete environment response %s"
                                 % str(response))
             print_message("Environment %s deleted" % self.environment_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

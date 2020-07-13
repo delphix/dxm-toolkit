@@ -25,7 +25,6 @@ from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
 from dxm.lib.DxConnector.DxConnector import DxConnector
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
@@ -77,13 +76,16 @@ class DxConnectorsList(object):
         if (self.__engine.version_ge('6.0.0')):
             from masking_api_60.api.database_connector_api import DatabaseConnectorApi
             from masking_api_60.api.file_connector_api import FileConnectorApi
+            from masking_api_60.rest import ApiException
         else:
             from masking_api_53.api.database_connector_api import DatabaseConnectorApi
             from masking_api_53.api.file_connector_api import FileConnectorApi
+            from masking_api_53.rest import ApiException
 
         self.__api = DatabaseConnectorApi
         self.__fileapi = FileConnectorApi
         self.__loaded_env = environment_name
+        self.__apiexc = ApiException
 
         try:
             api_instance = self.__api(self.__engine.api_client)
@@ -155,7 +157,7 @@ class DxConnectorsList(object):
                 return 1
 
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e.body)
             return 1

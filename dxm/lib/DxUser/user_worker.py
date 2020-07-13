@@ -29,7 +29,7 @@ from dxm.lib.DxUser.DxUserList import DxUserList
 from dxm.lib.DxRole.DxRoleList import DxRoleList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxAppSetting.DxAppSettingList import DxAppSettingList
-from masking_api_60.models.non_admin_properties import NonAdminProperties
+
 
 def user_delete(p_engine, username, force):
     """
@@ -92,6 +92,11 @@ def user_update(p_engine, username, firstname, lastname, email, password,
         engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
+
+        if (engine_obj.version_ge('6.0.0')):
+            from masking_api_60.models.non_admin_properties import NonAdminProperties
+        else:
+            from masking_api_53.models.non_admin_properties import NonAdminProperties
 
         userlist = DxUserList()
         userref = userlist.get_userId_by_name(username)

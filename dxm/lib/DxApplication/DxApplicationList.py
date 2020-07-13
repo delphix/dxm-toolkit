@@ -24,9 +24,8 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxApplication.DxApplication import DxApplication
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_api_60.rest import ApiException
 from dxm.lib.DxLogging import print_error
-from masking_api_60.api.application_api import ApplicationApi
+
 
 
 class DxApplicationList(object):
@@ -57,9 +56,15 @@ class DxApplicationList(object):
         try:
             if (self.__engine.version_ge('6.0.0')):
                 from masking_api_60.api.application_api import ApplicationApi
+                from masking_api_60.rest import ApiException
             else:
                 from masking_api_53.api.application_api import ApplicationApi
-            api_instance = ApplicationApi(self.__engine.api_client)
+                from masking_api_53.rest import ApiException
+
+            self.__api = ApplicationApi
+            self.__apiexc = ApiException
+
+            api_instance = self.__api(self.__engine.api_client)
             a = paginator(
                     api_instance,
                     "get_all_applications",
@@ -77,7 +82,7 @@ class DxApplicationList(object):
                 print_error("No applications found")
                 return 1
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e.body)
             return 1
