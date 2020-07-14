@@ -28,6 +28,7 @@ jobs:
       run: |
         echo %INCLUDE%
         python -m pip install --upgrade pip
+        python -m pip install cryptography
         python setup.py install
         pip install pyinstaller
         pyinstaller --onefile --clean dxmc.py
