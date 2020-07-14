@@ -223,10 +223,12 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                 ret = ret + 1
                 continue
 
+
+            envreflist = []
+
             if user_environments is not None:
                 envlist = DxEnvironmentList()
                 envnamelist = user_environments.split(',')
-                envreflist = []
                 for envname in envnamelist:
                     envref = envlist.get_environmentId_by_name(envname)
                     if envref is None:
@@ -236,9 +238,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                         envreflist.append(envref)
 
             is_admin = False
-            nap = NonAdminProperties()
-            nap.role_id = roleref
-            nap.environment_ids = envreflist
+            nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
         else:
             is_admin = True
             nap = None
