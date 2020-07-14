@@ -353,7 +353,7 @@ def sync_import(p_engine, envname, inputfile, inputpath, force):
         for f in os.listdir(inputpath):
             fullpath = os.path.join(inputpath, f)
             if os.path.isfile(fullpath):
-                fh = open(fullpath)
+                fh = open(fullpath, "rb")
                 list_of_opened_files.append(fh)
     else:
         if inputfile:
