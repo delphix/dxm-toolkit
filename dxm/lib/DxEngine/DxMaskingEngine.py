@@ -21,6 +21,7 @@
 import logging
 import requests
 import sys
+import re
 from packaging import version
 from datetime import datetime, timedelta
 from dxm.lib.DxLogging import print_error
@@ -104,6 +105,17 @@ try:
                     key_file=configuration.key_file,
                     **addition_pool_args
                 )
+
+        def _ApiClient__deserialize_file(self, response):
+            """Deserializes body to file
+
+            Return a body of request
+
+            :param response:  RESTResponse.
+            :return: file path.
+            """
+
+            return response.data
 
 
         def request(self, method, url, query_params=None, headers=None,
@@ -209,6 +221,19 @@ try:
                     key_file=configuration.key_file,
                     **addition_pool_args
                 )
+
+        def _ApiClient__deserialize_file(self, response):
+            """Deserializes body to file
+
+            Return a body of request
+
+            :param response:  RESTResponse.
+            :return: file path.
+            """
+
+            return response.data
+
+
 
         def request(self, method, url, query_params=None, headers=None,
                 post_params=None, body=None, _preload_content=True,
@@ -517,28 +542,26 @@ class DxMaskingEngine(object):
             print_error("Problem with LoggingAPI %s Error: %s" % (outputlog.name, str(e)))
             return 1
 
-        list = arr.response_list
-        list.reverse()
+        loglist = arr.response_list
+        loglist.reverse()
 
-        for l in list:
+        print(loglist)
+
+        for l in loglist:
             try:
                 data = FileDownloadApi(self.api_client)
                 data_file = data.download_file(l.file_download_id)
             except ApiException as e:
                 print_error("Problem with FileDownloadApi %s Error: %s" % (outputlog.name, str(e)))
                 return 1
-            with open(data_file) as f:
-                s = f.readlines()
-                try:
-                    outputlog = open(file,"a")
-                    for line in s:
-                        outputlog.write(line)
-                    outputlog.close()
-                    f.close()
-                    os.remove(f.name)
-                except Exception as e:
-                    print_error("Failed to write file %s because error: %s" % (outputlog.name, str(e)))
-                    return 1
+
+            try:
+                outputlog = open(file,"a")
+                outputlog.write(data_file)
+                outputlog.close()
+            except Exception as e:
+                print_error("Failed to write file %s because error: %s" % (outputlog.name, str(e)))
+                return 1
 
         print_message("Log saved to file %s" % outputlog.name)
         return 0
