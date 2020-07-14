@@ -19,9 +19,14 @@ jobs:
 
     - name: Install OpenSSL
       run: |
-        choco install openssl    
+        choco install openssl  
+        echo "::set-env name=INCLUDE::C:\\Program Files\\OpenSSL-Win64\\include;%INCLUDE%"
+        echo "::set-env name=LIB::C:\\Program Files\\OpenSSL-Win64\\lib;%LIB%"        
+        
+
     - name: Install dependencies
       run: |
+        echo %INCLUDE%
         python -m pip install --upgrade pip
         python setup.py install
         pip install pyinstaller
