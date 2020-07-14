@@ -6,7 +6,7 @@ setup(
     #version=dxm.dxm.__version__,
     packages=find_packages(),
     install_requires=[
-        'click','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil", "colorama", "tqdm", "packaging", "keyring", "pycryptodome"
+        'click','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi", "python-dateutil", "colorama", "tqdm", "packaging", "keyring", "cryptography"
     ],
     entry_points='''
         [console_scripts]

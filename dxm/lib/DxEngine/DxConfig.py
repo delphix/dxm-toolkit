@@ -23,8 +23,10 @@ import logging
 import sqlite3 as lite
 import sys
 import keyring
-from Crypto.Cipher import Salsa20
-from Crypto.Hash import SHA256
+import os
+from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxEngine.secret import secret
@@ -620,14 +622,18 @@ class DxConfig(object):
         return encryted password
         """ 
 
-        hash_object = SHA256.new(data=password.encode())
-        hashhex = hash_object.hexdigest()
+        hash_object = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        hash_object.update(password.encode())
+        dhash = hash_object.finalize()
+        hashhex = dhash.hex()
 
-        cipher = Salsa20.new(key=secret)
-        enc = cipher.nonce + cipher.encrypt(password.encode())
+
+        nonce = os.urandom(12)
+        cipher = ChaCha20Poly1305(secret)
+        enc = cipher.encrypt(nonce, password.encode(), None)
         enchex = enc.hex()
 
-        return enchex + hashhex
+        return nonce.hex() + enchex + hashhex
 
 
     def decrypt_password(self, password):
@@ -641,13 +647,15 @@ class DxConfig(object):
         enc = password[0:-64]
 
         dehex = bytes.fromhex(enc)
-        msg_nonce = dehex[:8]
-        ciphertext = dehex[8:]
-        cipher = Salsa20.new(key=secret, nonce=msg_nonce)
-        password = cipher.decrypt(ciphertext)
+        msg_nonce = dehex[:12]
+        ciphertext = dehex[12:]
+        cipher = ChaCha20Poly1305(secret)
+        password = cipher.decrypt(msg_nonce, ciphertext, None)
 
-        hash_object = SHA256.new(data=password)
-        hashhex_check = hash_object.hexdigest()
+        hash_object = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        hash_object.update(password)
+        dhash = hash_object.finalize()
+        hashhex_check = dhash.hex()
 
         if hashhex == hashhex_check:
             return password.decode('utf-8')
