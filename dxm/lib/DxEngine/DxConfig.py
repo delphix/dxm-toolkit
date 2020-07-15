@@ -27,6 +27,7 @@ import os
 from cryptography.hazmat.primitives.ciphers.aead import ChaCha20Poly1305
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
+from cryptography.exceptions import InvalidTag
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxEngine.secret import secret
@@ -646,11 +647,15 @@ class DxConfig(object):
         hashhex = password[-64:]
         enc = password[0:-64]
 
-        dehex = bytes.fromhex(enc)
-        msg_nonce = dehex[:12]
-        ciphertext = dehex[12:]
-        cipher = ChaCha20Poly1305(secret)
-        password = cipher.decrypt(msg_nonce, ciphertext, None)
+        try:
+            dehex = bytes.fromhex(enc)
+            msg_nonce = dehex[:12]
+            ciphertext = dehex[12:]
+            cipher = ChaCha20Poly1305(secret)
+            password = cipher.decrypt(msg_nonce, ciphertext, None)
+        except InvalidTag:
+            print_error("Wrong encryption key")
+            sys.exit(1)
 
         hash_object = hashes.Hash(hashes.SHA256(), backend=default_backend())
         hash_object.update(password)

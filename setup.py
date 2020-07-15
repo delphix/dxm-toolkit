@@ -25,6 +25,7 @@ setup(
     ]
 )
 
+
 # add swagger libs
 # docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_60 -DpackageName=masking_api_60
 # cd masking_api_60

@@ -13,7 +13,7 @@ jobs:
     - name: checkout dxtoolkit code
       uses: actions/checkout@master
 
-    - name: Set up a Perl container
+    - name: Set up a Python container
       #uses: pioro/dxtoolkit@develop
       uses: docker://pioro/dxpythoncentos7:latest
       with:
