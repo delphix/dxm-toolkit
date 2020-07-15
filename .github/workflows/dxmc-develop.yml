@@ -40,7 +40,7 @@ jobs:
         pwd
         ls -l dist/
         mkdir dxmc
-        cp dist/dxmc.gz dxmc
+        cp dist/dxmc dxmc/dxmc
         tar czvf ${{ env.FILENAME }} dxmc/
 
     - name: Upload centos 7
