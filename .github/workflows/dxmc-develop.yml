@@ -131,7 +131,7 @@ jobs:
         else
           exit 1
         fi
-        FILENAME="dxtoolkit2-${SOURCE_TAG}-osx.tar.gz"
+        FILENAME="dxmc-${SOURCE_TAG}-osx.gz"
         echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
         echo "::set-env name=FILENAME::$FILENAME"
 
@@ -145,10 +145,13 @@ jobs:
           echo $LIBS
           
           python3 setup.py install
-
+          pip3 install pyinstaller
+          pyinstaller --onefile --clean dxmc.py
+          cd dist
+          gzip dxmc
           cd ${CDIR}
-          ls -l ./dxtoolkit2
-          tar czvf ${{ env.FILENAME }} dxtoolkit2/
+          ls -l ./dist
+          cp dist/dxmc.gz ${{ env.FILENAME }} 
 
     - name: Upload OSX
       uses: actions/upload-artifact@v1
