@@ -146,7 +146,7 @@ jobs:
           
           python3 setup.py install
           pip3 install pyinstaller
-          pyinstaller --onefile --clean dxmc.py
+          pyinstaller --onefile --clean --hidden-import pkg_resources dxmc.py
           cd dist
           gzip dxmc
           cd ${CDIR}
