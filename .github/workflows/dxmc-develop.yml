@@ -37,7 +37,7 @@ jobs:
         cd D:\a\dxm-toolkit\dxm-toolkit\dxm\lib\DxEngine
         ls -l secret.py
         mv secret.py secret.orig.py
-        $raw = (Get-Content -path .\dbutils.orig.pm -Raw) -replace '*Thirty-two byte (256 bits) key*','${{ secrets.ENCKEY_WINDOWS }}'
+        $raw = (Get-Content -path .\secret.orig.py -Raw) -replace '*Thirty-two byte (256 bits) key*','${{ secrets.ENCKEY_WINDOWS }}'
         Set-Content -Path .\secret.py -Value $raw
         cd D:\a\dxm-toolkit\dxm-toolkit\
       shell: powershell
