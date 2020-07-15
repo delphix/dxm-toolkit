@@ -71,7 +71,7 @@ jobs:
         } else {
           exit 1
         }
-        $FILENAME="dxtoolkit2-" + $SOURCE_TAG + "-win64-installer.zip"
+        $FILENAME="dxmc-" + $SOURCE_TAG + "-win64.zip"
         echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
         echo "::set-env name=FILENAME::$FILENAME"
       shell: powershell
@@ -107,7 +107,7 @@ jobs:
         $NAME = "d:\a\dxm-toolkit\dxm-toolkit\${{ env.FILENAME }}"
         echo ${NAME}
         mkdir dxmc
-        copy dist\dxmc dxmc\dxmc
+        copy dist\dxmc.exe dxmc\
         Compress-Archive -Path d:\a\dxm-toolkit\dxm-toolkit\dxmc -DestinationPath ${NAME}
       shell: powershell
   
