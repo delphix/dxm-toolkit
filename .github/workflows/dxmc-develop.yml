@@ -6,46 +6,46 @@ on:
 
 
 jobs:
-  centos7:
+  # centos7:
 
-    runs-on: ubuntu-latest
-    steps:
-    - name: checkout dxtoolkit code
-      uses: actions/checkout@master
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: checkout dxtoolkit code
+  #     uses: actions/checkout@master
 
-    - name: Set up a Perl container
-      #uses: pioro/dxtoolkit@develop
-      uses: docker://pioro/dxpythoncentos7:latest
-      with:
-        ENCKEY: ${{ secrets.ENCKEY }}
+  #   - name: Set up a Perl container
+  #     #uses: pioro/dxtoolkit@develop
+  #     uses: docker://pioro/dxpythoncentos7:latest
+  #     with:
+  #       ENCKEY: ${{ secrets.ENCKEY }}
 
-    - name: Get the version
-      id: get_version
-      run: |
-        if (echo ${GITHUB_REF} | grep "/tags/" > /dev/null); then
-          SOURCE_TAG=${GITHUB_REF#refs/tags/}
-        elif (echo ${GITHUB_REF} | grep "/heads/" > /dev/null); then
-          SOURCE_TAG=${GITHUB_REF#refs/heads/}
-        else
-          exit 1
-        fi
-        FILENAME="dxmc-${SOURCE_TAG}-redhat7.gz"
-        echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
-        echo "::set-env name=FILENAME::$FILENAME"
+  #   - name: Get the version
+  #     id: get_version
+  #     run: |
+  #       if (echo ${GITHUB_REF} | grep "/tags/" > /dev/null); then
+  #         SOURCE_TAG=${GITHUB_REF#refs/tags/}
+  #       elif (echo ${GITHUB_REF} | grep "/heads/" > /dev/null); then
+  #         SOURCE_TAG=${GITHUB_REF#refs/heads/}
+  #       else
+  #         exit 1
+  #       fi
+  #       FILENAME="dxmc-${SOURCE_TAG}-redhat7.gz"
+  #       echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
+  #       echo "::set-env name=FILENAME::$FILENAME"
 
 
-    - name: rename toolkit
-      run: |
-        ls -l 
-        pwd
-        ls -l dist/
-        cp dist/dxmc.gz ${{ env.FILENAME }}
+  #   - name: rename toolkit
+  #     run: |
+  #       ls -l 
+  #       pwd
+  #       ls -l dist/
+  #       cp dist/dxmc.gz ${{ env.FILENAME }}
 
-    - name: Upload centos 7
-      uses: actions/upload-artifact@v1
-      with:
-        name: cento7build
-        path: ${{ env.FILENAME }}
+  #   - name: Upload centos 7
+  #     uses: actions/upload-artifact@v1
+  #     with:
+  #       name: cento7build
+  #       path: ${{ env.FILENAME }}
 
 
   # windows:
@@ -112,3 +112,47 @@ jobs:
   #     with:
   #       name: windowsbuild
   #       path: ${{ env.FILENAME }}
+
+  osx:
+    runs-on: macos-latest
+
+    steps:
+    - name: checkout dxtoolkit code
+      uses: actions/checkout@master
+
+
+    - name: Get the version
+      id: get_version
+      run: |
+        if (echo ${GITHUB_REF} | grep "/tags/" > /dev/null); then
+          SOURCE_TAG=${GITHUB_REF#refs/tags/}
+        elif (echo ${GITHUB_REF} | grep "/heads/" > /dev/null); then
+          SOURCE_TAG=${GITHUB_REF#refs/heads/}
+        else
+          exit 1
+        fi
+        FILENAME="dxtoolkit2-${SOURCE_TAG}-osx.tar.gz"
+        echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
+        echo "::set-env name=FILENAME::$FILENAME"
+
+    - name: run python
+      run: |
+          CELL=`brew --prefix perl`
+          OPENLIB=`brew --prefix openssl`
+          CDIR=`pwd`
+          export PP=${CELL}/bin/pp
+          export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
+          echo $LIBS
+          
+          python3 setup.py install
+
+          cd ${CDIR}
+          ls -l ./dxtoolkit2
+          tar czvf ${{ env.FILENAME }} dxtoolkit2/
+
+    - name: Upload OSX
+      uses: actions/upload-artifact@v1
+      with:
+        name: osxbuild
+        path: ${{ env.FILENAME }}
+      
