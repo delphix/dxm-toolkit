@@ -140,18 +140,19 @@ jobs:
           CELL=`brew --prefix perl`
           OPENLIB=`brew --prefix openssl`
           CDIR=`pwd`
-          export PP=${CELL}/bin/pp
           export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
           echo $LIBS
           
+          pip3 install --upgrade 'setuptools<45.0.0'
           python3 setup.py install
           pip3 install pyinstaller
           pyinstaller --onefile --clean --hidden-import pkg_resources dxmc.py
-          cd dist
-          gzip dxmc
+          
           cd ${CDIR}
-          ls -l ./dist
-          cp dist/dxmc.gz ${{ env.FILENAME }} 
+          mkdir dxmc
+          cp dist/dxmc dxmc/dxmc
+          ls -l ./dxmc
+          tar czvf ${{ env.FILENAME }} dxmc/dxmc
 
     - name: Upload OSX
       uses: actions/upload-artifact@v1
