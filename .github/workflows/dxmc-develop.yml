@@ -6,7 +6,46 @@ on:
 
 
 jobs:
-  build:
+  centos7:
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout dxtoolkit code
+      uses: actions/checkout@master
+
+    - name: Set up a Perl container
+      #uses: pioro/dxtoolkit@develop
+      uses: docker://pioro/dxpythoncentos7:latest
+      with:
+        ENCKEY: ${{ secrets.ENCKEY }}
+
+    - name: Get the version
+      id: get_version
+      run: |
+        if (echo ${GITHUB_REF} | grep "/tags/" > /dev/null); then
+          SOURCE_TAG=${GITHUB_REF#refs/tags/}
+        elif (echo ${GITHUB_REF} | grep "/heads/" > /dev/null); then
+          SOURCE_TAG=${GITHUB_REF#refs/heads/}
+        else
+          exit 1
+        fi
+        FILENAME="dxmc-${SOURCE_TAG}-redhat7.gz"
+        echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
+        echo "::set-env name=FILENAME::$FILENAME"
+
+
+    - name: rename toolkit
+      run: |
+        mv dist/dxmc.gz ${{ env.FILENAME }}
+
+    - name: Upload centos 7
+      uses: actions/upload-artifact@v1
+      with:
+        name: cento7build
+        path: ${{ env.FILENAME }}
+
+
+  windows:
 
     runs-on: windows-latest
 
