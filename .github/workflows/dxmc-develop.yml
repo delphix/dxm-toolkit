@@ -106,9 +106,9 @@ jobs:
       run: |
         $NAME = "d:\a\dxm-toolkit\dxm-toolkit\${{ env.FILENAME }}"
         echo ${NAME}
-        mkdir dxmc
-        copy dist\dxmc.exe dxmc\
-        Compress-Archive -Path d:\a\dxm-toolkit\dxm-toolkit\dxmc -DestinationPath ${NAME}
+        mkdir d:\a\dxm-toolkit\dxm-toolkit\dxmc
+        copy d:\a\dxm-toolkit\dxm-toolkit\dist\dxmc.exe dxmc\
+        Compress-Archive -Path d:\a\dxm-toolkit\dxm-toolkit\dxmc\* -DestinationPath ${NAME}
       shell: powershell
   
     - name: Upload windows
