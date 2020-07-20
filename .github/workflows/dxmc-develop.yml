@@ -2,7 +2,7 @@ name: dxmc
 
 on:
   push:
-    branches: [ develop1 ]
+    branches: [ develop ]
 
 
 jobs:
