@@ -208,8 +208,7 @@ jobs:
               release_name: Release ${{ env.SOURCE_TAG }}
               draft: true
               prerelease: true
-              body: "To jest tekst
-                     2nd linia"
+              body: "To jest tekst"
       
       
           - name: Upload Release Asset
