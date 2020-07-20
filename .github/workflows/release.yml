@@ -2,9 +2,8 @@ name: dxmc
 
 on:
   push:
-    branches: [ develop ]
-    # tags:
-    #   - "v*.*.*"
+    tags:
+       - "v*.*.*"
 
 jobs:
   centos7:
