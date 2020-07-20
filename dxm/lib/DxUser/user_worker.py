@@ -29,7 +29,7 @@ from dxm.lib.DxUser.DxUserList import DxUserList
 from dxm.lib.DxRole.DxRoleList import DxRoleList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxAppSetting.DxAppSettingList import DxAppSettingList
-from masking_apis.models.non_admin_properties import NonAdminProperties
+
 
 def user_delete(p_engine, username, force):
     """
@@ -55,7 +55,7 @@ def user_delete(p_engine, username, force):
         userref = userlist.get_userId_by_name(username)
 
         if userref is not None:
-            if userlist.delete(userref, force) is not None:
+            if userlist.delete(userref, force) != 0:
                 print_error("Problem with deleting user %s" % username)
                 logger.debug("Problem with deleting user %s" % username)
                 ret = ret + 1
@@ -92,6 +92,11 @@ def user_update(p_engine, username, firstname, lastname, email, password,
         engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
+
+        if (engine_obj.version_ge('6.0.0')):
+            from masking_api_60.models.non_admin_properties import NonAdminProperties
+        else:
+            from masking_api_53.models.non_admin_properties import NonAdminProperties
 
         userlist = DxUserList()
         userref = userlist.get_userId_by_name(username)
@@ -132,14 +137,12 @@ def user_update(p_engine, username, firstname, lastname, email, password,
 
 
                 userobj.is_admin = False
-                nap = NonAdminProperties()
-                nap.role_id = roleref
-                nap.environment_ids = envreflist
+                nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
                 userobj.non_admin_properties = nap
             else:
                 userobj.is_admin = True
                 userobj.delete_nap()
-                print userobj
+                print_message(userobj)
 
         if firstname is not None:
             update = 1
@@ -158,7 +161,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
             try:
                 userobj.password = password
             except ValueError as e:
-                print str(e)
+                print_error(str(e))
                 ret = ret + 1
                 return ret
 
@@ -203,7 +206,14 @@ def user_add(p_engine, username, firstname, lastname, email, password,
         if engine_obj.get_session():
             continue
 
+        if (engine_obj.version_ge('6.0.0')):
+            from masking_api_60.models.non_admin_properties import NonAdminProperties
+        else:
+            from masking_api_53.models.non_admin_properties import NonAdminProperties
+
+
         userobj = DxUser(engine_obj)
+
         if user_type == 'nonadmin':
             rolelist = DxRoleList()
             roleref = rolelist.get_roleId_by_name(user_role)
@@ -213,10 +223,12 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                 ret = ret + 1
                 continue
 
+
+            envreflist = []
+
             if user_environments is not None:
                 envlist = DxEnvironmentList()
                 envnamelist = user_environments.split(',')
-                envreflist = []
                 for envname in envnamelist:
                     envref = envlist.get_environmentId_by_name(envname)
                     if envref is None:
@@ -225,25 +237,21 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                     else:
                         envreflist.append(envref)
 
-            userobj.is_admin = False
-            nap = NonAdminProperties()
-            nap.role_id = roleref
-            nap.environment_ids = envreflist
-            userobj.non_admin_properties = nap
+            is_admin = False
+            nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
         else:
-            userobj.is_admin = True
-
-        userobj.user_name = username
-        userobj.first_name = firstname
-        userobj.last_name = lastname
-        userobj.email = email
+            is_admin = True
+            nap = None
 
         try:
-            userobj.password = password
+            userobj.create_user(user_name = username, password = password, first_name=firstname, last_name=lastname,
+                                email=email, is_admin=is_admin, non_admin_properties=nap)
         except ValueError as e:
-            print str(e)
+            print_error(str(e))
             ret = ret + 1
             return ret
+
+        
 
         userlist = DxUserList()
         ret = ret + userlist.add(userobj)

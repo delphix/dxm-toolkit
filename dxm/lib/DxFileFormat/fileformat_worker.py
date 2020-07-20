@@ -51,9 +51,7 @@ def fileformat_add(p_engine, fileformat_type, fileformat_file):
 
         fileformatList = DxFileFormatList()
         fileformat = DxFileFormat(engine_obj)
-
-        fileformat.file_format_type = fileformat_type.upper()
-        fileformat.file_format_name = fileformat_file.name
+        fileformat.create_fileformat(file_format_name = fileformat_file.name, file_format_type = fileformat_type.upper())
 
         if fileformatList.add(fileformat):
             ret = ret + 1

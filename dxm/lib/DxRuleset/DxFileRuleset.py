@@ -19,28 +19,59 @@
 
 import logging
 import csv
-from masking_apis.models.file_ruleset import FileRuleset
-from masking_apis.apis.file_ruleset_api import FileRulesetApi
+
 from dxm.lib.DxTable.DxFile import DxFile
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
-from masking_apis.rest import ApiException
+from dxm.lib.DxRuleset.DxDatabaseRuleset import DxDatabaseRuleset
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
-class DxFileRuleset(FileRuleset):
+class DxFileRuleset(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        FileRuleset.__init__(self)
+        #FileRuleset.__init__(self)
         self.__engine = engine
         self.__fileList = None
         self.__type = 'File'
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFileRuleset object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.file_ruleset import FileRuleset
+            from masking_api_60.api.file_ruleset_api import FileRulesetApi
+            from masking_api_60.models.file_metadata import FileMetadata
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.file_ruleset import FileRuleset
+            from masking_api_53.api.file_ruleset_api import FileRulesetApi
+            from masking_api_53.models.file_metadata import FileMetadata
+            from masking_api_53.rest import ApiException
+
+        self.__api = FileRulesetApi
+        self.__model = FileRuleset
+        self.__apiexc = ApiException
+        self.__modeltable = FileMetadata
+        self.__obj = None
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+    @property
+    def logger(self):
+        return self.__logger
+
+    @property
+    def engine(self):
+        return self.__engine
+
 
     @property
     def type(self):
@@ -48,18 +79,33 @@ class DxFileRuleset(FileRuleset):
 
     @property
     def ruleset_id(self):
-        return self.file_ruleset_id
+        return self.obj.file_ruleset_id
+
+    @property
+    def ruleset_name(self):
+        return self.obj.ruleset_name
 
     @property
     def connectorId(self):
-        return 'f' + str(self.file_connector_id)
+        return 'f' + str(self.obj.file_connector_id)
 
     def from_ruleset(self, ruleset):
         """
-        Copy properties from Ruleset object into DxRuleset
+        Set obj object with real ruleset object
         :param con: DatabaseConnector object
         """
-        self.__dict__.update(ruleset.__dict__)
+        self.__obj = ruleset
+
+    def create_file_ruleset(self, ruleset_name, file_connector_id):
+        """
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = self.__model(ruleset_name=ruleset_name, file_connector_id=file_connector_id)
+
 
     def add(self):
         """
@@ -68,28 +114,28 @@ class DxFileRuleset(FileRuleset):
         return 1 in case of error
         """
 
-        if (self.ruleset_name is None):
-            print "Ruleset name is required"
+        if (self.obj.ruleset_name is None):
+            print_error("Ruleset name is required")
             self.__logger.error("Ruleset name is required")
             return 1
 
-        if (self.file_connector_id is None):
-            print "File connector Id is required"
+        if (self.obj.file_connector_id is None):
+            print_error("File connector Id is required")
             self.__logger.error("File connector ID is required")
             return 1
 
         try:
             self.__logger.debug("create database ruleset input %s" % str(self))
 
-            api_instance = FileRulesetApi(self.__engine.api_client)
-            response = api_instance.create_file_ruleset(self)
-            self.file_ruleset_id = response.file_ruleset_id
+            api_instance = self.__api(self.__engine.api_client)
+            response = api_instance.create_file_ruleset(self.obj)
+            self.__obj = response
 
             self.__logger.debug("ruleset response %s"
                                 % str(response))
 
             print_message("Ruleset %s added" % self.ruleset_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -101,19 +147,19 @@ class DxFileRuleset(FileRuleset):
         return 1 in case of error
         """
 
-        api_instance = FileRulesetApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("delete ruleset id %s"
-                                % self.rulesetId)
+                                % self.ruleset_id)
             response = api_instance.delete_file_ruleset(
-                        self.rulesetId
+                        self.ruleset_id
                        )
             self.__logger.debug("delete ruleset response %s"
                                 % str(response))
             print_message("Ruleset %s deleted" % self.ruleset_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -153,17 +199,20 @@ class DxFileRuleset(FileRuleset):
         else:
             eor_string = eor
 
-        file = DxFile(self.__engine)
-        file.file_name = filename
-        file.ruleset_id = self.file_ruleset_id
-        file.file_type = connobj.file_type
-        file.file_format_id = file_format
-        if regular:
-            file.name_is_regular_expression = regular
+        if enclosure:
+            enclosure = enclosure.strip()
 
-        file.delimiter = delimiter
-        file.end_of_record = eor_string
-        file.enclosure = enclosure.strip()
+        file = DxFile(self.__engine)
+        file.create_file(
+            file_name = filename,
+            ruleset_id = self.ruleset_id,
+            file_type = connobj.connector_type,
+            file_format_id = file_format,
+            delimiter = delimiter,
+            end_of_record = eor_string,
+            enclosure = enclosure,
+            name_is_regular_expression=regular
+        )
         return file.add()
 
     def skip_comment(self, file):
@@ -200,3 +249,58 @@ class DxFileRuleset(FileRuleset):
             ret = ret + self.addmeta(params)
 
         return ret
+
+    def addmetafromfetch(self, fetchfilter, bulk):
+        """
+        Add tables from fetch into ruleset
+        :param fetchfilter: filter for tables
+        return a 0 if non error
+        return 1 in case of error
+        """
+        
+        connobj = DxConnectorsList.get_by_ref(self.connectorId)
+        table_list = []
+        ret = 0
+
+        if bulk:
+            print_error("Bulk option is not supported for files")
+            return 1
+
+        if fetchfilter:
+            fetchfilter = re.escape(fetchfilter).replace("\*",".*")
+            self.logger.debug("fetchfilter {}".format(fetchfilter))
+            pattern = re.compile(r'^{}$'.format(fetchfilter))
+
+        for table in connobj.fetch_meta():
+            params = {
+                "metaname": table,
+                "file_name_regex": None,
+                "file_format": None,
+                "file_delimiter": None,
+                "file_eor": None,
+                "file_enclosure": None
+            }
+
+            self.logger.debug("checking file {}".format(table))
+
+            if fetchfilter:
+                if pattern.search(table):
+                    self.logger.debug("filtered file added to bulk{}".format(table))
+                    ret = ret + self.addmeta(params)
+            else:
+                    if bulk:
+                        table_list.append(params)
+                    else:
+                        ret = ret + self.addmeta(params)            
+        
+        return ret
+
+
+    def refresh(self):
+        """
+        Refresh ruleset on the Masking engine 
+        return a None if non error
+        return 1 in case of error
+        """
+        print_error("Refresh operation is not supported for files")
+        return 1

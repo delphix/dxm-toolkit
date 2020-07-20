@@ -20,13 +20,10 @@
 import logging
 import sys
 import operator
-from masking_apis.apis.algorithm_api import AlgorithmApi
-from masking_apis.apis.sync_api import SyncApi
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxAlgorithm.DxAlgorithm import DxAlgorithm
 from dxm.lib.DxDomain.DxDomainList import DxDomainList
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxSync.DxSyncList import DxSyncList
@@ -55,8 +52,20 @@ class DxAlgorithmList(object):
         Return None if OK
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.algorithm_api import AlgorithmApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.algorithm_api import AlgorithmApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = AlgorithmApi
+        self.__apiexc = ApiException
+
+        domainlist = DxDomainList()
+
         try:
-            api_instance = AlgorithmApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             api_response = api_instance.get_all_algorithms()
 
             synclist = DxSyncList()
@@ -84,7 +93,7 @@ class DxAlgorithmList(object):
 
             return None
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e.body)
             return 1

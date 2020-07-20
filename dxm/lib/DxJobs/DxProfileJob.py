@@ -21,17 +21,12 @@
 import logging
 import time
 from tqdm import tqdm
-from masking_apis.models.profile_job import ProfileJob
-from masking_apis.apis.profile_job_api import ProfileJobApi
-from masking_apis.apis.execution_api import ExecutionApi
-from masking_apis.models.execution import Execution
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 import dxm.lib.DxJobs.DxJobCounter
 
 
-class DxProfileJob(ProfileJob):
+class DxProfileJob(object):
 
     def __init__(self, engine, lastExec):
         """
@@ -39,12 +34,31 @@ class DxProfileJob(ProfileJob):
         :param1 engine: DxMaskingEngine object
         :param2 execList: list of job executions
         """
-        ProfileJob.__init__(self)
+        #ProfileJob.__init__(self)
         self.__engine = engine
         self.__lastExec = lastExec
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxProfileJob object")
         self.__monitor = False
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.profile_job import ProfileJob
+            from masking_api_60.api.profile_job_api import ProfileJobApi
+            from masking_api_60.api.execution_api import ExecutionApi
+            from masking_api_60.models.execution import Execution
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.profile_job import ProfileJob
+            from masking_api_53.api.profile_job_api import ProfileJobApi
+            from masking_api_53.api.execution_api import ExecutionApi
+            from masking_api_53.models.execution import Execution
+            from masking_api_53.rest import ApiException
+
+        self.__api = ProfileJobApi
+        self.__model = ProfileJob
+        self.__apiexec = ExecutionApi
+        self.__modelexec = Execution
+        self.__apiexc = ApiException
+        self.__obj = None
 
     @property
     def monitor(self):
@@ -58,12 +72,168 @@ class DxProfileJob(ProfileJob):
     def lastExec(self):
         return self.__lastExec
 
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+    @property
+    def job_name(self):
+        if self.obj is not None:
+            return self.obj.job_name
+        else:
+            return None
+
+    @job_name.setter
+    def job_name(self, job_name):
+        if self.__obj is not None:
+            self.__obj.job_name = job_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def ruleset_id(self):
+        if self.obj is not None:
+            return self.obj.ruleset_id
+        else:
+            return None
+
+    @ruleset_id.setter
+    def ruleset_id(self, ruleset_id):
+        if self.__obj is not None:
+            self.__obj.ruleset_id = ruleset_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def profile_job_id(self):
+        if self.obj is not None:
+            return self.obj.profile_job_id
+        else:
+            return None
+
+    @profile_job_id.setter
+    def profile_job_id(self, profile_job_id):
+        if self.__obj is not None:
+            self.__obj.profile_job_id = profile_job_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def profile_set_id(self):
+        if self.obj is not None:
+            return self.obj.profile_set_id
+        else:
+            return None
+
+    @profile_set_id.setter
+    def profile_set_id(self, profile_set_id):
+        if self.__obj is not None:
+            self.__obj.profile_set_id = profile_set_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def email(self):
+        if self.obj is not None:
+            return self.obj.email
+        else:
+            return None
+
+    @email.setter
+    def email(self, email):
+        if self.__obj is not None:
+            self.__obj.email = email
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def max_memory(self):
+        if self.obj is not None:
+            return self.obj.max_memory
+        else:
+            return None
+
+    @max_memory.setter
+    def max_memory(self, max_memory):
+        if self.__obj is not None:
+            self.__obj.max_memory = max_memory
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def min_memory(self):
+        if self.obj is not None:
+            return self.obj.min_memory
+        else:
+            return None
+
+    @min_memory.setter
+    def min_memory(self, min_memory):
+        if self.__obj is not None:
+            self.__obj.min_memory = min_memory
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def num_input_streams(self):
+        if self.obj is not None:
+            return self.obj.num_input_streams
+        else:
+            return None
+
+    @num_input_streams.setter
+    def num_input_streams(self, num_input_streams):
+        if self.__obj is not None:
+            self.__obj.num_input_streams = num_input_streams
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def multi_tenant(self):
+        if self.obj is not None:
+            return self.obj.multi_tenant
+        else:
+            return None
+
+    @multi_tenant.setter
+    def multi_tenant(self, multi_tenant):
+        if self.__obj is not None:
+            self.__obj.multi_tenant = multi_tenant
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def feedback_size(self):
+        if self.obj is not None:
+            return self.obj.feedback_size
+        else:
+            return None
+
+    @feedback_size.setter
+    def feedback_size(self, feedback_size):
+        if self.__obj is not None:
+            self.__obj.feedback_size = feedback_size
+        else:
+            raise ValueError("Object needs to be initialized first")
+
     def from_job(self, job):
+        self.__obj = job
+
+    def create_job(self, job_name, ruleset_id, profile_set_id) :
         """
-        Copy properties from ProfileJob object into DxProfileJob
-        :param con: ProfileJob object
-        """
-        self.__dict__.update(job.__dict__)
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = self.__model(job_name=job_name, ruleset_id=ruleset_id, profile_set_id=profile_set_id)
 
     def add(self):
         """
@@ -84,17 +254,17 @@ class DxProfileJob(ProfileJob):
 
         try:
             self.__logger.debug("create profile job input %s" % str(self))
-            api_instance = ProfileJobApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_profile_job(
-                        self, _request_timeout=self.__engine.get_timeout())
+                        self.obj, _request_timeout=self.__engine.get_timeout())
             self.from_job(response)
 
             self.__logger.debug("profile job response %s"
                                 % str(response))
 
             print_message("Profile job %s added" % self.job_name)
-            return None
-        except ApiException as e:
+            return 0
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -107,7 +277,7 @@ class DxProfileJob(ProfileJob):
         """
 
         try:
-            api_instance = ProfileJobApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.delete_profile_job(
                 self.profile_job_id,
                 _request_timeout=self.__engine.get_timeout())
@@ -115,7 +285,7 @@ class DxProfileJob(ProfileJob):
                                 % str(response))
             print_message("Profile job %s deleted" % self.job_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -128,18 +298,18 @@ class DxProfileJob(ProfileJob):
         """
 
         try:
-            api_instance = ProfileJobApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("update profile job request %s"
                                 % str(self))
             response = api_instance.update_profile_job(
                 self.profile_job_id,
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("Profile job response %s"
                                 % str(response))
             print_message("Profile job %s updated" % self.job_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -153,17 +323,17 @@ class DxProfileJob(ProfileJob):
 
         try:
             execid = self.__lastExec.execution_id
-            exec_api = ExecutionApi(self.__engine.api_client)
+            exec_api = self.__apiexec(self.__engine.api_client)
             self.__logger.debug("Stopping execution %s" % str(self.__lastExec))
             execjob = exec_api.cancel_execution(self.__lastExec.execution_id)
             while execjob.status == 'RUNNING':
                 time.sleep(1)
                 execjob = exec_api.get_execution_by_id(execid)
 
-            print execjob
+            print_message(execjob)
             return 0
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -180,10 +350,9 @@ class DxProfileJob(ProfileJob):
         Return 0 if job started and finished OK, or was in nowait
         Return 1 if errors
         """
-        exec_api = ExecutionApi(self.__engine.api_client)
+        exec_api = self.__apiexec(self.__engine.api_client)
 
-        execjob = Execution()
-        execjob.job_id = self.profile_job_id
+        execjob = self.__modelexec(job_id=self.profile_job_id)
 
         if (self.multi_tenant):
             # target is mandatory
@@ -206,7 +375,7 @@ class DxProfileJob(ProfileJob):
             else:
                 return self.wait_for_job(response, posno, lock)
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             lock.acquire()
@@ -227,7 +396,7 @@ class DxProfileJob(ProfileJob):
 
         execid = execjob.execution_id
 
-        exec_api = ExecutionApi(self.__engine.api_client)
+        exec_api = self.__apiexec(self.__engine.api_client)
 
         self.__logger.debug('Waiting for profilejob %s to finish'
                             % self.job_name)

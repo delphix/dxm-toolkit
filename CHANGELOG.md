@@ -1,3 +1,24 @@
+## Version 0.8
+
+If you are upgrading from previous version, you need to update all engines in your configuration
+and set again engine password.
+
+### Added:
+ - Added Job Report [Job history report](https://github.com/delphix/dxm-toolkit/issues/37)
+ - Support for encrypted passwords in Engine config database 
+ - Add support for Proxy on Windows / OSX
+ - [fix for #33](https://github.com/delphix/dxm-toolkit/issues/33) - DateFormat not extracted with column list
+
+
+### Changed:
+ - Support for 5.3.X and 6.0.X in single build
+ - [fix for #32](https://github.com/delphix/dxm-toolkit/issues/32) - Unable to call pre and post script with script Path
+
+## Version 0.7
+
+### Changed:
+ - initial support for 6.0
+
 ## Version 0.6
 
 ### Added:

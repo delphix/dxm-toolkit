@@ -22,9 +22,7 @@ import sys
 from dxm.lib.DxUser.DxUser import DxUser
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.apis.user_api import UserApi
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 
 
@@ -54,9 +52,19 @@ class DxUserList(object):
         return 1 if error
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.user_api import UserApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.user_api import UserApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = UserApi
+        self.__apiexc = ApiException
+
         self.__userList.clear()
         try:
-            api_instance = UserApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             userlist = paginator(
                         api_instance,
                         "get_all_users",
@@ -71,7 +79,7 @@ class DxUserList(object):
                 self.__logger.error("No users found")
                 print_error("No users found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             self.__logger.error("Can't load users %s" % e.body)
             print_error("Can't load users %s" % e.body)
             return 1
@@ -146,11 +154,10 @@ class DxUserList(object):
 
         userobj = self.get_by_ref(user_id)
         if userobj is not None:
-            print
-            if userobj.delete(force) is None:
-                return None
+            if userobj.delete(force) == 0:
+                return 0
             else:
                 return 1
         else:
-            print "User with id %s not found" % user_id
+            print_error("User with id %s not found" % user_id)
             return 1

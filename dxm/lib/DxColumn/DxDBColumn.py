@@ -18,60 +18,163 @@
 
 
 import logging
-from masking_apis.apis.column_metadata_api import ColumnMetadataApi
-from masking_apis.models.column_metadata import ColumnMetadata
-from masking_apis.rest import ApiException
+
+
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxDBColumn(ColumnMetadata):
+class DxDBColumn(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        ColumnMetadata.__init__(self)
+        #ColumnMetadata.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxDBColumn object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.column_metadata_api import ColumnMetadataApi
+            from masking_api_60.models.column_metadata import ColumnMetadata
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.column_metadata_api import ColumnMetadataApi
+            from masking_api_53.models.column_metadata import ColumnMetadata
+            from masking_api_53.rest import ApiException
+
+        self.__api = ColumnMetadataApi
+        self.__model = ColumnMetadata
+        self.__obj = None
+        self.__apiexc = ApiException
+
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
 
     def from_column(self, column):
         """
-        Copy properties from column object into DxDBColumn
+        set obj property with ColumnMetadata object
         :param column: ColumnMetadata object
         """
-        self.__dict__.update(column.__dict__)
+        self.__obj = column
 
     @property
     def cf_metadata_id(self):
-        return self.column_metadata_id
+        return self.obj.column_metadata_id
 
     @property
     def cf_meta_name(self):
-        return self.column_name
+        return self.obj.column_name
 
     @property
     def cf_meta_type(self):
-        if self.column_length == 0:
-            return "{}".format(self.data_type)
+        if self.obj.column_length == 0:
+            return "{}".format(self.obj.data_type)
         else:
-            return "{}({})".format(self.data_type, self.column_length)
+            return "{}({})".format(self.obj.data_type, self.obj.column_length)
 
     @property
     def cf_meta_column_role(self):
         ret = ''
-        if self.is_primary_key:
+        if self.obj.is_primary_key:
             ret = 'PK '
 
-        if self.is_foreign_key:
+        if self.obj.is_foreign_key:
             ret = ret + "FK "
 
-        if self.is_index:
+        if self.obj.is_index:
             ret = ret + "IX "
 
         return ret.strip()
+
+
+    @property
+    def algorithm_name(self):
+        return self.obj.algorithm_name
+
+    @algorithm_name.setter
+    def algorithm_name(self, algorithm_name):
+        """
+        algorithm_name
+        :param algorithm_name: algorithm_name 
+        """
+
+        if self.obj is not None:
+            self.obj.algorithm_name = algorithm_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def domain_name(self):
+        return self.obj.domain_name
+
+    @domain_name.setter
+    def domain_name(self, domain_name):
+        """
+        domain_name
+        :param domain_name: domain_name 
+        """
+
+        if self.obj is not None:
+            self.obj.domain_name = domain_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def is_masked(self):
+        return self.obj.is_masked
+
+    @is_masked.setter
+    def is_masked(self, is_masked):
+        """
+        is_masked
+        :param is_masked: is_masked flag
+        """
+
+        if self.obj is not None:
+            self.obj.is_masked = is_masked
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def date_format(self):
+        return self.obj.date_format
+
+    @date_format.setter
+    def date_format(self, date_format):
+        """
+        date_format
+        :param date_format: date_format flag
+        """
+
+        if self.obj is not None:
+            self.obj.date_format = date_format
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+
+    @property
+    def is_profiler_writable(self):
+        return self.obj.is_profiler_writable
+
+    @is_profiler_writable.setter
+    def is_profiler_writable(self, is_profiler_writable):
+        """
+        is_profiler_writable
+        :param is_profiler_writable: is_profiler_writable flag
+        """
+
+        if self.obj is not None:
+            self.obj.is_profiler_writable = is_profiler_writable
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def update(self):
         """
@@ -80,24 +183,24 @@ class DxDBColumn(ColumnMetadata):
         return 1 in case of error
         """
 
-        if (self.column_metadata_id is None):
-            print "column_metadata_id is required"
+        if (self.obj.column_metadata_id is None):
+            print_error("column_metadata_id is required")
             self.__logger.error("column_metadata_id is required")
             return 1
 
         try:
-            if self.date_format == '':
+            if self.obj.date_format == '':
                 self.date_format = None
 
             self.__logger.debug("create column input %s" % str(self))
-            api_instance = ColumnMetadataApi(self.__engine.api_client)
-            response = api_instance.update_column_metadata(self.column_metadata_id, self)
+            api_instance = self.__api(self.__engine.api_client)
+            response = api_instance.update_column_metadata(self.obj.column_metadata_id, self.obj)
             self.__logger.debug("column response %s"
                                 % str(response))
 
-            print_message("Column %s updated" % self.column_name)
+            print_message("Column %s updated" % self.obj.column_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

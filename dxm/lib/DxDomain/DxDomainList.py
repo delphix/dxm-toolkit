@@ -19,11 +19,10 @@
 
 import logging
 import sys
-from masking_apis.apis.domain_api import DomainApi
+
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxDomain.DxDomain import DxDomain
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_message
@@ -53,8 +52,19 @@ class DxDomainList(object):
         """
 
         self.__domainList.clear()
+
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.domain_api import DomainApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.domain_api import DomainApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = DomainApi
+        self.__apiexc = ApiException
+
         try:
-            api_instance = DomainApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             domain_list = paginator(
                             api_instance,
                             "get_all_domains")
@@ -71,7 +81,7 @@ class DxDomainList(object):
 
             return None
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e.body)
             return 1

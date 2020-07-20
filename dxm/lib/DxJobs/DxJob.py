@@ -19,31 +19,50 @@
 
 import logging
 import time
+import pytz
 from tqdm import tqdm
-from masking_apis.models.masking_job import MaskingJob
-from masking_apis.apis.masking_job_api import MaskingJobApi
-from masking_apis.apis.execution_api import ExecutionApi
-from masking_apis.models.execution import Execution
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 import dxm.lib.DxJobs.DxJobCounter
+from dxm.lib.DxTools.DxTools import paginator
 
 
-class DxJob(MaskingJob):
+class DxJob(object):
 
-    def __init__(self, engine, lastExec):
+    def __init__(self, engine, execList):
         """
         Constructor
         :param1 engine: DxMaskingEngine object
         :param2 execList: list of job executions
         """
-        MaskingJob.__init__(self)
+        #MaskingJob.__init__(self)
         self.__engine = engine
-        self.__lastExec = lastExec
+        self.__execList = execList
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJob object")
         self.__monitor = False
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.masking_job import MaskingJob
+            from masking_api_60.api.masking_job_api import MaskingJobApi
+            from masking_api_60.api.execution_api import ExecutionApi
+            from masking_api_60.models.execution import Execution
+            from masking_api_60.api.execution_component_api import ExecutionComponentApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.masking_job import MaskingJob
+            from masking_api_53.api.masking_job_api import MaskingJobApi
+            from masking_api_53.api.execution_api import ExecutionApi
+            from masking_api_53.models.execution import Execution
+            from masking_api_53.api.execution_component_api import ExecutionComponentApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = MaskingJobApi
+        self.__model = MaskingJob
+        self.__apiexec = ExecutionApi
+        self.__apicomponent = ExecutionComponentApi
+        self.__modelexec = Execution
+        self.__apiexc = ApiException
+        self.__obj = None
 
     @property
     def monitor(self):
@@ -55,14 +74,235 @@ class DxJob(MaskingJob):
 
     @property
     def lastExec(self):
-        return self.__lastExec
+        if self.__execList:
+            return self.__execList[-1]
+        else:
+            return None
+
+    @property
+    def execList(self):
+        return self.__execList
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+
+    @property
+    def email(self):
+        if self.obj is not None:
+            return self.obj.email
+        else:
+            return None
+
+    @email.setter
+    def email(self, email):
+        if self.__obj is not None:
+            self.__obj.email = email
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def max_memory(self):
+        if self.obj is not None:
+            return self.obj.max_memory
+        else:
+            return None
+
+    @max_memory.setter
+    def max_memory(self, max_memory):
+        if self.__obj is not None:
+            self.__obj.max_memory = max_memory
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def min_memory(self):
+        if self.obj is not None:
+            return self.obj.min_memory
+        else:
+            return None
+
+    @min_memory.setter
+    def min_memory(self, min_memory):
+        if self.__obj is not None:
+            self.__obj.min_memory = min_memory
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def num_input_streams(self):
+        if self.obj is not None:
+            return self.obj.num_input_streams
+        else:
+            return None
+
+    @num_input_streams.setter
+    def num_input_streams(self, num_input_streams):
+        if self.__obj is not None:
+            self.__obj.num_input_streams = num_input_streams
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def multi_tenant(self):
+        if self.obj is not None:
+            return self.obj.multi_tenant
+        else:
+            return None
+
+    @multi_tenant.setter
+    def multi_tenant(self, multi_tenant):
+        if self.__obj is not None:
+            self.__obj.multi_tenant = multi_tenant
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def feedback_size(self):
+        if self.obj is not None:
+            return self.obj.feedback_size
+        else:
+            return None
+
+    @feedback_size.setter
+    def feedback_size(self, feedback_size):
+        if self.__obj is not None:
+            self.__obj.feedback_size = feedback_size
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def on_the_fly_masking(self):
+        if self.obj is not None:
+            return self.obj.on_the_fly_masking
+        else:
+            return None
+
+    @on_the_fly_masking.setter
+    def on_the_fly_masking(self, on_the_fly_masking):
+        if self.__obj is not None:
+            self.__obj.on_the_fly_masking = on_the_fly_masking
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def on_the_fly_masking_source(self):
+        if self.obj is not None:
+            return self.obj.on_the_fly_masking_source
+        else:
+            return None
+
+    @on_the_fly_masking_source.setter
+    def on_the_fly_masking_source(self, on_the_fly_masking_source):
+        if self.__obj is not None:
+            self.__obj.on_the_fly_masking_source = on_the_fly_masking_source
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def database_masking_options(self):
+        if self.obj is not None:
+            return self.obj.database_masking_options
+        else:
+            return None
+
+    @database_masking_options.setter
+    def database_masking_options(self, database_masking_options):
+        if self.__obj is not None:
+            self.__obj.database_masking_options = database_masking_options
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def job_description(self):
+        if self.obj is not None:
+            return self.obj.job_description
+        else:
+            return None
+
+    @job_description.setter
+    def job_description(self, job_description):
+        if self.__obj is not None:
+            self.__obj.job_description = job_description
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def job_name(self):
+        if self.obj is not None:
+            return self.obj.job_name
+        else:
+            return None
+
+    @job_name.setter
+    def job_name(self, job_name):
+        if self.__obj is not None:
+            self.__obj.job_name = job_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def ruleset_id(self):
+        if self.obj is not None:
+            return self.obj.ruleset_id
+        else:
+            return None
+
+    @ruleset_id.setter
+    def ruleset_id(self, ruleset_id):
+        if self.__obj is not None:
+            self.__obj.ruleset_id = ruleset_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def ruleset_type(self):
+        if self.obj is not None:
+            return self.obj.ruleset_type
+        else:
+            return None
+
+    @ruleset_type.setter
+    def ruleset_type(self, ruleset_type):
+        if self.__obj is not None:
+            self.__obj.ruleset_type = ruleset_type
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def masking_job_id(self):
+        if self.obj is not None:
+            return self.obj.masking_job_id
+        else:
+            return None
+
+    @masking_job_id.setter
+    def masking_job_id(self, masking_job_id):
+        if self.__obj is not None:
+            self.__obj.masking_job_id = masking_job_id
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def from_job(self, job):
+        self.__obj = job
+
+    def create_job(self, job_name, ruleset_id):
         """
-        Copy properties from MaskingJob object into DxJob
-        :param con: MaskingJob object
-        """
-        self.__dict__.update(job.__dict__)
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = self.__model(job_name=job_name, ruleset_id=ruleset_id)
 
 
     def add(self):
@@ -72,7 +312,7 @@ class DxJob(MaskingJob):
         return 1 in case of error
         """
 
-        if (self.job_name is None):
+        if (self.obj.job_name is None):
             print_error("Job name is required")
             self.__logger.error("Job name is required")
             return 1
@@ -83,18 +323,18 @@ class DxJob(MaskingJob):
             return 1
 
         try:
-            self.__logger.debug("create job input %s" % str(self))
-            api_instance = MaskingJobApi(self.__engine.api_client)
+            self.__logger.debug("create job input %s" % str(self.obj))
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("API instance created")
-            response = api_instance.create_masking_job(self)
+            response = api_instance.create_masking_job(self.obj)
             self.from_job(response)
 
             self.__logger.debug("job response %s"
                                 % str(response))
 
             print_message("Job %s added" % self.job_name)
-            return None
-        except ApiException as e:
+            return 0
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -107,15 +347,15 @@ class DxJob(MaskingJob):
         """
 
         try:
-            api_instance = MaskingJobApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.delete_masking_job(
-                self.masking_job_id,
+                self.obj.masking_job_id,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("job response %s"
                                 % str(response))
             print_message("Job %s deleted" % self.job_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -128,18 +368,18 @@ class DxJob(MaskingJob):
         """
 
         try:
-            api_instance = MaskingJobApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("update job request %s"
-                                % str(self))
+                                % str(self.obj))
             response = api_instance.update_masking_job(
-                self.masking_job_id,
-                self,
+                self.obj.masking_job_id,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("job response %s"
                                 % str(response))
             print_message("Job %s updated" % self.job_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -153,7 +393,7 @@ class DxJob(MaskingJob):
 
         try:
             execid = self.__lastExec.execution_id
-            exec_api = ExecutionApi(self.__engine.api_client)
+            exec_api = self.__apiexec(self.__engine.api_client)
             self.__logger.debug("Stopping execution %s" % str(execid))
             execjob = exec_api.cancel_execution(execid)
             self.__logger.debug("Stopping execution response %s" % str(execjob))
@@ -161,10 +401,10 @@ class DxJob(MaskingJob):
                 time.sleep(1)
                 execjob = exec_api.get_execution_by_id(execid)
 
-            print execjob
+            print_message(execjob)
             return 0
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -181,10 +421,8 @@ class DxJob(MaskingJob):
         Return 0 if job started and finished OK, or was in nowait
         Return 1 if errors
         """
-        exec_api = ExecutionApi(self.__engine.api_client)
-
-        execjob = Execution()
-        execjob.job_id = self.masking_job_id
+        exec_api = self.__apiexec(self.__engine.api_client)
+        execjob = self.__modelexec(job_id = self.masking_job_id)
 
         if (self.multi_tenant):
             # target is mandatory
@@ -216,7 +454,7 @@ class DxJob(MaskingJob):
             else:
                 return self.wait_for_job(response, posno, lock)
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             lock.acquire()
@@ -239,7 +477,7 @@ class DxJob(MaskingJob):
         first = True
         bar = None
 
-        exec_api = ExecutionApi(self.__engine.api_client)
+        exec_api = self.__apiexec(self.__engine.api_client)
         last = 0
 
         self.__logger.debug('Waiting for job %s to start processing rows'
@@ -304,3 +542,60 @@ class DxJob(MaskingJob):
             self.__logger.error('return value %s'
                                 % dxm.lib.DxJobs.DxJobCounter.ret)
             return 1
+
+
+
+    def filter_executions(self, startdate, enddate):
+        """
+        Filter job executions using start and end date parameters
+        :param1 startdate: start date
+        :param2 enddate: end date
+        Return a list of filtered executions
+        """
+
+        if startdate:
+            startdate_tz = startdate.replace(tzinfo=pytz.UTC)
+
+        if enddate:
+            enddate_tz = enddate.replace(tzinfo=pytz.UTC)
+
+        if self.execList:
+            execlist = [ x for x in self.execList if ((startdate is None) or (x.start_time >= startdate_tz)) and ((enddate is None) or (x.end_time <= enddate_tz)) ]
+        else:
+            execlist = self.execList
+
+        return execlist
+
+
+    def list_execution_component(self, execid):
+        """
+        List an execution detalis ( tables, rows, etc)
+        :param1 execid: execution id to display
+        return a None if non error
+        return 1 in case of error
+        """
+
+        if (execid is None):
+            print_error("Execution id is required")
+            self.__logger.error("Execution id is required")
+            return 1
+
+        try:
+
+
+
+            self.__logger.debug("execute component")
+            api_instance = self.__apicomponent(self.__engine.api_client)
+            execomponents = paginator(
+                            api_instance,
+                            "get_all_execution_components",
+                            execution_id=execid,
+                            _request_timeout=self.__engine.get_timeout())
+
+            return execomponents.response_list
+
+
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return None

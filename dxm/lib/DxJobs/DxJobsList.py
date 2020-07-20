@@ -21,11 +21,8 @@ import logging
 import sys
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.apis.masking_job_api import MaskingJobApi
 from dxm.lib.DxJobs.DxJob import DxJob
-from masking_apis.apis.execution_api import ExecutionApi
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 
@@ -56,18 +53,34 @@ class DxJobsList(object):
         Return None if OK
         """
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.masking_job_api import MaskingJobApi
+            from masking_api_60.api.execution_api import ExecutionApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.masking_job_api import MaskingJobApi
+            from masking_api_53.api.execution_api import ExecutionApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = MaskingJobApi
+        self.__apiexec = ExecutionApi
+        self.__apiexc = ApiException
+
         try:
 
-            api_instance = MaskingJobApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
 
-            execapi = ExecutionApi(self.__engine.api_client)
+            execapi = self.__apiexec(self.__engine.api_client)
             execList = paginator(
                         execapi,
                         "get_all_executions")
 
             if execList.response_list:
                 for e in execList.response_list:
-                    self.__executionList[e.job_id] = e
+                    if e.job_id in self.__executionList:
+                        self.__executionList[e.job_id].append(e)
+                    else:
+                        self.__executionList[e.job_id] = [e]
 
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
@@ -91,11 +104,11 @@ class DxJobsList(object):
             if jobs.response_list:
                 for c in jobs.response_list:
                     if c.masking_job_id in self.__executionList:
-                        lastExec = self.__executionList[c.masking_job_id]
+                        jobExecList = self.__executionList[c.masking_job_id]
                     else:
-                        lastExec = None
+                        jobExecList = None
 
-                    job = DxJob(self.__engine, lastExec)
+                    job = DxJob(self.__engine, jobExecList)
                     job.from_job(c)
                     self.__jobsList[c.masking_job_id] = job
             else:
@@ -105,7 +118,7 @@ class DxJobsList(object):
 
             self.__logger.debug("All jobs loaded")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error("Can't load job list %s" % e.body)
             return 1
 
@@ -209,5 +222,5 @@ class DxJobsList(object):
             else:
                 return 1
         else:
-            print "Job with id %s not found" % masking_job_id
+            print_error("Job with id %s not found" % masking_job_id)
             return 1

@@ -36,13 +36,12 @@ from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
-from masking_apis.models.database_masking_options import DatabaseMaskingOptions
-from masking_apis.models.masking_job_script import MaskingJobScript
-from masking_apis.models.on_the_fly_masking_source import OnTheFlyMaskingSource
+
 
 from threading import Thread
 from threading import active_count
 import time
+import os
 from tqdm import tqdm
 from threading import RLock
 import dxm.lib.DxJobs.DxJobCounter
@@ -116,9 +115,7 @@ def profilejob_add(p_engine, params):
 
 
         job = DxProfileJob(engine_obj, None)
-        job.ruleset_id = rulesetref
-        job.job_name = jobname
-        job.profile_set_id = profileref
+        job.create_job(job_name=jobname, ruleset_id=rulesetref, profile_set_id=profileref)
 
         for p in masking_params_list:
             if params[p] is not None:
@@ -128,7 +125,7 @@ def profilejob_add(p_engine, params):
                     value = False
                 else:
                     value = params[p]
-                setattr(job, p, value)
+                setattr(job.obj, p, value)
 
         if joblist.add(job):
             ret = ret + 1
@@ -172,8 +169,7 @@ def job_add(p_engine, params):
         rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
 
         job = DxJob(engine_obj, None)
-        job.ruleset_id = rulesetref
-        job.job_name = jobname
+        job.create_job(job_name=jobname, ruleset_id=rulesetref)
 
         for p in optional_params_list:
             if params[p] is not None:
@@ -184,6 +180,16 @@ def job_add(p_engine, params):
                 else:
                     value = params[p]
                 setattr(job, p, value)
+
+
+        if (engine_obj.version_ge('6.0.0')):
+            from masking_api_60.models.database_masking_options import DatabaseMaskingOptions
+            from masking_api_60.models.masking_job_script import MaskingJobScript
+            from masking_api_60.models.on_the_fly_masking_source import OnTheFlyMaskingSource
+        else:
+            from masking_api_53.models.database_masking_options import DatabaseMaskingOptions
+            from masking_api_53.models.masking_job_script import MaskingJobScript
+            from masking_api_53.models.on_the_fly_masking_source import OnTheFlyMaskingSource
 
         dmo = DatabaseMaskingOptions()
 
@@ -214,16 +220,15 @@ def job_add(p_engine, params):
                 on_the_fly_maskking_srcobj.connector_type = "FILE"
             job.on_the_fly_masking_source = on_the_fly_maskking_srcobj
 
+
         if params["prescript"]:
-            prescript = MaskingJobScript()
-            prescript.contents = ''.join(params["prescript"].readlines())
-            prescript.name = params["prescript"].name
+            scriptname = os.path.basename(params["prescript"].name)
+            prescript = MaskingJobScript(name=scriptname, contents=''.join(params["prescript"].readlines()))
             dmo.prescript = prescript
 
         if params["postscript"]:
-            postscript = MaskingJobScript()
-            postscript.contents = ''.join(params["postscript"].readlines())
-            postscript.name = params["postscript"].name
+            scriptname = os.path.basename(params["postscript"].name)
+            postscript = MaskingJobScript(name=scriptname, contents = ''.join(params["postscript"].readlines()))
             dmo.postscript = postscript
 
         job.database_masking_options = dmo
@@ -323,7 +328,7 @@ def do_update(**kwargs):
 
     logger = logging.getLogger()
 
-    if "rulesetname" in params:
+    if "rulesetname" in params and params['rulesetname'] != None:
         rulesetname = params['rulesetname']
         # as job is in particular environment
         # new ruleset need to be search in same environment
@@ -355,7 +360,7 @@ def do_update(**kwargs):
                     value = False
                 else:
                     value = params[p]
-                setattr(jobobj, p, value)
+                setattr(jobobj.obj, p, value)
 
         dmo = jobobj.database_masking_options
 
@@ -369,9 +374,23 @@ def do_update(**kwargs):
                 else:
                     value = params[p]
                 setattr(dmo, p, value)
+
+        if params["prescript"]=='':
+            dmo.prescript = None
+        elif params["prescript"]:
+            scriptname = os.path.basename(params["prescript"].name)
+            prescript = MaskingJobScript(name=scriptname, contents=''.join(params["prescript"].readlines()))
+            dmo.prescript = prescript
+
+        if params["postscript"]=='':
+            dmo.postscript = None
+        if params["postscript"]:
+            scriptname = os.path.basename(params["postscript"].name)
+            postscript = MaskingJobScript(name=scriptname, contents = ''.join(params["postscript"].readlines()))
+            dmo.postscript = postscript
     else:
 
-        if "profilename" in params:
+        if "profilename" in params and params['rulesetname'] != None:
             profilename = params['profilename']
 
             oldprofile = jobobj.profile_set_id
@@ -392,7 +411,7 @@ def do_update(**kwargs):
                     value = False
                 else:
                     value = params[p]
-                setattr(jobobj, p, value)
+                setattr(jobobj.obj, p, value)
 
     if update:
         return jobobj.update()
@@ -538,11 +557,13 @@ def job_selector(**kwargs):
 
 
         else:
-            lock.acquire()
+            if lock:
+                lock.acquire()
             dxm.lib.DxJobs.DxJobCounter.ret = \
                 dxm.lib.DxJobs.DxJobCounter.ret + 1
 
-            lock.release()
+            if lock:
+                lock.release()
             continue
 
     return ret
@@ -658,7 +679,7 @@ def job_start_worker(p_engine, jobname, envname, tgt_connector,
                 except IndexError:
                     pass
         except Exception:
-            print "Error: unable to start thread"
+            print_error("Error: unable to start thread")
 
         # wait 1 sec before kicking off next job
         time.sleep(1)
@@ -675,7 +696,7 @@ def job_start_worker(p_engine, jobname, envname, tgt_connector,
         jobsbar.close()
 
     logger.debug("After close")
-    print "\n" * posno
+    print_message("\n" * posno)
 
     if joblist_class == "DxJobsList":
         return dxm.lib.DxJobs.DxJobCounter.ret
@@ -752,6 +773,17 @@ def jobs_list(p_engine, jobname, envname, p_format):
     """
     return jobs_list_worker(p_engine, jobname, envname, p_format, "DxJobsList")
 
+def jobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+    """
+    Print report of masking jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    return 0 if environment found
+    """
+    return jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details)
+
 def profilejobs_list(p_engine, jobname, envname, p_format):
     """
     Print list of profile jobs
@@ -805,15 +837,15 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
         # load all objects
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulesetlist = DxRulesetList()
-        connectorlist = DxConnectorsList()
+        rulesetlist = DxRulesetList(envname)
+        connectorlist = DxConnectorsList(envname)
         joblist = globals()[joblist_class]()
 
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
 
         joblist.LoadJobs(envname)
-        rulesetlist.LoadRulesets(envname)
-        connectorlist.LoadConnectors(envname)
+        #rulesetlist.LoadRulesets(envname)
+        #connectorlist.LoadConnectors(envname)
 
         if jobname is None:
             jobs = joblist.get_allref()
@@ -873,6 +905,241 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
                               status,
                               runtime
                             )
+        print("")
+        print (data.data_output(False))
+        print("")
+        return ret
+
+def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+    """
+    Print report of jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    param5: joblist_class - DxJobsList, DxProfileJobslist
+    return 0 if environment found
+    """
+
+    ret = 0
+
+    logger = logging.getLogger()
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    data = DataFormatter()
+    
+    if details:
+        data_header = [
+                ("Engine name", 30),
+                ("Environment name", 30),
+                ("Job name", 30),  
+                ("ExecId", 6),               
+                ("Meta name", 12),
+                ("Masked Rows", 10),   
+                ("Started", 20),                                                              
+                ("Completed", 20),
+                ("Status", 20),
+                ("Runtime", 20)                  
+                ]
+    else:
+        data_header = [
+                        ("Engine name", 30),
+                        ("Environment name", 30),
+                        ("Job name", 30),
+                        ("Job Id", 6),                    
+                        ("Min Memory", 10),
+                        ("Max Memory", 10), 
+                        ("Streams", 7),                                              
+                        ("On The Fly", 10),
+                        ("Ruleset Type", 12),
+                        ("ExecId", 6),
+                        ("Total Rows", 10),
+                        ("Masked Rows", 10),   
+                        ("Started", 20),                                                              
+                        ("Completed", 20),
+                        ("Status", 20),
+                        ("Runtime", 20)                  
+                    ]
+    data.create_header(data_header)
+    data.format_type = p_format
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple)
+        if engine_obj.get_session():
+            continue
+
+        # load all objects
+        envlist = DxEnvironmentList()
+        envlist.LoadEnvironments()
+        rulesetlist = DxRulesetList()
+        connectorlist = DxConnectorsList()
+        joblist = DxJobsList()
+
+        logger.debug("Envname is %s, job name is %s" % (envname, jobname))
+
+        joblist.LoadJobs(envname)
+        rulesetlist.LoadRulesets(envname)
+        connectorlist.LoadConnectors(envname)
+
+        if jobname is None:
+            jobs = joblist.get_allref()
+        else:
+            jobs = joblist.get_all_jobId_by_name(jobname)
+            if jobs is None:
+                ret = ret + 1
+                continue
+
+        for jobref in jobs:
+            jobobj = joblist.get_by_ref(jobref)
+
+            rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
+            # those test are requierd for 5.X engies where API is not showing all types of connectors
+            if rulesetobj is not None:
+                rulename = rulesetobj.ruleset_name
+                connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
+                if connectorobj is not None:
+                    connectorname = connectorobj.connector_name
+                    envobj = envlist.get_by_ref(connectorobj.environment_id)
+                    if envobj is not None:
+                        envobjname = envobj.environment_name
+                    else:
+                        envobjname = "N/A"   
+                else:
+                    connectorname = "N/A"
+                    envobjname = "N/A"
+            else:
+                rulename = "N/A"
+                connectorname = "N/A"
+                envobjname = "N/A"
+
+
+            if last:
+                lastonly = True
+            else:
+                lastonly = False
+
+
+            if lastonly:
+                execlist = [ jobobj.lastExec ]
+            else:
+                if startdate or enddate:
+                    execlist = jobobj.filter_executions(startdate, enddate)
+                else:
+                    execlist = jobobj.execList
+
+            if execlist:
+
+                for jobexec in execlist:
+
+
+
+                    if details == False:
+
+                        if jobexec is not None:
+                            status = jobexec.status
+                            execid = jobexec.execution_id
+                            rowsmasked = jobexec.rows_masked
+                            rowstotal = jobexec.rows_total
+                            if jobexec.start_time is not None:
+                                starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                            else:
+                                starttime = 'N/A'
+                            if (jobexec.end_time is not None) and \
+                            (jobexec.start_time is not None):
+                                endtime = jobexec.end_time \
+                                    .strftime("%Y-%m-%d %H:%M:%S")
+                                runtimetemp = jobexec.end_time \
+                                    - jobexec.start_time
+                                runtime = str(runtimetemp)
+                            else:
+                                endtime = 'N/A'
+                                runtime = 'N/A'
+                        else:
+                            status = 'N/A'
+                            endtime = 'N/A'
+                            starttime = 'N/A'
+                            runtime = 'N/A'
+                            execid = 'N/A'
+                            rowsmasked = 'N/A'
+                            rowstotal = 'N/A'
+
+                        data.data_insert(
+                                        engine_tuple[0],
+                                        envobjname,
+                                        jobobj.job_name,
+                                        jobobj.masking_job_id,
+                                        jobobj.min_memory,
+                                        jobobj.max_memory,
+                                        jobobj.num_input_streams,
+                                        jobobj.on_the_fly_masking,
+                                        jobobj.ruleset_type,
+                                        execid,
+                                        rowstotal,
+                                        rowsmasked,
+                                        starttime,
+                                        endtime,
+                                        status,
+                                        runtime
+                                        )
+
+
+                    else:
+                        # details here      
+                        if jobexec is not None:         
+                            execid = jobexec.execution_id
+                            complist = jobobj.list_execution_component(execid)
+
+                            if complist is not None:
+                                for comp in complist:    
+                                    status = comp.status
+                                    rowsmasked = comp.rows_masked
+                                    metaname = comp.component_name
+                                    if comp.start_time is not None:
+                                        starttime = comp.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                                    else:
+                                        starttime = 'N/A'
+                                    if (comp.end_time is not None) and \
+                                    (comp.start_time is not None):
+                                        endtime = comp.end_time \
+                                            .strftime("%Y-%m-%d %H:%M:%S")
+                                        runtimetemp = comp.end_time \
+                                            - comp.start_time
+                                        runtime = str(runtimetemp)
+                                    else:
+                                        endtime = 'N/A'
+                                        runtime = 'N/A'
+
+                                    data.data_insert(
+                                                    engine_tuple[0],
+                                                    envobjname,
+                                                    jobobj.job_name,
+                                                    execid,
+                                                    metaname,
+                                                    rowsmasked,
+                                                    starttime,
+                                                    endtime,
+                                                    status,
+                                                    runtime
+                                                    )
+                        else:
+                            print("setting 1")
+                            ret = 1
+
+
+                    
+                else:
+                    # no executions
+                    ret = 1
+
+            else:
+                # no executions
+                ret = 1
+
+
         print("")
         print (data.data_output(False))
         print("")

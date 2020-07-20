@@ -19,30 +19,127 @@
 
 import logging
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.models.profile_expression import ProfileExpression
-from masking_apis.apis.profile_expression_api import ProfileExpressionApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxProfileExt(ProfileExpression):
+class DxProfileExt(object):
 
     def __init__(self):
         """
         Constructor
         """
-        ProfileExpression.__init__(self)
+        #ProfileExpression.__init__(self)
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxProfileExt object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.profile_expression import ProfileExpression
+            from masking_api_60.api.profile_expression_api import ProfileExpressionApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.profile_expression import ProfileExpression
+            from masking_api_53.api.profile_expression_api import ProfileExpressionApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = ProfileExpressionApi
+        self.__model = ProfileExpression
+        self.__apiexc = ApiException
+        self.__obj = None
 
     def from_profilesetext(self, profileext):
-        """
-        Copy properties from ProfileExpression object into DxProfileExt
-        :param profileext: ProfileExpression object
-        """
-        self.__dict__.update(profileext.__dict__)
+        self.__obj = profileext
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+    @property
+    def profile_expression_id(self):
+        if self.obj is not None:
+            return self.obj.profile_expression_id
+        else:
+            return None
+
+    @profile_expression_id.setter
+    def profile_expression_id(self, profile_expression_id):
+        if self.__obj is not None:
+            self.__obj.profile_expression_id = profile_expression_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def expression_name(self):
+        if self.obj is not None:
+            return self.obj.expression_name
+        else:
+            return None
+
+    @expression_name.setter
+    def expression_name(self, expression_name):
+        if self.__obj is not None:
+            self.__obj.expression_name = expression_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def domain_name(self):
+        if self.obj is not None:
+            return self.obj.domain_name
+        else:
+            return None
+
+    @domain_name.setter
+    def domain_name(self, domain_name):
+        if self.__obj is not None:
+            self.__obj.domain_name = domain_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def regular_expression(self):
+        if self.obj is not None:
+            return self.obj.regular_expression
+        else:
+            return None
+
+    @regular_expression.setter
+    def regular_expression(self, regular_expression):
+        if self.__obj is not None:
+            self.__obj.regular_expression = regular_expression
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def data_level_profiling(self):
+        if self.obj is not None:
+            return self.obj.data_level_profiling
+        else:
+            return None
+
+    @data_level_profiling.setter
+    def data_level_profiling(self, data_level_profiling):
+        if self.__obj is not None:
+            self.__obj.data_level_profiling = data_level_profiling
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def created_by(self):
+        if self.obj is not None:
+            return self.obj.created_by
+        else:
+            return None
+
+
+    def create_profile_expression(self, domain_name, expression_name, regular_expression,  data_level_profiling):
+
+        self.__obj = self.__model(domain_name=domain_name, expression_name=expression_name, regular_expression=regular_expression, 
+                                  data_level_profiling=data_level_profiling)
+
 
     def add(self):
         """
@@ -68,8 +165,8 @@ class DxProfileExt(ProfileExpression):
 
         try:
             self.__logger.debug("create expression input %s" % str(self))
-            api_instance = ProfileExpressionApi(self.__engine.api_client)
-            response = api_instance.create_profile_expression(self)
+            api_instance = self.__api(self.__engine.api_client)
+            response = api_instance.create_profile_expression(self.obj)
             self.from_profilesetext(response)
 
             self.__logger.debug("expression response %s"
@@ -77,7 +174,7 @@ class DxProfileExt(ProfileExpression):
 
             print_message("Expression %s added" % self.expression_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -90,7 +187,7 @@ class DxProfileExt(ProfileExpression):
         """
 
         try:
-            api_instance = ProfileExpressionApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             response = api_instance.delete_profile_expression(
                 self.profile_expression_id,
                 _request_timeout=self.__engine.get_timeout())
@@ -98,7 +195,7 @@ class DxProfileExt(ProfileExpression):
                                 % str(response))
             print_message("Expression %s deleted" % self.expression_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -111,18 +208,18 @@ class DxProfileExt(ProfileExpression):
         """
 
         try:
-            api_instance = ProfileExpressionApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("update expression request %s"
                                 % str(self))
             response = api_instance.update_profile_expression(
                 self.profile_expression_id,
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("expression response %s"
                                 % str(response))
             print_message("Expression %s updated" % self.expression_name)
             return None
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

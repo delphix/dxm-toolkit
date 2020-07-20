@@ -59,9 +59,9 @@ def do_export(**kwargs):
     syncobj = kwargs.get('object')
     name = kwargs.get('name')
     path = kwargs.get('path')
-    print(name)
-    print(path)
-    print(kwargs)
+    # print(name)
+    # print(path)
+    # print(kwargs)
     return syncobj.export(name, path)
 
 
@@ -88,7 +88,7 @@ def sync_list(p_engine, objecttype, objectname, envname, format):
     ret = sync_worker(p_engine, objecttype, objectname, envname, "do_list",
                       data=data)
 
-    print("XXX")
+    print("")
     print (data.data_output(False))
     print("")
 
@@ -184,7 +184,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
 
                 if objectname:
                     connbynameref = connlist.get_connectorId_by_name(
-                                        objectname, False)
+                                        objectname, True)
                     if connbynameref:
                         syncconnref = int(connbynameref[1:])
                         if synclist.get_object_by_type_name(
@@ -197,6 +197,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                         connrefs = []
                 else:
                     connrefs = synclist.get_all_object_by_type(objtype)
+
 
                 for syncref in connrefs:
                     syncobj = synclist.get_object_by_type_name(
@@ -352,7 +353,7 @@ def sync_import(p_engine, envname, inputfile, inputpath, force):
         for f in os.listdir(inputpath):
             fullpath = os.path.join(inputpath, f)
             if os.path.isfile(fullpath):
-                fh = open(fullpath)
+                fh = open(fullpath, "rb")
                 list_of_opened_files.append(fh)
     else:
         if inputfile:
@@ -368,7 +369,10 @@ def sync_import(p_engine, envname, inputfile, inputpath, force):
             continue
 
         envlist = DxEnvironmentList()
-        environment_id = envlist.get_environmentId_by_name(envname)
+        if envname:
+            environment_id = envlist.get_environmentId_by_name(envname)
+        else:
+            environment_id = None
 
 
         for i in list_of_opened_files:

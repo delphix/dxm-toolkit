@@ -18,37 +18,90 @@
 
 
 import logging
-from masking_apis.models.environment import Environment
-from masking_apis.apis.environment_api import EnvironmentApi
 from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxEnvironment(Environment):
+class DxEnvironment(object):
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        Environment.__init__(self)
+        
         self.__logger = logging.getLogger()
         self.__engine = engine
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.environment import Environment
+            from masking_api_60.api.environment_api import EnvironmentApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.environment import Environment
+            from masking_api_53.api.environment_api import EnvironmentApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = EnvironmentApi
+        self.__model = Environment
+        self.__apiexc = ApiException
+        self.__obj = None
+        self.__application_name = None
+
+    @property
+    def environment_id(self):
+        if self.__obj is not None:
+            return self.__obj.environment_id
+        else:
+            return None
+
+    @property
+    def application_name(self):
+        if hasattr(self.__model, "application_id"):
+            return self.__application_name
+        else:
+            return self.__obj.application
+
+    @application_name.setter
+    def application_name(self, application_name):
+        self.__application_name = application_name
+
+
+    @property
+    def environment_name(self):
+        if self.__obj is not None:
+            return self.__obj.environment_name
+        else:
+            return None
+
+    @environment_name.setter
+    def environment_name(self, environment_name):
+        if self.__obj is not None:
+            self.__obj.environment_name = environment_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     def from_environment(self, env):
         """
         Copy properties from environemnt object into DxEnvironment
         :param env: Environment object
         """
-        # self.environment_id = env.environment_id
-        # self.purpose = env.purpose
-        if hasattr(env, "application"):
-            self.application = env.application
-        # self.is_workflow_enabled = env.is_workflow_enabled
-        # self.environment_name = env.environment_name
-        self.__dict__.update(env.__dict__)
+        self.__obj = env
+
+    def create_environment(self, environment_name, application_name, purpose):
+        """
+        Create an environment object
+        :param app: Application object
+        """  
+
+        if hasattr(self.__model, "application_id"):
+            appList = DxApplicationList()
+            appList.LoadApplications()
+            application_id = appList.get_applicationId_by_name(application_name)
+            self.__obj = self.__model(environment_name=environment_name, application_id=application_id[0], purpose=purpose)
+        else:
+            self.__obj = self.__model(environment_name=environment_name, application=application_name, purpose=purpose)
 
     def add(self):
         """
@@ -57,66 +110,35 @@ class DxEnvironment(Environment):
         return 1 in case of error
         """
 
-        if (self.environment_name is None):
-            print "Environment name is required"
-            self.__logger.error("Environment name is required")
-            return 1
+        # if (self.environment_name is None):
+        #     print_error("Environment name is required")
+        #     self.__logger.error("Environment name is required")
+        #     return 1
 
-        if (self.application is None):
-            print "Application name is required"
-            self.__logger.error("Application name is required")
-            return 1
+        # if (self.application is None):
+        #     print_error("Application name is required")
+        #     self.__logger.error("Application name is required")
+        #     return 1
 
-        if (self.purpose is None):
-            print "Purpose is required"
-            self.__logger.error("Purpose is required")
-            return 1
+        # if (self.purpose is None):
+        #     print_error("Purpose is required")
+        #     self.__logger.error("Purpose is required")
+        #     return 1
 
-        appList = DxApplicationList()
-        appList.LoadApplications()
-        appobjlist = appList.get_applicationId_by_name(self.application)
 
-        if self.__engine.get_version()<"6.0.0.0":
-            from apis.v5.masking_apis.models.environment import Environment as Env5
-            from apis.v5.masking_apis.rest import ApiException
-            envobj = Env5()
-            if len(appobjlist)>0:
-                envobj.application = self.application
-            else:
-                print_error("Application {} not found".format(self.application))
-                self.__logger.error("Application {} not found".format(self.application))
-                return 1
-            
-        else:
-            from masking_apis.rest import ApiException
-            envobj = Environment()
-            if len(appobjlist)>0:
-                envobj.application_id = appobjlist[-1]
-            else:
-                print_error("Application {} not found".format(self.application))
-                self.__logger.error("Application {} not found".format(self.application))
-                return 1
-
-        envobj.environment_name = self.environment_name
-        envobj.purpose = self.purpose
-
-        api_instance = EnvironmentApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
-            self.__logger.debug("create environment input %s" % str(self))
+            self.__logger.debug("create environment input %s" % str(self.__obj))
             response = api_instance.create_environment(
-                envobj,
+                self.__obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("create environment response %s"
                                 % str(response))
 
-            self.environment_id = response.environment_id
-            self.purpose = response.purpose
-            self.is_workflow_enabled = response.is_workflow_enabled
-            if hasattr(response, "application_id"):
-                self.application_id = response.application_id
+            self.__obj = response
             print_message("Environment %s added" % self.environment_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -128,7 +150,7 @@ class DxEnvironment(Environment):
         return 1 in case of error
         """
 
-        api_instance = EnvironmentApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("delete environment id %s"
@@ -139,7 +161,7 @@ class DxEnvironment(Environment):
             self.__logger.debug("delete environment response %s"
                                 % str(response))
             print_message("Environment %s deleted" % self.environment_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1

@@ -62,12 +62,12 @@ def algorithm_list(p_engine, format, algname):
         if engine_obj.get_session():
             continue
 
-        domainlist = DxDomainList()
-        domainlist.LoadDomains()
+        
+        #domainlist.LoadDomains()
 
 
         alglist = DxAlgorithmList()
-        alglist.LoadAlgorithms()
+        #alglist.LoadAlgorithms()
 
         algref_list = []
 

@@ -6,10 +6,10 @@ import sys
 import datetime
 from dxm.lib.DxLogging import logging_est
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-from masking_apis.models.page_info import PageInfo
-from masking_apis.apis.file_format_api import FileFormatApi
-from masking_apis.models.file_format import FileFormat
-from masking_apis.models.file_format_list import FileFormatList
+from masking_api_60.models.page_info import PageInfo
+from masking_api_60.api.file_format_api import FileFormatApi
+from masking_api_60.models.file_format import FileFormat
+from masking_api_60.models.file_format_list import FileFormatList
 from dxm.lib.DxFileFormat.fileformat_worker import fileformat_list
 from dxm.lib.DxFileFormat.fileformat_worker import fileformat_add
 from dxm.lib.DxFileFormat.fileformat_worker import fileformat_delete

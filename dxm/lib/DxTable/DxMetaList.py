@@ -24,9 +24,8 @@ from dxm.lib.DxTable.DxFile import DxFile
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
-from masking_apis.apis.table_metadata_api import TableMetadataApi
-from masking_apis.apis.file_metadata_api import FileMetadataApi
-from masking_apis.rest import ApiException
+
+
 from dxm.lib.DxLogging import print_error
 
 
@@ -56,9 +55,22 @@ class DxMetaList(object):
         notable = None
         nofile = None
 
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.api.table_metadata_api import TableMetadataApi
+            from masking_api_60.api.file_metadata_api import FileMetadataApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.api.table_metadata_api import TableMetadataApi
+            from masking_api_53.api.file_metadata_api import FileMetadataApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = TableMetadataApi
+        self.__fileapi = FileMetadataApi
+        self.__apiexc = ApiException
+
         self.__tableList.clear()
         try:
-            api_instance = TableMetadataApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
 
             if ruleset_id:
                 table_metadata = paginator(
@@ -78,7 +90,7 @@ class DxMetaList(object):
             else:
                 self.__logger.error("No table metadata found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             if (e.status == 404) and (ruleset_id is not None):
                 notable = 1
             else:
@@ -87,7 +99,7 @@ class DxMetaList(object):
                 return 1
 
         try:
-            api_instance = FileMetadataApi(self.__engine.api_client)
+            api_instance = self.__fileapi(self.__engine.api_client)
 
             if ruleset_id:
                 file_metadata = paginator(
@@ -107,7 +119,7 @@ class DxMetaList(object):
             else:
                 self.__logger.error("No file metadata found")
 
-        except ApiException as e:
+        except self.__apiexc as e:
             if (e.status == 404) and (ruleset_id is not None):
                 nofile = 1
             else:
@@ -220,7 +232,7 @@ class DxMetaList(object):
             else:
                 return 1
         else:
-            print "Table or File with id %s not found" % tableMetadataId
+            print_error("Table or File with id %s not found" % tableMetadataId)
             return 1
 
     @classmethod

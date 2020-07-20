@@ -54,14 +54,16 @@ def expression_add(p_engine, expname, domainname, level, regex):
         # load all objects
         profileexplist = DxProfileExpList()
         peobj = DxProfileExt()
-        peobj.expression_name = expname
-        peobj.domain_name = domainname
         if level:
             if level == 'data':
-                peobj.data_level_profiling = True
+                data_level_profiling = True
             else:
-                peobj.data_level_profiling = False
-        peobj.regular_expression = regex
+                data_level_profiling = False
+        else:
+            data_level_profiling = False
+        peobj.create_profile_expression(expression_name = expname, domain_name = domainname, regular_expression = regex, 
+                                        data_level_profiling=data_level_profiling)
+
 
         if profileexplist.add(peobj):
             ret = ret + 1
@@ -93,14 +95,22 @@ def profile_add(p_engine, profilename, expname, description):
         # load all objects
         profilelist = DxProfilesList()
         probj = DxProfile()
-        probj.profile_set_name = profilename
-        probj.created_by = engine_obj.get_username()
-        probj.description = description
-        if probj.set_expressions_using_names(expname):
-            ret = ret + 1
-        else:
+
+        explist = probj.set_expressions_using_names(expname)
+
+        if explist:
+            probj.create_profile(
+                profile_set_name = profilename,
+                created_by = engine_obj.get_username(),
+                description = description,
+                profile_expression_ids=explist
+            )
             if profilelist.add(probj):
                 ret = ret + 1
+        else:
+            ret = ret + 1
+
+
 
     return ret
 
@@ -282,6 +292,7 @@ def expression_worker(**kwargs):
             if expression is None:
                 ret = ret + 1
                 continue
+
 
         for peref in expressions:
             proexpobj = profileexplist.get_by_ref(peref)

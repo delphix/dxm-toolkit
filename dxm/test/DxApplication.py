@@ -2,10 +2,10 @@ from unittest import TestCase
 from unittest import main
 import mock
 import sys
-from masking_apis.apis.application_api import ApplicationApi
-from masking_apis.models.application import Application
-from masking_apis.models.application_list import ApplicationList
-from masking_apis.models.page_info import PageInfo
+from masking_api_60.api.application_api import ApplicationApi
+from masking_api_60.models.application import Application
+from masking_api_60.models.application_list import ApplicationList
+from masking_api_60.models.page_info import PageInfo
 from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxApplication.app_worker import application_add

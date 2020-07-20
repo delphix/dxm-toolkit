@@ -18,14 +18,11 @@
 
 
 import logging
-from masking_apis.models.domain import Domain
-from masking_apis.apis.domain_api import DomainApi
-from masking_apis.rest import ApiException
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
-class DxDomain(Domain):
+class DxDomain(object):
     
 
     def __init__(self, engine):
@@ -33,18 +30,77 @@ class DxDomain(Domain):
         Constructor
         :param engine: DxMaskingEngine object
         """
-        Domain.__init__(self)
+        #Domain.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__sync = None
         self.__logger.debug("creating DxDomain object")
+        if (self.__engine.version_ge('6.0.0')):
+            from masking_api_60.models.domain import Domain
+            from masking_api_60.api.domain_api import DomainApi
+            from masking_api_60.rest import ApiException
+        else:
+            from masking_api_53.models.domain import Domain
+            from masking_api_53.api.domain_api import DomainApi
+            from masking_api_53.rest import ApiException
+
+        self.__api = DomainApi
+        self.__model = Domain
+        self.__apiexc = ApiException
+        self.__obj = None
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
 
     def from_domain(self, dom):
         """
-        Copy properties from domain object into DxDomain
+        Set obj properties with a Domain object
         :param column: Domain object
         """
-        self.__dict__.update(dom.__dict__)
+        self.__obj = dom
+
+
+    def create_domain(self, domain_name, domain_classification, default_algorithm_code):
+        self.__obj = self.__model(domain_name, domain_classification, default_algorithm_code=default_algorithm_code)
+
+    @property
+    def domain_name(self):
+        if self.obj is not None:
+            return self.obj.domain_name
+        else:
+            return None
+
+    @property
+    def classification(self):
+        if self.obj is not None:
+            return self.obj.classification
+        else:
+            return None
+
+    @property
+    def default_algorithm_code(self):
+        if self.obj is not None:
+            return self.obj.default_algorithm_code
+        else:
+            return None
+
+    @default_algorithm_code.setter
+    def default_algorithm_code(self, default_algorithm_code):
+        if self.__obj is not None:
+            self.__obj.default_algorithm_code = default_algorithm_code
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def default_tokenization_code(self):
+        if self.obj is not None:
+            return self.obj.default_tokenization_code
+        else:
+            return None
 
     def add(self):
         """
@@ -53,36 +109,31 @@ class DxDomain(Domain):
         return 1 in case of error
         """
 
-        if (self.domain_name is None):
+        if (self.obj.domain_name is None):
             print_error("Domain name is required")
             self.__logger.error("Domain name is required")
             return 1
 
-        if (self.classification is None):
-            print_error("Domain classification is required")
-            self.__logger.error("Domain classification is required")
-            return 1
-
-        if (self.default_algorithm_code is None):
+        if (self.obj.default_algorithm_code is None):
             print_error("Domain default algorithm is required")
             self.__logger.error("Domain default algorithm is required")
             return 1
 
         try:
             self.__logger.debug("create domain input %s" % str(self))
-            api_instance = DomainApi(self.__engine.api_client)
+            api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("API instance created")
             response = api_instance.create_domain(
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout()
             )
             self.from_domain(response)
             self.__logger.debug("domain response %s"
                                 % str(response))
 
-            print_message("Domain %s added" % self.domain_name)
+            print_message("Domain %s added" % self.obj.domain_name)
             return 0
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -95,19 +146,19 @@ class DxDomain(Domain):
         return 1 in case of error
         """
 
-        api_instance = DomainApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("delete domain name %s"
-                                % self.domain_name)
+                                % self.obj.domain_name)
             response = api_instance.delete_domain(
-                self.domain_name,
+                self.obj.domain_name,
                 _request_timeout=self.__engine.get_timeout()
             )
             self.__logger.debug("delete domain name response %s"
                                 % str(response))
-            print_message("Domain %s deleted" % self.domain_name)
-        except ApiException as e:
+            print_message("Domain %s deleted" % self.obj.domain_name)
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
@@ -120,19 +171,19 @@ class DxDomain(Domain):
         return 1 in case of error
         """
 
-        api_instance = DomainApi(self.__engine.api_client)
+        api_instance = self.__api(self.__engine.api_client)
 
         try:
             self.__logger.debug("update domain name %s"
                                 % self.domain_name)
             response = api_instance.update_domain(self.domain_name,
-                self,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout()
             )
             self.__logger.debug("delete domain name response %s"
                                 % str(response))
             print_message("Domain %s updated" % self.domain_name)
-        except ApiException as e:
+        except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
             return 1
