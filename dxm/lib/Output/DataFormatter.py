@@ -141,11 +141,9 @@ class DataFormatter(object):
             json_list = []
 
             for row in self.results['data']:
-                 json_list.append(dict(itertools.izip(self.results['headers'], row)))
-            #
-            # for row, dt in enumerate(data_results):
-            #     json_results['data'].append(data_results[row])
+                data = map(self.f, row)
+                json_list.append(dict(zip(self.results['headers'], data)))
 
-            data_out = json.dumps(json_list,indent=4)
+            data_out = json.dumps(json_list, indent=4)
 
         return (data_out)
