@@ -999,6 +999,7 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
             rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
             # those test are requierd for 5.X engies where API is not showing all types of connectors
             if rulesetobj is not None:
+                ruleset_type = rulesetobj.type
                 rulename = rulesetobj.ruleset_name
                 connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
                 if connectorobj is not None:
@@ -1015,6 +1016,7 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
                 rulename = "N/A"
                 connectorname = "N/A"
                 envobjname = "N/A"
+                ruleset_type = "N/A"
 
 
             if last:
@@ -1076,7 +1078,7 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
                                         jobobj.max_memory,
                                         jobobj.num_input_streams,
                                         jobobj.on_the_fly_masking,
-                                        jobobj.ruleset_type,
+                                        ruleset_type,
                                         execid,
                                         rowstotal,
                                         rowsmasked,
