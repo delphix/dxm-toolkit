@@ -265,7 +265,10 @@ class DxJob(object):
     @property
     def ruleset_type(self):
         if self.obj is not None:
-            return self.obj.ruleset_type
+            if hasattr(self.obj, "ruleset_type"):
+                return self.obj.ruleset_type
+            else:
+                return "N/A"
         else:
             return None
 
