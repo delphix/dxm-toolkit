@@ -1,3 +1,9 @@
+## Version 0.8.2
+
+### Changed:
+ - Fix for job report
+
+
 ## Version 0.8
 
 If you are upgrading from previous version, you need to update all engines in your configuration
