@@ -21,7 +21,7 @@ setup(
     ],
     dependency_links=[
         'git+https://github.com/pioro/masking_api_53.git#egg=masking_api_53-1.0.0',
-        'git+https://github.com/pioro/masking_api_60.git#egg=masking_api_60-1.0.0'
+        'git+https://github.com/pioro/masking_api_60.git#egg=masking_api_60-6.0.4.2'
     ]
 )
 
