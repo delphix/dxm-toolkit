@@ -26,7 +26,7 @@ Configure a masking engine using the following steps:
 
 * add engine
 ```
-dxmc engine engine add --engine testeng --ip testeng.foo.com --username delphix_admin --default Y
+dxmc engine add --engine testeng --ip testeng.foo.com --username delphix_admin --default Y
 Password:
 Repeat for confirmation:
 Engine added to configuration
