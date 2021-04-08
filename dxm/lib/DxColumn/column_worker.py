@@ -441,7 +441,7 @@ def do_print(**kwargs):
         environment_name = 'N/A'
 
 
-    if colobj.date_format:
+    if hasattr(colobj, "date_format") and colobj.date_format:
         date_format = colobj.date_format
     else:
         date_format = "-"

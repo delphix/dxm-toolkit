@@ -563,7 +563,7 @@ class DxJob(object):
             enddate_tz = enddate.replace(tzinfo=pytz.UTC)
 
         if self.execList:
-            execlist = [ x for x in self.execList if ((startdate is None) or (x.start_time >= startdate_tz)) and ((enddate is None) or (x.end_time <= enddate_tz)) ]
+            execlist = [ x for x in self.execList if ((startdate is None) or (x.start_time >= startdate_tz)) and ((enddate is None) or ( (x.end_time is not None) and (x.end_time <= enddate_tz))) ]
         else:
             execlist = self.execList
 
