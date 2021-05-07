@@ -504,7 +504,7 @@ class DxMaskingEngine(object):
         Return timeout for query
         Tuple (connect_timeout, read_timeout)
         """
-        return (5, 15)
+        return (5, 60)
         """    enginelist = get_list_of_engines(p_engine)
 
     if enginelist is None:
