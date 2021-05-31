@@ -490,7 +490,7 @@ class DxJob(object):
             print_message('Waiting for job %s to start processing rows'
                           % self.job_name)
 
-        while execjob.status == 'RUNNING':
+        while execjob.status == 'RUNNING' or execjob.status == 'QUEUED':
             time.sleep(10)
             execjob = exec_api.get_execution_by_id(execid)
             if first and (execjob.rows_total is not None):
