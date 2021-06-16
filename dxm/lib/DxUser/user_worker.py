@@ -342,10 +342,13 @@ def user_list(p_engine, format, username):
             else:
                 envs = ''
 
-            if userobj.is_locked:
-                locked = 'Locked'
+            if userobj.is_locked is not None:
+                if userobj.is_locked is True:
+                    locked = 'Locked'
+                else:
+                    locked = 'Open'
             else:
-                locked = 'Open'
+                locked = 'N/A'
 
             if msadobj is None:
                 authtype = 'NATIVE'

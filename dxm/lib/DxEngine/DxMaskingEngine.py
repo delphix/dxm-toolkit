@@ -29,8 +29,10 @@ from dxm.lib.DxLogging import print_message
 
 import os
 import urllib3
+import json
 import ssl
 import certifi
+import six
 from urllib3 import make_headers, ProxyManager, PoolManager
 
 #import pickle
@@ -48,12 +50,13 @@ try:
 
     class DxApiClient(ApiClient):
 
+
+
         def __init__(self, configuration=None, header_name=None, header_value=None,
                     cookie=None):
 
             super(DxApiClient, self).__init__(configuration=configuration, header_name=header_name, header_value=header_value,
                                             cookie=cookie)
-
 
             if configuration.verify_ssl:
                 cert_reqs = ssl.CERT_REQUIRED
@@ -118,6 +121,71 @@ try:
             return response.data
 
 
+        # def _ApiClient__deserialize(self, data, klass):
+        #     super(ApiClient, self).__deserialize(data, klass)
+
+        def _ApiClient__deserialize_model(self, data, klass):
+            """Deserializes list or dict to model.
+
+            :param data: dict, list.
+            :param klass: class literal.
+            :return: model object.
+            """
+
+            class Struct(object):
+                def __init__(self, data):
+                    for name, value in data.items():
+                        name = self.to_snake_case(name)
+                        setattr(self, name, self._wrap(value))
+
+                def to_snake_case(self, name):
+                    name = name.replace('_','')
+                    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+                    name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
+                    return name.lower()
+
+                def _wrap(self, value):
+                    if isinstance(value, (tuple, list, set, frozenset)): 
+                        return type(value)([self._wrap(v) for v in value])
+                    else:
+                        return Struct(value) if isinstance(value, dict) else value
+
+            print(data)
+            print(type(data))
+            a =  Struct(data)
+            print(a.__dict__)
+            print(type(a))
+            return a
+
+            if (not klass.swagger_types and
+                    not self.__hasattr(klass, 'get_real_child_model')):
+                return data
+
+            kwargs = {
+                "_configuration" : self.configuration
+            }
+            if klass.swagger_types is not None:
+                for attr, attr_type in six.iteritems(klass.swagger_types):
+                    if (data is not None and
+                            klass.attribute_map[attr] in data and
+                            isinstance(data, (list, dict))):
+                        value = data[klass.attribute_map[attr]]
+                        kwargs[attr] = super(DxApiClient, self)._ApiClient__deserialize(value, attr_type)
+
+            instance = klass(**kwargs)
+
+            if (isinstance(instance, dict) and
+                    klass.swagger_types is not None and
+                    isinstance(data, dict)):
+                for key, value in data.items():
+                    if key not in klass.swagger_types:
+                        instance[key] = value
+            if super(DxApiClient, self)._ApiClient__hasattr(instance, 'get_real_child_model'):
+                klass_name = instance.get_real_child_model(data)
+                if klass_name:
+                    instance = super(DxApiClient, self)._ApiClient__deserialize(data, klass_name)
+            return instance
+
         def request(self, method, url, query_params=None, headers=None,
                 post_params=None, body=None, _preload_content=True,
                 _request_timeout=None):
@@ -131,6 +199,8 @@ try:
             if logging.getLogger('debugfile').getEffectiveLevel() == 9:
                 logging_file("SAVE TO FILE {} {} {}".format(response.status, response.reason, response.data))
             return response
+
+
 
 
 except ModuleNotFoundError:
@@ -296,6 +366,7 @@ class DxMaskingEngine(object):
         self.config = Configuration()
         self.config.host = self.__base_url
         self.config.debug = False
+        self.config.client_side_validation = False
 
         if engine_tuple[8]:
             #proxy settings
@@ -318,6 +389,11 @@ class DxMaskingEngine(object):
                 logger.setLevel(logging.DEBUG)
                 logger.removeHandler(self.config.logger_stream_handler)
 
+
+
+    @classmethod
+    def get_config(self):
+        return self.config
 
 
     @classmethod
@@ -348,6 +424,8 @@ class DxMaskingEngine(object):
         else:
             is_api6 = False
 
+        
+
         self.get_session_worker(version=version)
         if self.get_version()<"6.0.0.0":
             if is_api5:    
@@ -375,6 +453,7 @@ class DxMaskingEngine(object):
             self.api_client = DxApiClient5(self.config)
         else:
             try:
+                print("Version 6")
                 self.api_client = DxApiClient(self.config)
             except NameError:
                 self.__logger.debug("No 6 libs, failing back to 5") 
@@ -465,6 +544,16 @@ class DxMaskingEngine(object):
         """
         engine_ver = self.get_version()
         return version.parse(engine_ver) >= version.parse(version_engine)
+
+    @classmethod
+    def version_le(self, version_engine):
+        """
+        Compare an input parameter with engine version.
+        param1: version_engine: version number to compare ex. "5.3"
+        return: True if engine has higher or equal version
+        """
+        engine_ver = self.get_version()
+        return version.parse(engine_ver) <= version.parse(version_engine)
 
     @classmethod
     def save(self, apikey):

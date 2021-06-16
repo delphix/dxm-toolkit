@@ -185,9 +185,25 @@ class DxUser(object):
 
     @property
     def is_locked(self):
+        print("SLON1")
         if self.obj is not None:
-            return self.obj.is_locked
+            print("SLON2")
+            print(self.obj)
+            if hasattr(self.obj,"is_locked"):
+                print("SLON3")
+                return self.obj.is_locked
+            elif hasattr(self.obj,"user_status"):
+                print("SLON4")
+                if self.obj.user_status == 'ACTIVE':
+                    print("SLON5")
+                    return False
+                else:
+                    print("SLON6")
+                    return True
+            else:
+                raise ValueError("is_locked not implemented / API change")
         else:
+            print("SLONEND")
             return None
 
     @is_locked.setter
@@ -200,7 +216,10 @@ class DxUser(object):
     @property
     def non_admin_properties(self):
         if self.obj is not None:
-            return self.obj.non_admin_properties
+            if hasattr(self.obj, 'non_admin_properties'):
+                return self.obj.non_admin_properties
+            else:
+                return None
         else:
             return None
 
@@ -212,6 +231,10 @@ class DxUser(object):
             raise ValueError("Object needs to be initialized first")
 
     def from_user(self, user):
+        print("Local")
+        print(self.__obj)
+        print("Remote")
+        print(user)
         self.__obj = user
 
 
