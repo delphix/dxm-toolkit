@@ -21,9 +21,30 @@ import logging
 from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.environment_api import EnvironmentApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxEnvironment(object):
+
+    swagger_types = {
+        'environment_id': 'int',
+        'environment_name': 'str',
+        'application_id': 'int',
+        'application': 'str',
+        'purpose': 'str',
+        'is_workflow_enabled': 'bool'
+    }
+
+    swagger_map = {
+        'environment_id': 'environmentId',
+        'environment_name': 'environmentName',
+        'application_id': 'applicationId',
+        'purpose': 'purpose',
+        'is_workflow_enabled': 'isWorkflowEnabled',
+        'application': 'application'
+    }
+
 
     def __init__(self, engine):
         """
@@ -33,17 +54,8 @@ class DxEnvironment(object):
         
         self.__logger = logging.getLogger()
         self.__engine = engine
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.environment import Environment
-            from masking_api_60.api.environment_api import EnvironmentApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.environment import Environment
-            from masking_api_53.api.environment_api import EnvironmentApi
-            from masking_api_53.rest import ApiException
 
         self.__api = EnvironmentApi
-        self.__model = Environment
         self.__apiexc = ApiException
         self.__obj = None
         self.__application_name = None
@@ -57,7 +69,7 @@ class DxEnvironment(object):
 
     @property
     def application_name(self):
-        if hasattr(self.__model, "application_id"):
+        if self.__engine.version_ge("6.0.0.0"):
             return self.__application_name
         else:
             return self.__obj.application
@@ -65,6 +77,36 @@ class DxEnvironment(object):
     @application_name.setter
     def application_name(self, application_name):
         self.__application_name = application_name
+        if self.__engine.version_le("5.3.9.9"):
+            self.__obj.application = application_name
+
+    @property
+    def application_id(self):
+        if self.__obj is not None:
+            return self.__obj.application_id
+        else:
+            return None
+
+    @application_id.setter
+    def application_id(self, application_id):
+        if self.__obj is not None:
+            self.__obj.application_id = application_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+    @property
+    def purpose(self):
+        if self.__obj is not None:
+            return self.__obj.purpose
+        else:
+            return None
+
+    @purpose.setter
+    def purpose(self, purpose):
+        if self.__obj is not None:
+            self.__obj.purpose = purpose
+        else:
+            raise ValueError("Object needs to be initialized first")
 
 
     @property
@@ -95,13 +137,19 @@ class DxEnvironment(object):
         :param app: Application object
         """  
 
-        if hasattr(self.__model, "application_id"):
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+
+        if self.__engine.version_ge("6.0.0.0"):
             appList = DxApplicationList()
             appList.LoadApplications()
             application_id = appList.get_applicationId_by_name(application_name)
-            self.__obj = self.__model(environment_name=environment_name, application_id=application_id[0], purpose=purpose)
+            self.environment_name=environment_name
+            self.purpose=purpose
+            self.application_id = application_id[0]
         else:
-            self.__obj = self.__model(environment_name=environment_name, application=application_name, purpose=purpose)
+            self.environment_name=environment_name
+            self.purpose=purpose
+            self.application_name = application_name
 
     def add(self):
         """

@@ -22,169 +22,34 @@ import logging
 import requests
 import sys
 import re
+import urllib3
+import ssl
+import certifi
 from packaging import version
 from datetime import datetime, timedelta
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 import os
-import urllib3
+
 import json
-import ssl
-import certifi
+
 import six
 from urllib3 import make_headers, ProxyManager, PoolManager
 
 #import pickle
 from dxm.lib.DxEngine.DxConfig import DxConfig
 try:
-    from masking_api_60.rest import ApiException
-    from masking_api_60.configuration import Configuration
-    from masking_api_60.api_client import ApiClient
-    from masking_api_60.models.login import Login
-    from masking_api_60.api.login_api import LoginApi
-    from masking_api_60.api.application_api import ApplicationApi
-    from masking_api_60.api.system_information_api import SystemInformationApi
-    from masking_api_60.api.logging_api import LoggingApi
-    from masking_api_60.api.file_download_api import FileDownloadApi
+    from dxm.lib.masking_api.rest import ApiException
+    from dxm.lib.masking_api.configuration import Configuration
+    from dxm.lib.masking_api.api_client import ApiClient
+    from dxm.lib.masking_api.api.login_api import LoginApi
+    from dxm.lib.masking_api.api.application_api import ApplicationApi
+    from dxm.lib.masking_api.api.system_information_api import SystemInformationApi
+    from dxm.lib.masking_api.api.logging_api import LoggingApi
+    from dxm.lib.masking_api.api.file_download_api import FileDownloadApi
 
     class DxApiClient(ApiClient):
-
-
-
-        def __init__(self, configuration=None, header_name=None, header_value=None,
-                    cookie=None):
-
-            super(DxApiClient, self).__init__(configuration=configuration, header_name=header_name, header_value=header_value,
-                                            cookie=cookie)
-
-            if configuration.verify_ssl:
-                cert_reqs = ssl.CERT_REQUIRED
-            else:
-                cert_reqs = ssl.CERT_NONE
-
-            # ca_certs
-            if configuration.ssl_ca_cert:
-                ca_certs = configuration.ssl_ca_cert
-            else:
-                # if not set certificate file, use Mozilla's root certificates.
-                ca_certs = certifi.where()
-
-            addition_pool_args = {}
-            if configuration.assert_hostname is not None:
-                addition_pool_args['assert_hostname'] = configuration.assert_hostname  # noqa: E501
-
-            maxsize = 4
-            if maxsize is None:
-                if configuration.connection_pool_maxsize is not None:
-                    maxsize = configuration.connection_pool_maxsize
-                else:
-                    maxsize = 4
-
-            # https pool manager
-            if configuration.proxy:
-                if configuration.proxyuser:
-                    default_headers = make_headers(proxy_basic_auth='{}:{}'.format(configuration.proxyuser, configuration.proxypass))
-                else:
-                    default_headers = make_headers()
-                self.rest_client.pool_manager = urllib3.ProxyManager(
-                    num_pools=4,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=ca_certs,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    proxy_url=configuration.proxy,
-                    proxy_headers = default_headers,
-                    **addition_pool_args
-                )
-            else:
-                self.rest_client.pool_manager = urllib3.PoolManager(
-                    num_pools=4,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=ca_certs,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    **addition_pool_args
-                )
-
-        def _ApiClient__deserialize_file(self, response):
-            """Deserializes body to file
-
-            Return a body of request
-
-            :param response:  RESTResponse.
-            :return: file path.
-            """
-
-            return response.data
-
-
-        # def _ApiClient__deserialize(self, data, klass):
-        #     super(ApiClient, self).__deserialize(data, klass)
-
-        def _ApiClient__deserialize_model(self, data, klass):
-            """Deserializes list or dict to model.
-
-            :param data: dict, list.
-            :param klass: class literal.
-            :return: model object.
-            """
-
-            class Struct(object):
-                def __init__(self, data):
-                    for name, value in data.items():
-                        name = self.to_snake_case(name)
-                        setattr(self, name, self._wrap(value))
-
-                def to_snake_case(self, name):
-                    name = name.replace('_','')
-                    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-                    name = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
-                    return name.lower()
-
-                def _wrap(self, value):
-                    if isinstance(value, (tuple, list, set, frozenset)): 
-                        return type(value)([self._wrap(v) for v in value])
-                    else:
-                        return Struct(value) if isinstance(value, dict) else value
-
-            print(data)
-            print(type(data))
-            a =  Struct(data)
-            print(a.__dict__)
-            print(type(a))
-            return a
-
-            if (not klass.swagger_types and
-                    not self.__hasattr(klass, 'get_real_child_model')):
-                return data
-
-            kwargs = {
-                "_configuration" : self.configuration
-            }
-            if klass.swagger_types is not None:
-                for attr, attr_type in six.iteritems(klass.swagger_types):
-                    if (data is not None and
-                            klass.attribute_map[attr] in data and
-                            isinstance(data, (list, dict))):
-                        value = data[klass.attribute_map[attr]]
-                        kwargs[attr] = super(DxApiClient, self)._ApiClient__deserialize(value, attr_type)
-
-            instance = klass(**kwargs)
-
-            if (isinstance(instance, dict) and
-                    klass.swagger_types is not None and
-                    isinstance(data, dict)):
-                for key, value in data.items():
-                    if key not in klass.swagger_types:
-                        instance[key] = value
-            if super(DxApiClient, self)._ApiClient__hasattr(instance, 'get_real_child_model'):
-                klass_name = instance.get_real_child_model(data)
-                if klass_name:
-                    instance = super(DxApiClient, self)._ApiClient__deserialize(data, klass_name)
-            return instance
 
         def request(self, method, url, query_params=None, headers=None,
                 post_params=None, body=None, _preload_content=True,
@@ -412,13 +277,13 @@ class DxMaskingEngine(object):
         :return autorization key for a session
         """
 
-        if "masking_api_53.api" in sys.modules.keys():
+        if "masking_api.api" in sys.modules.keys():
             is_api5 = True
             version = 5
         else:
             is_api5 = False
 
-        if "masking_api_60.api" in sys.modules.keys():
+        if "dxm.lib.masking_api.api" in sys.modules.keys():
             is_api6 = True
             version = 6
         else:
@@ -427,6 +292,7 @@ class DxMaskingEngine(object):
         
 
         self.get_session_worker(version=version)
+        print (self.get_version())
         if self.get_version()<"6.0.0.0":
             if is_api5:    
                 self.__logger.debug("Change API from 6 to 5") 
@@ -483,7 +349,10 @@ class DxMaskingEngine(object):
                     return 1
                 self.__logger.debug("Logging into Delphix Masking")
                 login_api = LoginApi(self.api_client)
-                login = Login(self.__username, password)
+                login = { 
+                    "username": self.__username, 
+                    "password": password
+                }
                 try:
                     self.__logger.debug("sending a login request. "
                                         "Username {}".format(self.__username))

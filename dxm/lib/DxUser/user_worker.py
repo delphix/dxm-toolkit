@@ -25,6 +25,7 @@ from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
 
 from dxm.lib.DxUser.DxUser import DxUser
+from dxm.lib.DxUser.DxUser import DxUserNonAdmin
 from dxm.lib.DxUser.DxUserList import DxUserList
 from dxm.lib.DxRole.DxRoleList import DxRoleList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
@@ -238,7 +239,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                         envreflist.append(envref)
 
             is_admin = False
-            nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
+            nap = DxUserNonAdmin(roleref, envreflist)
         else:
             is_admin = True
             nap = None

@@ -20,9 +20,59 @@
 import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+from dxm.lib.masking_api.api.user_api import UserApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
+
+
+class DxUserNonAdmin(object):
+    swagger_map = {
+        'role_id': 'roleId',
+        'environment_ids': 'environmentIds'
+    }
+
+    swagger_types = {
+        'role_id': 'int',
+        'environment_ids': 'list'
+    }
+
+    def __init__(self, role_id, environment_ids):
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.role_id = role_id
+        self.environment_ids = environment_ids
 
 
 class DxUser(object):
+
+    swagger_map = {
+        'user_id': 'userId',
+        'user_name': 'userName',
+        'password': 'password',
+        'first_name': 'firstName',
+        'last_name': 'lastName',
+        'email': 'email',
+        'is_admin': 'isAdmin',
+        'show_welcome': 'showWelcome',
+        'is_locked': 'isLocked',
+        'non_admin_properties': 'nonAdminProperties',
+        'api_access': 'apiAccess',
+        'user_status': 'userStatus'
+    }
+
+    swagger_types = {
+        'user_id': 'int',
+        'user_name': 'str',
+        'password': 'str',
+        'first_name': 'str',
+        'last_name': 'str',
+        'email': 'str',
+        'is_admin': 'bool',
+        'show_welcome': 'bool',
+        'is_locked': 'bool',
+        'non_admin_properties': 'dict1',
+        'api_access': 'bool',
+        'user_status': 'str'
+    }
 
     def __init__(self, engine):
         """
@@ -32,20 +82,20 @@ class DxUser(object):
         #User.__init__(self)
         self.__logger = logging.getLogger()
         self.__engine = engine
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.user import User
-            from masking_api_60.models.non_admin_properties import NonAdminProperties
-            from masking_api_60.api.user_api import UserApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.user import User
-            from masking_api_53.models.non_admin_properties import NonAdminProperties
-            from masking_api_53.api.user_api import UserApi
-            from masking_api_53.rest import ApiException
+        # if (self.__engine.version_ge('6.0.0')):
+        #     from masking_api_60.models.user import User
+        #     from masking_api_60.models.non_admin_properties import NonAdminProperties
+        #     from masking_api_60.api.user_api import UserApi
+        #     from masking_api_60.rest import ApiException
+        # else:
+        #     from masking_api_53.models.user import User
+        #     from masking_api_53.models.non_admin_properties import NonAdminProperties
+        #     from masking_api_53.api.user_api import UserApi
+        #     from masking_api_53.rest import ApiException
 
         self.__api = UserApi
-        self.__model = User
-        self.__modelnap = NonAdminProperties
+        # self.__model = User
+        # self.__modelnap = NonAdminProperties
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -95,9 +145,12 @@ class DxUser(object):
     @user_name.setter
     def user_name(self, user_name):
         if self.__obj is not None:
+            print("W sweterze 2")
             self.__obj.user_name = user_name
         else:
             raise ValueError("Object needs to be initialized first")
+
+            
 
     @property
     def password(self):
@@ -185,33 +238,37 @@ class DxUser(object):
 
     @property
     def is_locked(self):
-        print("SLON1")
         if self.obj is not None:
-            print("SLON2")
-            print(self.obj)
             if hasattr(self.obj,"is_locked"):
-                print("SLON3")
                 return self.obj.is_locked
             elif hasattr(self.obj,"user_status"):
-                print("SLON4")
                 if self.obj.user_status == 'ACTIVE':
-                    print("SLON5")
                     return False
                 else:
-                    print("SLON6")
                     return True
             else:
                 raise ValueError("is_locked not implemented / API change")
         else:
-            print("SLONEND")
             return None
 
     @is_locked.setter
     def is_locked(self, is_locked):
-        if self.__obj is not None:
-            self.__obj.is_locked = is_locked
+
+        if self.__engine.version_le("6.0.6.0"):
+            if self.__obj is not None:
+                self.__obj.is_locked = is_locked
+            else:
+                raise ValueError("Object needs to be initialized first")
         else:
-            raise ValueError("Object needs to be initialized first")
+            if is_locked == True:
+                status = "LOCKED"
+            else:
+                status = "ACTIVE"
+            if self.__obj is not None:
+                self.__obj.user_status = status
+            else:
+                raise ValueError("Object needs to be initialized first") 
+
 
     @property
     def non_admin_properties(self):
@@ -231,16 +288,25 @@ class DxUser(object):
             raise ValueError("Object needs to be initialized first")
 
     def from_user(self, user):
-        print("Local")
-        print(self.__obj)
-        print("Remote")
-        print(user)
         self.__obj = user
 
 
     def create_user(self, user_name, password, first_name, last_name, email, is_admin, non_admin_properties):
-        self.__obj = self.__model(user_name=user_name, password=password, first_name=first_name, last_name=last_name, 
-                                 email=email, is_admin=is_admin, non_admin_properties=non_admin_properties, is_locked=False)
+        # self.__obj = self.__model(user_name=user_name, password=password, first_name=first_name, last_name=last_name, 
+        #                          email=email, is_admin=is_admin, non_admin_properties=non_admin_properties, is_locked=False)
+
+
+
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.user_name = user_name
+        self.password = password
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email = email
+        self.is_admin = is_admin
+        self.is_locked=False
+        self.non_admin_properties = non_admin_properties
+
 
     def delete_nap(self):
         """
