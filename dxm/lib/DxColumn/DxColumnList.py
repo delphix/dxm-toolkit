@@ -31,6 +31,10 @@ from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.column_metadata_api import ColumnMetadataApi
+from dxm.lib.masking_api.api.file_field_metadata_api import FileFieldMetadataApi
+from dxm.lib.masking_api.rest import ApiException
+
 class DxColumnList(object):
 
     def __init__(self):
@@ -52,16 +56,6 @@ class DxColumnList(object):
         nofile = None
 
         metaobj = DxMetaList.get_by_ref(metadata_id)
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.column_metadata_api import ColumnMetadataApi
-            from masking_api_60.api.file_field_metadata_api import FileFieldMetadataApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.column_metadata_api import ColumnMetadataApi
-            from masking_api_53.api.file_field_metadata_api import FileFieldMetadataApi
-            from masking_api_53.rest import ApiException
-
 
         self.__api = ColumnMetadataApi
         self.__fileapi = FileFieldMetadataApi

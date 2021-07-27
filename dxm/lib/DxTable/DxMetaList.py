@@ -28,6 +28,9 @@ from dxm.lib.DxTools.DxTools import paginator
 
 from dxm.lib.DxLogging import print_error
 
+from dxm.lib.masking_api.api.table_metadata_api import TableMetadataApi
+from dxm.lib.masking_api.api.file_metadata_api import FileMetadataApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxMetaList(object):
 
@@ -54,15 +57,6 @@ class DxMetaList(object):
 
         notable = None
         nofile = None
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.table_metadata_api import TableMetadataApi
-            from masking_api_60.api.file_metadata_api import FileMetadataApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.table_metadata_api import TableMetadataApi
-            from masking_api_53.api.file_metadata_api import FileMetadataApi
-            from masking_api_53.rest import ApiException
 
         self.__api = TableMetadataApi
         self.__fileapi = FileMetadataApi

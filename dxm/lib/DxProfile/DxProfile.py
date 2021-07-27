@@ -22,9 +22,29 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxProfile.DxProfileExpList import DxProfileExpList
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.profile_set_api import ProfileSetApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxProfile(object):
+
+    swagger_types = {
+        'profile_set_id': 'int',
+        'profile_set_name': 'str',
+        'profile_expression_ids': 'list[int]',
+        'created_by': 'str',
+        'created_time': 'datetime',
+        'description': 'str'
+    }
+
+    swagger_map = {
+        'profile_set_id': 'profileSetId',
+        'profile_set_name': 'profileSetName',
+        'profile_expression_ids': 'profileExpressionIds',
+        'created_by': 'createdBy',
+        'created_time': 'createdTime',
+        'description': 'description'
+    }
 
     def __init__(self):
         """
@@ -34,17 +54,8 @@ class DxProfile(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxProfileSet object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.profile_set import ProfileSet
-            from masking_api_60.api.profile_set_api import ProfileSetApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.profile_set import ProfileSet
-            from masking_api_53.api.profile_set_api import ProfileSetApi
-            from masking_api_53.rest import ApiException
 
         self.__api = ProfileSetApi
-        self.__model = ProfileSet
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -76,9 +87,13 @@ class DxProfile(object):
         else:
             return None
 
+    @profile_expression_ids.setter
+    def profile_expression_ids(self, value):
+        self.obj.profile_expression_ids = value
+
     @property
     def description(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'description'):
             return self.obj.description
         else:
             return None
@@ -99,10 +114,18 @@ class DxProfile(object):
 
 
     def create_profile(self, profile_set_name, profile_expression_ids, created_by, description):
-        self.__obj = self.__model(profile_set_name=profile_set_name, profile_expression_ids=profile_expression_ids, created_by=created_by, description=description)
+
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.profile_set_name = profile_set_name
+        self.obj.profile_expression_ids = profile_expression_ids
+        self.obj.created_by = created_by
+        self.obj.description = description
+
 
     def from_profileset(self, profile):
         self.__obj = profile
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
 
     def set_expressions_using_names(self, expression_list):
         """

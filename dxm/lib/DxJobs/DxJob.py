@@ -25,9 +25,58 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 import dxm.lib.DxJobs.DxJobCounter
 from dxm.lib.DxTools.DxTools import paginator
+from dxm.lib.masking_api.api.masking_job_api import MaskingJobApi
+from dxm.lib.masking_api.api.execution_api import ExecutionApi
+from dxm.lib.masking_api.api.execution_component_api import ExecutionComponentApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxJobs.DxJobOptions import DxDatabaseMaskingOptions
+from dxm.lib.DxJobs.DxJobOptions import DxMaskingScriptJob
+from dxm.lib.DxJobs.DxJobOptions import DxOnTheFlyJob
 
 
 class DxJob(object):
+
+    swagger_types = {
+        'masking_job_id': 'int',
+        'job_name': 'str',
+        'ruleset_id': 'int',
+        'ruleset_type': 'str',
+        'created_by': 'str',
+        'created_time': 'datetime',
+        'email': 'str',
+        'feedback_size': 'int',
+        'job_description': 'str',
+        'max_memory': 'int',
+        'min_memory': 'int',
+        'multi_tenant': 'bool',
+        'num_input_streams': 'int',
+        'on_the_fly_masking': 'bool',
+        'database_masking_options': 'dict',
+        'on_the_fly_masking_source': 'dict',
+        'fail_immediately': 'bool'
+    }
+
+    swagger_map = {
+        'masking_job_id': 'maskingJobId',
+        'job_name': 'jobName',
+        'ruleset_id': 'rulesetId',
+        'ruleset_type': 'rulesetType',
+        'created_by': 'createdBy',
+        'created_time': 'createdTime',
+        'email': 'email',
+        'feedback_size': 'feedbackSize',
+        'job_description': 'jobDescription',
+        'max_memory': 'maxMemory',
+        'min_memory': 'minMemory',
+        'multi_tenant': 'multiTenant',
+        'num_input_streams': 'numInputStreams',
+        'on_the_fly_masking': 'onTheFlyMasking',
+        'database_masking_options': 'databaseMaskingOptions',
+        'on_the_fly_masking_source': 'onTheFlyMaskingSource',
+        'fail_immediately': 'failImmediately'
+    }
+
 
     def __init__(self, engine, execList):
         """
@@ -41,26 +90,11 @@ class DxJob(object):
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJob object")
         self.__monitor = False
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.masking_job import MaskingJob
-            from masking_api_60.api.masking_job_api import MaskingJobApi
-            from masking_api_60.api.execution_api import ExecutionApi
-            from masking_api_60.models.execution import Execution
-            from masking_api_60.api.execution_component_api import ExecutionComponentApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.masking_job import MaskingJob
-            from masking_api_53.api.masking_job_api import MaskingJobApi
-            from masking_api_53.api.execution_api import ExecutionApi
-            from masking_api_53.models.execution import Execution
-            from masking_api_53.api.execution_component_api import ExecutionComponentApi
-            from masking_api_53.rest import ApiException
+
 
         self.__api = MaskingJobApi
-        self.__model = MaskingJob
         self.__apiexec = ExecutionApi
         self.__apicomponent = ExecutionComponentApi
-        self.__modelexec = Execution
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -296,6 +330,68 @@ class DxJob(object):
 
     def from_job(self, job):
         self.__obj = job
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
+
+        if hasattr(self.__obj,'database_masking_options') and self.__obj.database_masking_options is not None:
+
+            opt_swagger_types = {
+                'batch_update': 'bool',
+                'commit_size': 'int',
+                'disable_constraints': 'bool',
+                'drop_indexes': 'bool',
+                'disable_triggers': 'bool',
+                'num_output_threads_per_stream': 'int',
+                'truncate_tables': 'bool',
+                'prescript': 'dict',
+                'postscript': 'dict'
+            }
+
+            opt_swagger_map = {
+                'batch_update': 'batchUpdate',
+                'commit_size': 'commitSize',
+                'disable_constraints': 'disableConstraints',
+                'drop_indexes': 'dropIndexes',
+                'disable_triggers': 'disableTriggers',
+                'num_output_threads_per_stream': 'numOutputThreadsPerStream',
+                'truncate_tables': 'truncateTables',
+                'prescript': 'prescript',
+                'postscript': 'postscript'
+            }
+
+            self.__obj.database_masking_options.swagger_map = opt_swagger_map
+            self.__obj.database_masking_options.swagger_types = opt_swagger_types
+
+
+            script_swagger_types = {
+                'connector_id': 'int',
+                'connector_type': 'str'
+            }
+
+            script_swagger_map = {
+                'connector_id': 'connectorId',
+                'connector_type': 'connectorType'
+            }
+
+            if hasattr(self.__obj.database_masking_options,'prescript') and self.__obj.database_masking_options.prescript is not None:
+                self.__obj.database_masking_options.prescript.swagger_map = script_swagger_map
+                self.__obj.database_masking_options.prescript.swagger_types = script_swagger_types
+
+            if hasattr(self.__obj.database_masking_options,'postscript') and self.__obj.database_masking_options.postscript is not None:
+                self.__obj.database_masking_options.postscript.swagger_map = script_swagger_map
+                self.__obj.database_masking_options.postscript.swagger_types = script_swagger_types
+
+        if hasattr(self.__obj,'on_the_fly_masking_source') and self.__obj.on_the_fly_masking_source is not None:
+            self.__obj.on_the_fly_masking_source.swagger_map = {
+                                                                    'name': 'name',
+                                                                    'contents': 'contents'
+                                                                }
+            self.__obj.on_the_fly_masking_source.swagger_types = {
+                                                                    'name': 'str',
+                                                                    'contents': 'str'
+                                                                }
+
+
 
     def create_job(self, job_name, ruleset_id):
         """
@@ -305,7 +401,9 @@ class DxJob(object):
         :param environment_id
         """  
 
-        self.__obj = self.__model(job_name=job_name, ruleset_id=ruleset_id)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.job_name = job_name
+        self.obj.ruleset_id = ruleset_id
 
 
     def add(self):

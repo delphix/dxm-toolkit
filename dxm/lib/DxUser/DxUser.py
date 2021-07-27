@@ -25,7 +25,7 @@ from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
 
 
-class DxUserNonAdmin(object):
+def DxUserNonAdmin(role_id, environment_ids):
     swagger_map = {
         'role_id': 'roleId',
         'environment_ids': 'environmentIds'
@@ -36,10 +36,11 @@ class DxUserNonAdmin(object):
         'environment_ids': 'list'
     }
 
-    def __init__(self, role_id, environment_ids):
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
-        self.role_id = role_id
-        self.environment_ids = environment_ids
+
+    obj = GenericModel({ x:None for x in swagger_map.values()}, swagger_types, swagger_map)
+    obj.role_id = role_id
+    obj.environment_ids = environment_ids
+    return obj
 
 
 class DxUser(object):
@@ -289,6 +290,18 @@ class DxUser(object):
 
     def from_user(self, user):
         self.__obj = user
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
+
+        if hasattr(self.__obj,'non_admin_properties') and self.__obj.non_admin_properties is not None:
+            self.__obj.non_admin_properties.swagger_map =  {
+                                                                'role_id': 'roleId',
+                                                                'environment_ids': 'environmentIds'
+                                                            }
+            self.__obj.non_admin_properties.swagger_types = {
+                                                                'role_id': 'int',
+                                                                'environment_ids': 'list'
+                                                            }
 
 
     def create_user(self, user_name, password, first_name, last_name, email, is_admin, non_admin_properties):
@@ -421,6 +434,7 @@ class DxUser(object):
         try:
             self.__logger.debug("update user id %s"
                                 % self.user_id)
+
             response = api_instance.update_user_by_id(
                 self.user_id,
                 self.obj,

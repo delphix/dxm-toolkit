@@ -26,7 +26,8 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxSync.DxSync import DxSync
 from dxm.lib.DxTools.DxTools import paginator
-
+from dxm.lib.masking_api.api.sync_api import SyncApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxSyncList(object):
 
@@ -54,17 +55,7 @@ class DxSyncList(object):
 
         self.__syncableList = {}
 
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.sync_api import SyncApi
-            from masking_api_60.models.export_object_metadata_list import ExportObjectMetadataList
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.sync_api import SyncApi
-            from masking_api_53.models.export_object_metadata_list import ExportObjectMetadataList
-            from masking_api_53.rest import ApiException
-
         self.__api = SyncApi
-        self.__model = ExportObjectMetadataList
         self.__apiexc = ApiException
 
         try:
@@ -73,7 +64,6 @@ class DxSyncList(object):
                 objecttype = objecttype.upper()
             if objecttype and self.__engine.version_ge("5.3"):
                 if objecttype == "ALGORITHM":
-                    api_sync_response = self.__model()
                     for atype in ["SEGMENT", "DATE_SHIFT",
                                   "LOOKUP", "TOKENIZATION"]:
                         partres = paginator(
@@ -114,6 +104,9 @@ class DxSyncList(object):
                                  "SEGMENT", "TOKENIZATION"]:
                         stype = "ALGORITHM"
 
+                    # print(type(syncobj))
+                    # print(type(syncobj.object_identifier))
+
                     sid = list(syncobj.object_identifier.values())[0]
                     if stype not in self.__syncableList:
                         self.__syncableList[stype] = {}
@@ -137,8 +130,12 @@ class DxSyncList(object):
         """
 
         allalg = self.__syncableList["ALGORITHM"]
+
+        #print(allalg[0].object_identifier.__dict__)
+
+        # check with older engine 
         return sorted(allalg, key=lambda k:
-                      allalg[k].object_identifier["algorithmName"].lower())
+                      allalg[k].object_identifier["algorithm_name"].lower())
 
     @classmethod
     def get_object_by_type_name(self, objecttype, name):

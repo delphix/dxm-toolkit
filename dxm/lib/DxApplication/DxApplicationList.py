@@ -68,7 +68,7 @@ class DxApplicationList(object):
                 for c in a.response_list:
                     application = DxApplication(self.__engine)
                     application.from_obj(c)
-                    if hasattr(c, "application_id") and c.application_id is not None:
+                    if self.__engine.version_ge("6.0.0.0") and c.application_id is not None:
                         self.__applicationList[c.application_id] = application
                     else:
                         self.__applicationList[c.application_name] = application

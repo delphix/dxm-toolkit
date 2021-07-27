@@ -21,9 +21,29 @@ import logging
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.profile_expression_api import ProfileExpressionApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxProfileExt(object):
+
+    swagger_types = {
+        'profile_expression_id': 'int',
+        'domain_name': 'str',
+        'expression_name': 'str',
+        'regular_expression': 'str',
+        'created_by': 'str',
+        'data_level_profiling': 'bool'
+    }
+
+    swagger_map = {
+        'profile_expression_id': 'profileExpressionId',
+        'domain_name': 'domainName',
+        'expression_name': 'expressionName',
+        'regular_expression': 'regularExpression',
+        'created_by': 'createdBy',
+        'data_level_profiling': 'dataLevelProfiling'
+    }
 
     def __init__(self):
         """
@@ -33,22 +53,16 @@ class DxProfileExt(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxProfileExt object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.profile_expression import ProfileExpression
-            from masking_api_60.api.profile_expression_api import ProfileExpressionApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.profile_expression import ProfileExpression
-            from masking_api_53.api.profile_expression_api import ProfileExpressionApi
-            from masking_api_53.rest import ApiException
+
 
         self.__api = ProfileExpressionApi
-        self.__model = ProfileExpression
         self.__apiexc = ApiException
         self.__obj = None
 
     def from_profilesetext(self, profileext):
         self.__obj = profileext
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
 
     @property
     def obj(self):
@@ -137,8 +151,11 @@ class DxProfileExt(object):
 
     def create_profile_expression(self, domain_name, expression_name, regular_expression,  data_level_profiling):
 
-        self.__obj = self.__model(domain_name=domain_name, expression_name=expression_name, regular_expression=regular_expression, 
-                                  data_level_profiling=data_level_profiling)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.domain_name = domain_name
+        self.obj.expression_name = expression_name
+        self.obj.regular_expression = regular_expression
+        self.obj.data_level_profiling = data_level_profiling
 
 
     def add(self):

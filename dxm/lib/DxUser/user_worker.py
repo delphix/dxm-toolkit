@@ -94,10 +94,6 @@ def user_update(p_engine, username, firstname, lastname, email, password,
         if engine_obj.get_session():
             continue
 
-        if (engine_obj.version_ge('6.0.0')):
-            from masking_api_60.models.non_admin_properties import NonAdminProperties
-        else:
-            from masking_api_53.models.non_admin_properties import NonAdminProperties
 
         userlist = DxUserList()
         userref = userlist.get_userId_by_name(username)
@@ -138,7 +134,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
 
 
                 userobj.is_admin = False
-                nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
+                nap = DxUserNonAdmin(role_id=roleref, environment_ids=envreflist)
                 userobj.non_admin_properties = nap
             else:
                 userobj.is_admin = True

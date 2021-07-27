@@ -130,6 +130,8 @@ class DxEnvironment(object):
         :param env: Environment object
         """
         self.__obj = env
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     def create_environment(self, environment_name, application_name, purpose):
         """

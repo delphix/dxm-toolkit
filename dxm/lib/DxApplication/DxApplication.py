@@ -86,6 +86,8 @@ class DxApplication(object):
         :param app: Application object
         """
         self.__obj = obj
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     def add(self):
         """
