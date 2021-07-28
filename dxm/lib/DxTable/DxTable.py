@@ -23,8 +23,31 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.table_metadata_api import TableMetadataApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxTable(object):
+
+    swagger_types = {
+        'table_metadata_id': 'int',
+        'table_name': 'str',
+        'ruleset_id': 'int',
+        'custom_sql': 'str',
+        'where_clause': 'str',
+        'having_clause': 'str',
+        'key_column': 'str'
+    }
+
+    swagger_map = {
+        'table_metadata_id': 'tableMetadataId',
+        'table_name': 'tableName',
+        'ruleset_id': 'rulesetId',
+        'custom_sql': 'customSql',
+        'where_clause': 'whereClause',
+        'having_clause': 'havingClause',
+        'key_column': 'keyColumn'
+    }
 
     def __init__(self, engine):
         """
@@ -36,17 +59,8 @@ class DxTable(object):
         self.__columnList = {}
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxTable object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.table_metadata import TableMetadata
-            from masking_api_60.api.table_metadata_api import TableMetadataApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.table_metadata import TableMetadata
-            from masking_api_53.api.table_metadata_api import TableMetadataApi
-            from masking_api_53.rest import ApiException
 
         self.__api = TableMetadataApi
-        self.__model = TableMetadata
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -55,17 +69,12 @@ class DxTable(object):
         Set obj object with real table object
         :param con: DatabaseConnector object
         """
+
         self.__obj = table
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
-    def create_table(self, table_name, ruleset_id, custom_sql, where_clause, having_clause, key_column):
-        """
-        Create an connector object
-        :param connector_name
-        :param database_type
-        :param environment_id
-        """  
 
-        self.__obj = self.__model(table_name=table_name, ruleset_id=ruleset_id, custom_sql=custom_sql, where_clause=where_clause, having_clause=having_clause, key_column=key_column)
 
     @property
     def obj(self):
@@ -91,17 +100,51 @@ class DxTable(object):
     def key_column(self):
         return self.obj.key_column
 
+    @key_column.setter
+    def key_column(self, key_column):
+        self.obj.ruleset_name = key_column
+
     @property
     def having_clause(self):
         return self.obj.having_clause
+
+    @having_clause.setter
+    def having_clause(self, having_clause):
+        self.obj.ruleset_name = having_clause
 
     @property
     def where_clause(self):
         return self.obj.where_clause
 
+    @where_clause.setter
+    def where_clause(self, where_clause):
+        self.obj.ruleset_name = where_clause
+
     @property
     def custom_sql(self):
         return self.obj.custom_sql
+
+    @custom_sql.setter
+    def custom_sql(self, custom_sql):
+        self.obj.ruleset_name = custom_sql
+
+
+    def create_table(self, table_name, ruleset_id, custom_sql, where_clause, having_clause, key_column):
+        """
+        Create an connector object
+        :param connector_name
+        :param database_type
+        :param environment_id
+        """  
+
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.table_name = table_name
+        self.obj.ruleset_id = ruleset_id
+        self.obj.custom_sql = custom_sql
+        self.obj.where_clause = where_clause
+        self.obj.having_clause = having_clause
+        self.obj.key_column = key_column
+
 
     def add(self):
         """

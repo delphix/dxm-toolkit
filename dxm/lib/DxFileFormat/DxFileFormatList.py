@@ -24,7 +24,8 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_error
-
+from dxm.lib.masking_api.api.file_format_api import FileFormatApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxFileFormatList(object):
 
@@ -50,13 +51,6 @@ class DxFileFormatList(object):
         Load list of rule sets
         Return None if OK
         """
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.file_format_api import FileFormatApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.file_format_api import FileFormatApi
-            from masking_api_53.rest import ApiException
 
         self.__api = FileFormatApi
         self.__apiexc = ApiException

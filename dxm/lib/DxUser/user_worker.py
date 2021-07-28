@@ -25,6 +25,7 @@ from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
 
 from dxm.lib.DxUser.DxUser import DxUser
+from dxm.lib.DxUser.DxUser import DxUserNonAdmin
 from dxm.lib.DxUser.DxUserList import DxUserList
 from dxm.lib.DxRole.DxRoleList import DxRoleList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
@@ -93,10 +94,6 @@ def user_update(p_engine, username, firstname, lastname, email, password,
         if engine_obj.get_session():
             continue
 
-        if (engine_obj.version_ge('6.0.0')):
-            from masking_api_60.models.non_admin_properties import NonAdminProperties
-        else:
-            from masking_api_53.models.non_admin_properties import NonAdminProperties
 
         userlist = DxUserList()
         userref = userlist.get_userId_by_name(username)
@@ -137,7 +134,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
 
 
                 userobj.is_admin = False
-                nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
+                nap = DxUserNonAdmin(role_id=roleref, environment_ids=envreflist)
                 userobj.non_admin_properties = nap
             else:
                 userobj.is_admin = True
@@ -238,7 +235,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                         envreflist.append(envref)
 
             is_admin = False
-            nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
+            nap = DxUserNonAdmin(roleref, envreflist)
         else:
             is_admin = True
             nap = None
@@ -342,10 +339,13 @@ def user_list(p_engine, format, username):
             else:
                 envs = ''
 
-            if userobj.is_locked:
-                locked = 'Locked'
+            if userobj.is_locked is not None:
+                if userobj.is_locked is True:
+                    locked = 'Locked'
+                else:
+                    locked = 'Open'
             else:
-                locked = 'Open'
+                locked = 'N/A'
 
             if msadobj is None:
                 authtype = 'NATIVE'

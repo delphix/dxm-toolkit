@@ -437,26 +437,31 @@ def do_addexpression(**kwargs):
     profobj = kwargs.get('profobj')
     expname = kwargs.get('expname')
     logger = logging.getLogger()
-    existing = profobj.profile_expression_ids
+    existing = profobj.profile_expression_ids.copy()
+
+
 
     logger.debug("list of existing expressions " + str(existing))
 
-    if profobj.set_expressions_using_names(expname):
+    newlist = profobj.set_expressions_using_names(expname)
+
+    if len(newlist)<1:
         return 1
 
     logger.debug("list of new expressions "
-                 + str(profobj.profile_expression_ids))
+                 + str(newlist))
 
-    profobj.profile_expression_ids.extend(existing)
+    existing.extend(newlist)
 
     logger.debug("sum of expressions "
-                 + str(profobj.profile_expression_ids))
+                 + str(existing))
 
     if set(existing) != set(profobj.profile_expression_ids):
         # we are adding a expressions which are not on the profile list yet
         # remove duplictates
+
         profobj.profile_expression_ids = list(
-            set(profobj.profile_expression_ids))
+            set(existing))
 
         logger.debug("sum of expressions after deduplicate "
                      + str(profobj.profile_expression_ids))

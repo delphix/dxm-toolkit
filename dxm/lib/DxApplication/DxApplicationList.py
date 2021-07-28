@@ -25,7 +25,8 @@ from dxm.lib.DxApplication.DxApplication import DxApplication
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_error
-
+from dxm.lib.masking_api.api.application_api import ApplicationApi
+from dxm.lib.masking_api.rest import ApiException
 
 
 class DxApplicationList(object):
@@ -54,13 +55,6 @@ class DxApplicationList(object):
 
         self.__applicationList.clear()
         try:
-            if (self.__engine.version_ge('6.0.0')):
-                from masking_api_60.api.application_api import ApplicationApi
-                from masking_api_60.rest import ApiException
-            else:
-                from masking_api_53.api.application_api import ApplicationApi
-                from masking_api_53.rest import ApiException
-
             self.__api = ApplicationApi
             self.__apiexc = ApiException
 
@@ -74,7 +68,7 @@ class DxApplicationList(object):
                 for c in a.response_list:
                     application = DxApplication(self.__engine)
                     application.from_obj(c)
-                    if hasattr(c, "application_id") and c.application_id is not None:
+                    if self.__engine.version_ge("6.0.0.0") and c.application_id is not None:
                         self.__applicationList[c.application_id] = application
                     else:
                         self.__applicationList[c.application_name] = application

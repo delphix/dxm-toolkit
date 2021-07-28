@@ -25,8 +25,49 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 import dxm.lib.DxJobs.DxJobCounter
 
+from dxm.lib.masking_api.api.profile_job_api import ProfileJobApi
+from dxm.lib.masking_api.api.execution_api import ExecutionApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxProfileJob(object):
+
+    swagger_types = {
+        'profile_job_id': 'int',
+        'job_name': 'str',
+        'profile_set_id': 'int',
+        'ruleset_id': 'int',
+        'ruleset_type': 'str',
+        'created_by': 'str',
+        'created_time': 'datetime',
+        'email': 'str',
+        'feedback_size': 'int',
+        'job_description': 'str',
+        'max_memory': 'int',
+        'min_memory': 'int',
+        'multi_tenant': 'bool',
+        'num_input_streams': 'int',
+        'multiple_profiler_check': 'bool'
+    }
+
+    swagger_map = {
+        'profile_job_id': 'profileJobId',
+        'job_name': 'jobName',
+        'profile_set_id': 'profileSetId',
+        'ruleset_id': 'rulesetId',
+        'ruleset_type': 'rulesetType',
+        'created_by': 'createdBy',
+        'created_time': 'createdTime',
+        'email': 'email',
+        'feedback_size': 'feedbackSize',
+        'job_description': 'jobDescription',
+        'max_memory': 'maxMemory',
+        'min_memory': 'minMemory',
+        'multi_tenant': 'multiTenant',
+        'num_input_streams': 'numInputStreams',
+        'multiple_profiler_check': 'multipleProfilerCheck'
+    }
+
 
     def __init__(self, engine, lastExec):
         """
@@ -40,23 +81,10 @@ class DxProfileJob(object):
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxProfileJob object")
         self.__monitor = False
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.profile_job import ProfileJob
-            from masking_api_60.api.profile_job_api import ProfileJobApi
-            from masking_api_60.api.execution_api import ExecutionApi
-            from masking_api_60.models.execution import Execution
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.profile_job import ProfileJob
-            from masking_api_53.api.profile_job_api import ProfileJobApi
-            from masking_api_53.api.execution_api import ExecutionApi
-            from masking_api_53.models.execution import Execution
-            from masking_api_53.rest import ApiException
+
 
         self.__api = ProfileJobApi
-        self.__model = ProfileJob
         self.__apiexec = ExecutionApi
-        self.__modelexec = Execution
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -233,7 +261,10 @@ class DxProfileJob(object):
         :param environment_id
         """  
 
-        self.__obj = self.__model(job_name=job_name, ruleset_id=ruleset_id, profile_set_id=profile_set_id)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.job_name = job_name
+        self.obj.ruleset_id = ruleset_id
+        self.obj.profile_set_id = profile_set_id
 
     def add(self):
         """

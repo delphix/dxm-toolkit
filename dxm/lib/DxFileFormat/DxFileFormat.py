@@ -21,8 +21,27 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.file_format_api import FileFormatApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxFileFormat(object):
+
+    swagger_types = {
+        'file_format_id': 'int',
+        'file_format_name': 'str',
+        'file_format_type': 'str',
+        'header': 'int',
+        'footer': 'int'
+    }
+
+    swagger_map = {
+        'file_format_id': 'fileFormatId',
+        'file_format_name': 'fileFormatName',
+        'file_format_type': 'fileFormatType',
+        'header': 'header',
+        'footer': 'footer'
+    }
 
     def __init__(self, engine):
         """
@@ -34,22 +53,15 @@ class DxFileFormat(object):
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFileFormat object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.file_format import FileFormat
-            from masking_api_60.api.file_format_api import FileFormatApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.file_format import FileFormat
-            from masking_api_53.api.file_format_api import FileFormatApi
-            from masking_api_53.rest import ApiException
 
         self.__api = FileFormatApi
-        self.__model = FileFormat
         self.__apiexc = ApiException
         self.__obj = None
 
     def from_filetype(self, filetype):
         self.__obj = filetype
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     def create_fileformat(self, file_format_name, file_format_type):
         """
@@ -59,7 +71,9 @@ class DxFileFormat(object):
         :param environment_id
         """  
 
-        self.__obj = self.__model(file_format_name=file_format_name, file_format_type=file_format_type)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.file_format_name = file_format_name
+        self.obj.file_format_type = file_format_type
 
 
     @property

@@ -26,8 +26,23 @@ from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
 from dxm.lib.DxRuleset.DxDatabaseRuleset import DxDatabaseRuleset
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+from dxm.lib.masking_api.api.file_ruleset_api import FileRulesetApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxFileRuleset(object):
+
+    swagger_types = {
+        'file_ruleset_id': 'int',
+        'ruleset_name': 'str',
+        'file_connector_id': 'int'
+    }
+
+    swagger_map = {
+        'file_ruleset_id': 'fileRulesetId',
+        'ruleset_name': 'rulesetName',
+        'file_connector_id': 'fileConnectorId'
+    }
 
     def __init__(self, engine):
         """
@@ -40,21 +55,9 @@ class DxFileRuleset(object):
         self.__type = 'File'
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFileRuleset object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.file_ruleset import FileRuleset
-            from masking_api_60.api.file_ruleset_api import FileRulesetApi
-            from masking_api_60.models.file_metadata import FileMetadata
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.file_ruleset import FileRuleset
-            from masking_api_53.api.file_ruleset_api import FileRulesetApi
-            from masking_api_53.models.file_metadata import FileMetadata
-            from masking_api_53.rest import ApiException
 
         self.__api = FileRulesetApi
-        self.__model = FileRuleset
         self.__apiexc = ApiException
-        self.__modeltable = FileMetadata
         self.__obj = None
 
     @property
@@ -89,12 +92,22 @@ class DxFileRuleset(object):
     def connectorId(self):
         return 'f' + str(self.obj.file_connector_id)
 
+    @property
+    def file_connector_id(self):
+        return self.obj.file_connector_id
+
+    @file_connector_id.setter
+    def file_connector_id(self, file_connector_id):
+        self.obj.file_connector_id = file_connector_id
+
     def from_ruleset(self, ruleset):
         """
         Set obj object with real ruleset object
         :param con: DatabaseConnector object
         """
         self.__obj = ruleset
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     def create_file_ruleset(self, ruleset_name, file_connector_id):
         """
@@ -103,8 +116,9 @@ class DxFileRuleset(object):
         :param database_type
         :param environment_id
         """  
-
-        self.__obj = self.__model(ruleset_name=ruleset_name, file_connector_id=file_connector_id)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.ruleset_name = ruleset_name
+        self.obj.file_connector_id = file_connector_id
 
 
     def add(self):

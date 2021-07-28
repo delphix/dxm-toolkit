@@ -25,9 +25,30 @@ from time import sleep
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
-
+from dxm.lib.masking_api.api.async_task_api import AsyncTaskApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxAsyncTask(object):
+
+    swagger_types = {
+        'async_task_id': 'int',
+        'operation': 'str',
+        'reference': 'str',
+        'status': 'str',
+        'start_time': 'datetime',
+        'end_time': 'datetime',
+        'cancellable': 'bool'
+    }
+
+    swagger_map = {
+        'async_task_id': 'asyncTaskId',
+        'operation': 'operation',
+        'reference': 'reference',
+        'status': 'status',
+        'start_time': 'startTime',
+        'end_time': 'endTime',
+        'cancellable': 'cancellable'
+    }
 
     def __init__(self):
         """
@@ -38,17 +59,8 @@ class DxAsyncTask(object):
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxAsyncTask object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.async_task import AsyncTask
-            from masking_api_60.api.async_task_api import AsyncTaskApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.async_task import AsyncTask
-            from masking_api_53.api.async_task_api import AsyncTaskApi
-            from masking_api_53.rest import ApiException
 
         self.__api = AsyncTaskApi
-        self.__model = AsyncTask
         self.__obj = None
         self.__apiexc = ApiException
     
@@ -67,7 +79,8 @@ class DxAsyncTask(object):
         :param con: DatabaseConnector object
         """
         self.__obj = task
-
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
 
     def wait_for_task(self):
         """

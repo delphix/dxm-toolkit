@@ -23,9 +23,27 @@ import json
 
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.sync_api import SyncApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxAlgorithm(object):
+
+    swagger_types = {
+        'algorithm_name': 'str',
+        'algorithm_type': 'str',
+        'created_by': 'str',
+        'description': 'str',
+        'algorithm_extension': 'object'
+    }
+
+    swagger_map = {
+        'algorithm_name': 'algorithmName',
+        'algorithm_type': 'algorithmType',
+        'created_by': 'createdBy',
+        'description': 'description',
+        'algorithm_extension': 'algorithmExtension'
+    }
 
     def __init__(self, engine):
         """
@@ -38,17 +56,8 @@ class DxAlgorithm(object):
         self.__domain_name = None
         self.__sync = None
         self.__logger.debug("creating DxAlgorithm object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.algorithm import Algorithm
-            from masking_api_60.api.sync_api import SyncApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.algorithm import Algorithm
-            from masking_api_53.api.sync_api import SyncApi
-            from masking_api_53.rest import ApiException
 
         self.__api = SyncApi
-        self.__model = Algorithm
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -67,6 +76,8 @@ class DxAlgorithm(object):
         :param column: Algorithm object
         """
         self.__obj = alg
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
 
     @property
     def domain_name(self):

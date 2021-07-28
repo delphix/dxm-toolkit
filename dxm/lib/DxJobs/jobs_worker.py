@@ -36,6 +36,9 @@ from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxProfile.DxProfilesList import DxProfilesList
+from dxm.lib.DxJobs.DxJobOptions import DxDatabaseMaskingOptions
+from dxm.lib.DxJobs.DxJobOptions import DxMaskingScriptJob
+from dxm.lib.DxJobs.DxJobOptions import DxOnTheFlyJob
 
 
 from threading import Thread
@@ -182,16 +185,7 @@ def job_add(p_engine, params):
                 setattr(job, p, value)
 
 
-        if (engine_obj.version_ge('6.0.0')):
-            from masking_api_60.models.database_masking_options import DatabaseMaskingOptions
-            from masking_api_60.models.masking_job_script import MaskingJobScript
-            from masking_api_60.models.on_the_fly_masking_source import OnTheFlyMaskingSource
-        else:
-            from masking_api_53.models.database_masking_options import DatabaseMaskingOptions
-            from masking_api_53.models.masking_job_script import MaskingJobScript
-            from masking_api_53.models.on_the_fly_masking_source import OnTheFlyMaskingSource
-
-        dmo = DatabaseMaskingOptions()
+        dmo = DxDatabaseMaskingOptions()
 
         for p in optional_options_list:
             if params[p] is not None:
@@ -210,7 +204,7 @@ def job_add(p_engine, params):
             conid = conlist.get_connectorId_by_name(src_con)
             if not conid :
                 return 1
-            on_the_fly_maskking_srcobj = OnTheFlyMaskingSource()
+            on_the_fly_maskking_srcobj = DxOnTheFlyJob()
             on_the_fly_maskking_srcobj.connector_id = conid[1:]
 
             conObj = conlist.get_by_ref(conid)
@@ -223,12 +217,12 @@ def job_add(p_engine, params):
 
         if params["prescript"]:
             scriptname = os.path.basename(params["prescript"].name)
-            prescript = MaskingJobScript(name=scriptname, contents=''.join(params["prescript"].readlines()))
+            prescript = DxMaskingScriptJob(name=scriptname, contents=''.join(params["prescript"].readlines()))
             dmo.prescript = prescript
 
         if params["postscript"]:
             scriptname = os.path.basename(params["postscript"].name)
-            postscript = MaskingJobScript(name=scriptname, contents = ''.join(params["postscript"].readlines()))
+            postscript = DxMaskingScriptJob(name=scriptname, contents = ''.join(params["postscript"].readlines()))
             dmo.postscript = postscript
 
         job.database_masking_options = dmo
@@ -379,14 +373,14 @@ def do_update(**kwargs):
             dmo.prescript = None
         elif params["prescript"]:
             scriptname = os.path.basename(params["prescript"].name)
-            prescript = MaskingJobScript(name=scriptname, contents=''.join(params["prescript"].readlines()))
+            prescript = DxMaskingScriptJob(name=scriptname, contents=''.join(params["prescript"].readlines()))
             dmo.prescript = prescript
 
         if params["postscript"]=='':
             dmo.postscript = None
         if params["postscript"]:
             scriptname = os.path.basename(params["postscript"].name)
-            postscript = MaskingJobScript(name=scriptname, contents = ''.join(params["postscript"].readlines()))
+            postscript = DxMaskingScriptJob(name=scriptname, contents = ''.join(params["postscript"].readlines()))
             dmo.postscript = postscript
     else:
 

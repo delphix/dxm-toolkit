@@ -23,31 +23,60 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.database_connector_api import DatabaseConnectorApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxConnector(object):
+
+    swagger_types = {
+        'database_connector_id': 'int',
+        'connector_name': 'str',
+        'database_type': 'str',
+        'environment_id': 'int',
+        'custom_driver_name': 'str',
+        'database_name': 'str',
+        'host': 'str',
+        'instance_name': 'str',
+        'jdbc': 'str',
+        'password': 'str',
+        'port': 'int',
+        'schema_name': 'str',
+        'sid': 'str',
+        'username': 'str',
+        'kerberos_auth': 'bool',
+        'service_principal': 'str'
+    }
+
+    swagger_map = {
+        'database_connector_id': 'databaseConnectorId',
+        'connector_name': 'connectorName',
+        'database_type': 'databaseType',
+        'environment_id': 'environmentId',
+        'custom_driver_name': 'customDriverName',
+        'database_name': 'databaseName',
+        'host': 'host',
+        'instance_name': 'instanceName',
+        'jdbc': 'jdbc',
+        'password': 'password',
+        'port': 'port',
+        'schema_name': 'schemaName',
+        'sid': 'sid',
+        'username': 'username',
+        'kerberos_auth': 'kerberosAuth',
+        'service_principal': 'servicePrincipal'
+    }
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        #DatabaseConnector.__init__(self)
         self.__is_database = None
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxConnector object")
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.database_connector import DatabaseConnector
-            from masking_api_60.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.database_connector import DatabaseConnector
-            from masking_api_53.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_53.rest import ApiException
-
         self.__api = DatabaseConnectorApi
-        self.__model = DatabaseConnector
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -93,29 +122,45 @@ class DxConnector(object):
         else:
             return None     
 
+    @connector_name.setter
+    def connector_name(self, connector_name):
+
+        if self.__obj is not None:
+            self.__obj.connector_name = connector_name
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     @property
     def database_type(self):
         if self.__obj is not None:
             return self.__obj.database_type
         else:
-            return None     
+            return None   
+
+    @database_type.setter
+    def database_type(self, database_type):
+
+        if self.__obj is not None:
+            self.__obj.database_type = database_type
+        else:
+            raise ValueError("Object needs to be initialized first")  
 
     @property
     def environment_id(self):
         if self.obj is not None:
             return self.obj.environment_id
         else:
-            return None     
-
-    @property
-    def custom_driver_name(self):
-        if self.__obj is not None:
-            return self.__obj.custom_driver_name
-        else:
             return None    
 
+    @environment_id.setter
+    def environment_id(self, environment_id):
 
+        if self.__obj is not None:
+            self.__obj.environment_id = environment_id
+        else:
+            raise ValueError("Object needs to be initialized first") 
+
+  
     @property
     def database_name(self):
         if self.__obj is not None:
@@ -306,6 +351,25 @@ class DxConnector(object):
         """
         self.__is_database = is_database
 
+    @property
+    def custom_driver_name(self):
+        print('ala')
+        if self.obj is not None and hasattr(self.obj,'custom_driver_name'):
+            return self.obj.custom_driver_name
+        else:
+            return None  
+
+    @custom_driver_name.setter
+    def custom_driver_name(self, custom_driver_name):
+        """
+        custom_driver_name
+        :param schemaName: custom_driver_name Name
+        """
+
+        if self.obj is not None:
+            self.obj.custom_driver_name = custom_driver_name
+        else:
+            raise ValueError("Object needs to be initialized first")
 
 
     def from_connector(self, con):
@@ -313,7 +377,10 @@ class DxConnector(object):
         Set a obj property using a Database Connector 
         :param con: DatabaseConnector object
         """
+
         self.__obj = con
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     def create_connector(self, connector_name, database_type, environment_id):
         """
@@ -323,7 +390,11 @@ class DxConnector(object):
         :param environment_id
         """  
 
-        self.__obj = self.__model(connector_name=connector_name, database_type=database_type, environment_id=environment_id)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.connector_name = connector_name
+        self.database_type = database_type
+        self.environment_id = environment_id
+
 
     def get_properties(self):
         """

@@ -69,11 +69,11 @@ Python 3.7.X
 To generate Masking SDK version 6.0.X run the following commands where _myengine_ is a name or IP of Delphix Masking Engine
 
 ```
-mkdir masking_api_60
+mkdir masking_api_v514
 
-docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_60 -DpackageName=masking_api_60
+docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_v514 -DpackageName=masking_api_v514
 
-cd masking_api_60
+cd masking_api_v514
 
 python setup.py install
 ```

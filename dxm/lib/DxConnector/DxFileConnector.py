@@ -22,7 +22,8 @@ import logging
 from dxm.lib.DxConnector.DxConnector import DxConnector
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.file_connector_api import FileConnectorApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxFileConnector(DxConnector):
 
@@ -36,20 +37,7 @@ class DxFileConnector(DxConnector):
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating FileConnector object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.file_connector import FileConnector
-            from masking_api_60.api.file_connector_api import FileConnectorApi
-            from masking_api_60.models.connection_info import ConnectionInfo
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.file_connector import FileConnector
-            from masking_api_53.api.file_connector_api import FileConnectorApi
-            from masking_api_53.models.connection_info import ConnectionInfo
-            from masking_api_53.rest import ApiException
-
         self.__api = FileConnectorApi
-        self.__model = FileConnector
-        self.__model_connection_info = ConnectionInfo
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -97,6 +85,8 @@ class DxFileConnector(DxConnector):
         :param con: DatabaseConnector object
         """
         self.__obj = con
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
 
     def create_connector(self, connector_name, file_type, environment_id, host, port, login_name, password, path, connection_mode):

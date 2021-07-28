@@ -28,7 +28,9 @@ from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
-
+from dxm.lib.masking_api.api.database_connector_api import DatabaseConnectorApi
+from dxm.lib.masking_api.api.file_connector_api import FileConnectorApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxConnectorsList(object):
 
@@ -72,15 +74,6 @@ class DxConnectorsList(object):
             # delete a list as we can have multi engines
             self.__connectorsList.clear()
             self.__loaded_engine = self.__engine.get_name()
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_60.api.file_connector_api import FileConnectorApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_53.api.file_connector_api import FileConnectorApi
-            from masking_api_53.rest import ApiException
 
         self.__api = DatabaseConnectorApi
         self.__fileapi = FileConnectorApi

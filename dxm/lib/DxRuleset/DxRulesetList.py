@@ -26,7 +26,9 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
-
+from dxm.lib.masking_api.api.database_ruleset_api import DatabaseRulesetApi
+from dxm.lib.masking_api.api.file_ruleset_api import FileRulesetApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxRulesetList(object):
 
@@ -81,16 +83,6 @@ class DxRulesetList(object):
             self.__loaded_engine = self.__engine.get_name()
 
         DxConnectorsList(environment_name)
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
-            from masking_api_60.api.file_ruleset_api import FileRulesetApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.database_ruleset_api import DatabaseRulesetApi
-            from masking_api_53.api.file_ruleset_api import FileRulesetApi
-            from masking_api_53.rest import ApiException
-
 
         self.__api = DatabaseRulesetApi
         self.__fileapi = FileRulesetApi

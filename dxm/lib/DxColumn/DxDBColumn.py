@@ -23,8 +23,44 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
-
+from dxm.lib.masking_api.api.column_metadata_api import ColumnMetadataApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 class DxDBColumn(object):
+
+    swagger_types = {
+        'column_metadata_id': 'int',
+        'column_name': 'str',
+        'table_metadata_id': 'int',
+        'algorithm_name': 'str',
+        'domain_name': 'str',
+        'data_type': 'str',
+        'date_format': 'str',
+        'column_length': 'int',
+        'is_masked': 'bool',
+        'is_profiler_writable': 'bool',
+        'is_primary_key': 'bool',
+        'is_index': 'bool',
+        'is_foreign_key': 'bool',
+        'notes': 'str'
+    }
+
+    swagger_map = {
+        'column_metadata_id': 'columnMetadataId',
+        'column_name': 'columnName',
+        'table_metadata_id': 'tableMetadataId',
+        'algorithm_name': 'algorithmName',
+        'domain_name': 'domainName',
+        'data_type': 'dataType',
+        'date_format': 'dateFormat',
+        'column_length': 'columnLength',
+        'is_masked': 'isMasked',
+        'is_profiler_writable': 'isProfilerWritable',
+        'is_primary_key': 'isPrimaryKey',
+        'is_index': 'isIndex',
+        'is_foreign_key': 'isForeignKey',
+        'notes': 'notes'
+    }
 
     def __init__(self, engine):
         """
@@ -35,17 +71,8 @@ class DxDBColumn(object):
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxDBColumn object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.column_metadata_api import ColumnMetadataApi
-            from masking_api_60.models.column_metadata import ColumnMetadata
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.column_metadata_api import ColumnMetadataApi
-            from masking_api_53.models.column_metadata import ColumnMetadata
-            from masking_api_53.rest import ApiException
 
         self.__api = ColumnMetadataApi
-        self.__model = ColumnMetadata
         self.__obj = None
         self.__apiexc = ApiException
 
@@ -63,10 +90,19 @@ class DxDBColumn(object):
         :param column: ColumnMetadata object
         """
         self.__obj = column
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     @property
     def cf_metadata_id(self):
         return self.obj.column_metadata_id
+
+    @property
+    def column_metadata_id(self):
+        if hasattr(self.obj, 'column_metadata_id'):
+            return self.obj.column_metadata_id
+        else:
+            return None
 
     @property
     def cf_meta_name(self):
@@ -144,7 +180,10 @@ class DxDBColumn(object):
 
     @property
     def date_format(self):
-        return self.obj.date_format
+        if hasattr(self.obj, 'date_format'):
+            return self.obj.date_format
+        else:
+            return None
 
     @date_format.setter
     def date_format(self, date_format):
@@ -183,13 +222,13 @@ class DxDBColumn(object):
         return 1 in case of error
         """
 
-        if (self.obj.column_metadata_id is None):
+        if (self.column_metadata_id is None):
             print_error("column_metadata_id is required")
             self.__logger.error("column_metadata_id is required")
             return 1
 
         try:
-            if self.obj.date_format == '':
+            if self.date_format == '':
                 self.date_format = None
 
             self.__logger.debug("create column input %s" % str(self))

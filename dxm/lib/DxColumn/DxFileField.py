@@ -22,6 +22,8 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.file_field_metadata_api import FileFieldMetadataApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxFileField(object):
 
@@ -34,17 +36,8 @@ class DxFileField(object):
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFile object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.file_field_metadata import FileFieldMetadata
-            from masking_api_60.api.file_field_metadata_api import FileFieldMetadataApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.file_field_metadata import FileFieldMetadata
-            from masking_api_53.api.file_field_metadata_api import FileFieldMetadataApi
-            from masking_api_53.rest import ApiException
 
         self.__api = FileFieldMetadataApi
-        self.__model = FileFieldMetadata
         self.__obj = None
         self.__apiexc = ApiException
 
@@ -63,6 +56,8 @@ class DxFileField(object):
         :param column: FileMetadata object
         """
         self.__obj = file
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     @property
     def cf_meta_name(self):

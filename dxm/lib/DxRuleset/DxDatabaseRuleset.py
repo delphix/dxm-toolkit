@@ -27,8 +27,25 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.DxTable.DxTable import DxTable
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxAsyncTask.DxAsyncTask import DxAsyncTask
+from dxm.lib.masking_api.api.database_ruleset_api import DatabaseRulesetApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxDatabaseRuleset():
+
+    swagger_types = {
+        'database_ruleset_id': 'int',
+        'ruleset_name': 'str',
+        'database_connector_id': 'int',
+        'refresh_drops_tables': 'bool'
+    }
+
+    swagger_map = {
+        'database_ruleset_id': 'databaseRulesetId',
+        'ruleset_name': 'rulesetName',
+        'database_connector_id': 'databaseConnectorId',
+        'refresh_drops_tables': 'refreshDropsTables'
+    }
 
     def __init__(self, engine):
         """
@@ -41,23 +58,9 @@ class DxDatabaseRuleset():
         self.__tableList = None
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxRuleset object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.database_ruleset import DatabaseRuleset
-            from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
-            from masking_api_60.models.table_metadata_bulk_input import TableMetadataBulkInput
-            from masking_api_60.models.table_metadata import TableMetadata
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.database_ruleset import DatabaseRuleset
-            from masking_api_53.api.database_ruleset_api import DatabaseRulesetApi
-            from masking_api_53.models.table_metadata_bulk_input import TableMetadataBulkInput
-            from masking_api_53.models.table_metadata import TableMetadata
-            from masking_api_53.rest import ApiException
+
 
         self.__api = DatabaseRulesetApi
-        self.__model = DatabaseRuleset
-        self.__modeltable = TableMetadata
-        self.__modeltablebulk = TableMetadataBulkInput
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -85,6 +88,23 @@ class DxDatabaseRuleset():
         self.obj.ruleset_name = ruleset_name
 
     @property
+    def refresh_drops_tables(self):
+        return self.obj.refresh_drops_tables
+
+    @refresh_drops_tables.setter
+    def refresh_drops_tables(self, refresh_drops_tables):
+        self.obj.refresh_drops_tables = refresh_drops_tables
+
+
+    @property
+    def database_connector_id(self):
+        return self.obj.database_connector_id
+
+    @database_connector_id.setter
+    def database_connector_id(self, database_connector_id):
+        self.obj.database_connector_id = database_connector_id
+
+    @property
     def connectorId(self):
         return 'd' + str(self.obj.database_connector_id)
 
@@ -94,6 +114,8 @@ class DxDatabaseRuleset():
         :param con: DatabaseConnector object
         """
         self.__obj = ruleset
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     @property
     def logger(self):
@@ -111,7 +133,11 @@ class DxDatabaseRuleset():
         :param environment_id
         """  
 
-        self.__obj = self.__model(ruleset_name=ruleset_name, database_connector_id=database_connector_id, refresh_drops_tables=refresh_drops_tables)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.ruleset_name = ruleset_name
+        self.obj.database_connector_id = database_connector_id
+        self.obj.refresh_drops_tables = refresh_drops_tables
+
 
 
     def add(self):
