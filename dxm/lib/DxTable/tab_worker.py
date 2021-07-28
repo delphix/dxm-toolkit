@@ -293,7 +293,7 @@ def tab_selector(p_engine, rulesetname, envname, metaname, function_to_call,
 
         for p in param_map.keys():
             if params[p] or params[p]=='':
-                if hasattr(metaobj.obj, param_map[p]):
+                if param_map[p] in metaobj.obj.swagger_map:
                     update = True
                     value = params[p]
                     if value == '':

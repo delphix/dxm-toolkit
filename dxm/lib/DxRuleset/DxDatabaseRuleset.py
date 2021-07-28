@@ -310,6 +310,22 @@ class DxDatabaseRuleset():
         
         return ret
 
+
+
+    def create_bulk_objects(self, table_list):
+            swagger_types = {
+                'table_metadata': 'list[TableMetadata]'
+            }
+
+            swagger_map = {
+                'table_metadata': 'tableMetadata'
+            }
+
+            obj = GenericModel({ x:None for x in self.swagger_map.values()}, swagger_types, swagger_map)
+            obj.table_metadata = table_list
+            return obj
+
+
     def addmeta_bulk(self, table_list):
         """
 
@@ -330,7 +346,7 @@ class DxDatabaseRuleset():
 
             table_obj_list.append(table.obj)
         
-        table_bulk = self.__modeltablebulk(table_metadata = table_obj_list)        
+        table_bulk = self.create_bulk_objects(table_obj_list)        
         api_instance = self.__api(self.__engine.api_client)
         
         try:

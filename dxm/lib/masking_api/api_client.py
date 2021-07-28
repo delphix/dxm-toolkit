@@ -683,4 +683,8 @@ class ApiClient(object):
         :param klass: class literal.
         :return: object based on REST response to support different versions 
         """ 
-        return GenericModel(data)
+
+        if isinstance(data, self.PRIMITIVE_TYPES):
+            return data
+        else:
+            return GenericModel(data)

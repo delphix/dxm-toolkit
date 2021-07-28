@@ -98,7 +98,10 @@ class DxTable(object):
 
     @property
     def key_column(self):
-        return self.obj.key_column
+        if self.obj is not None and hasattr(self.obj,'key_column'):
+            return self.obj.key_column
+        else:
+            return None
 
     @key_column.setter
     def key_column(self, key_column):
@@ -114,7 +117,10 @@ class DxTable(object):
 
     @property
     def where_clause(self):
-        return self.obj.where_clause
+        if self.obj is not None and hasattr(self.obj,'where_clause'):
+            return self.obj.where_clause
+        else:
+            return None
 
     @where_clause.setter
     def where_clause(self, where_clause):
@@ -122,7 +128,10 @@ class DxTable(object):
 
     @property
     def custom_sql(self):
-        return self.obj.custom_sql
+        if self.obj is not None and hasattr(self.obj,'custom_sql'):
+            return self.obj.custom_sql
+        else:
+            return None
 
     @custom_sql.setter
     def custom_sql(self, custom_sql):

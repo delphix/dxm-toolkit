@@ -518,12 +518,12 @@ class DxConnector(object):
                 self.database_connector_id,
                 body=self.obj,
                 _request_timeout=self.__engine.get_timeout())
-            if response.response == "Connection Failed":
-                print_error("Connector test %s failed" % self.connector_name)
+
+            if "Connection Failed" in response.response:
+                print_error("Connector test {} failed. Error message is: {}".format(self.connector_name, response.response))
                 return 1
             else:
-                print_message("Connector test %s succeeded"
-                              % self.connector_name)
+                print_message("Connector test {} succeeded".format(self.connector_name))
                 return 0
         except self.__apiexc as e:
             print_error(e.body)
