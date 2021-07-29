@@ -139,6 +139,13 @@ jobs:
         echo SOURCE_TAG=$SOURCE_TAG >> $GITHUB_ENV
         echo FILENAME=$FILENAME >> $GITHUB_ENV
 
+    - name: fix password
+      run: |
+        cd /github/workspace/dxm/lib/DxEngine
+        mv secret.py secret.py.orig
+        cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${INPUT_ENCKEY}/" > secret.py
+
+
     - name: run python
       run: |
           CELL=`brew --prefix perl`
