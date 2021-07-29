@@ -2,7 +2,15 @@ FROM centos:7
 
 RUN yum install -y python3 \
     && yum install -y python3-devel \
-    && yum install -y git 
+    && yum install -y git \ 
+    && yum install -y gcc \
+    && yum install -y zlib-devel
+
+ENV CFLAGS "-std=gnu99"
+
+RUN pip3 install wheel \
+    && pip3 install pyinstaller \
+    && pip3 install jeepney
 
 RUN mkdir -p /github/workspace
 RUN mkdir -p /github/home
