@@ -140,11 +140,13 @@ jobs:
         echo FILENAME=$FILENAME >> $GITHUB_ENV
 
     - name: fix password
+      env:
+        ENCKEY: ${{ secrets.ENCKEY }}
       run: |
         cd dxm/lib/DxEngine
         ls -l 
         mv secret.py secret.py.orig
-        cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${INPUT_ENCKEY}/" > secret.py
+        cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${ENCKEY}/" > secret.py
         ls -l 
         cd
 
