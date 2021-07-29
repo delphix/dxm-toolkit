@@ -106,7 +106,7 @@ from dxm.lib.DxLogging import logging_est
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
-__version__ = "0.8.2.2"
+__version__ = "0.9"
 
 class dxm_state(object):
 
