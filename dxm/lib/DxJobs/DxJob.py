@@ -33,6 +33,7 @@ from dxm.lib.masking_api.genericmodel import GenericModel
 from dxm.lib.DxJobs.DxJobOptions import DxDatabaseMaskingOptions
 from dxm.lib.DxJobs.DxJobOptions import DxMaskingScriptJob
 from dxm.lib.DxJobs.DxJobOptions import DxOnTheFlyJob
+from dxm.lib.DxJobs.DxExecution import DxExecution
 
 
 class DxJob(object):
@@ -86,7 +87,15 @@ class DxJob(object):
         """
         #MaskingJob.__init__(self)
         self.__engine = engine
-        self.__execList = execList
+        self.__execList = []
+
+        if execList is not None:
+            for exe in execList:
+                newexe = DxExecution(exe.job_id)
+                newexe.from_exec(exe)
+                self.__execList.append(newexe)
+
+
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJob object")
         self.__monitor = False
@@ -512,6 +521,9 @@ class DxJob(object):
 
 
 
+
+
+
     def start(self, target_connector_id, source_connector_id, nowait, posno,
               lock):
         """
@@ -523,7 +535,7 @@ class DxJob(object):
         Return 1 if errors
         """
         exec_api = self.__apiexec(self.__engine.api_client)
-        execjob = self.__modelexec(job_id = self.masking_job_id)
+        execjob = DxExecution(job_id = self.masking_job_id)
 
         if (self.multi_tenant):
             # target is mandatory

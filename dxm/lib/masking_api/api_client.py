@@ -686,5 +686,9 @@ class ApiClient(object):
 
         if isinstance(data, self.PRIMITIVE_TYPES):
             return data
+        elif klass == datetime.date:
+            return self.__deserialize_date(data)
+        elif klass == datetime.datetime:
+            return self.__deserialize_datatime(data)
         else:
             return GenericModel(data)
