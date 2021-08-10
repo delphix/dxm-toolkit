@@ -34,7 +34,7 @@ from dxm.lib.DxJobs.DxJobOptions import DxDatabaseMaskingOptions
 from dxm.lib.DxJobs.DxJobOptions import DxMaskingScriptJob
 from dxm.lib.DxJobs.DxJobOptions import DxOnTheFlyJob
 from dxm.lib.DxJobs.DxExecution import DxExecution
-
+from dxm.lib.DxJobs.DxExecutionComponent import DxExecutionComponent
 
 class DxJob(object):
 
@@ -695,7 +695,7 @@ class DxJob(object):
 
         try:
 
-
+            execcomp = []
 
             self.__logger.debug("execute component")
             api_instance = self.__apicomponent(self.__engine.api_client)
@@ -705,7 +705,14 @@ class DxJob(object):
                             execution_id=execid,
                             _request_timeout=self.__engine.get_timeout())
 
-            return execomponents.response_list
+            if execomponents.response_list is not None:
+                for exe in execomponents.response_list:
+                    newexecomp = DxExecutionComponent()
+                    newexecomp.from_exec(exe)
+                    execcomp.append(newexecomp)
+
+
+            return execcomp
 
 
         except self.__apiexc as e:

@@ -132,7 +132,10 @@ class DxDBColumn(object):
 
     @property
     def algorithm_name(self):
-        return self.obj.algorithm_name
+        if self.obj is not None and hasattr(self.obj,'algorithm_name'):
+            return self.__obj.algorithm_name
+        else:
+            return None
 
     @algorithm_name.setter
     def algorithm_name(self, algorithm_name):

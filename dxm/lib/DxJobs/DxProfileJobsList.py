@@ -68,9 +68,17 @@ class DxProfileJobsList(object):
                         execapi,
                         "get_all_executions")
 
+            # if execList.response_list:
+            #     for e in execList.response_list:
+            #         self.__executionList[e.job_id] = e
+
+
             if execList.response_list:
                 for e in execList.response_list:
-                    self.__executionList[e.job_id] = e
+                    if e.job_id in self.__executionList:
+                        self.__executionList[e.job_id].append(e)
+                    else:
+                        self.__executionList[e.job_id] = [e]
 
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
@@ -94,11 +102,11 @@ class DxProfileJobsList(object):
             if jobs.response_list:
                 for c in jobs.response_list:
                     if c.profile_job_id in self.__executionList:
-                        lastExec = self.__executionList[c.profile_job_id]
+                        execution_list = self.__executionList[c.profile_job_id]
                     else:
-                        lastExec = None
+                        execution_list = None
 
-                    job = DxProfileJob(self.__engine, lastExec)
+                    job = DxProfileJob(self.__engine, execution_list)
                     job.from_job(c)
                     self.__jobsList[c.profile_job_id] = job
             else:

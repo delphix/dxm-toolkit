@@ -29,6 +29,7 @@ from dxm.lib.masking_api.api.profile_job_api import ProfileJobApi
 from dxm.lib.masking_api.api.execution_api import ExecutionApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxJobs.DxExecution import DxExecution
 
 class DxProfileJob(object):
 
@@ -69,7 +70,7 @@ class DxProfileJob(object):
     }
 
 
-    def __init__(self, engine, lastExec):
+    def __init__(self, engine, execList):
         """
         Constructor
         :param1 engine: DxMaskingEngine object
@@ -77,10 +78,18 @@ class DxProfileJob(object):
         """
         #ProfileJob.__init__(self)
         self.__engine = engine
-        self.__lastExec = lastExec
+        # self.__lastExec = lastExec
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxProfileJob object")
         self.__monitor = False
+
+        self.__execList = []
+
+        if execList is not None:
+            for exe in execList:
+                newexe = DxExecution(exe.job_id)
+                newexe.from_exec(exe)
+                self.__execList.append(newexe)
 
 
         self.__api = ProfileJobApi
@@ -98,7 +107,14 @@ class DxProfileJob(object):
 
     @property
     def lastExec(self):
-        return self.__lastExec
+        if self.__execList:
+            return self.__execList[-1]
+        else:
+            return None
+
+    @property
+    def execList(self):
+        return self.__execList
 
     @property
     def obj(self):
@@ -383,7 +399,7 @@ class DxProfileJob(object):
         """
         exec_api = self.__apiexec(self.__engine.api_client)
 
-        execjob = self.__modelexec(job_id=self.profile_job_id)
+        execjob = DxExecution(job_id = self.masking_job_id)
 
         if (self.multi_tenant):
             # target is mandatory

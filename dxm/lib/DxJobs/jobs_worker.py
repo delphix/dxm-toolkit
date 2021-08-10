@@ -778,6 +778,23 @@ def jobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, 
     """
     return jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details)
 
+
+def profilejobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+    """
+    Print report of masking jobs
+    param1: p_engine: engine name from configuration
+    param2: jobname: job name to list
+    param3: envname: environemnt name to list jobs from
+    param4: p_format: output format
+    return 0 if environment found
+    """
+
+    if details == True:
+        print_error("Details option not supported for profile jobs")
+        return -1
+
+    return jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details, 'profile')
+
 def profilejobs_list(p_engine, jobname, envname, p_format):
     """
     Print list of profile jobs
@@ -904,14 +921,18 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
         print("")
         return ret
 
-def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details, jobtype='masking'):
     """
     Print report of jobs
     param1: p_engine: engine name from configuration
     param2: jobname: job name to list
     param3: envname: environemnt name to list jobs from
     param4: p_format: output format
-    param5: joblist_class - DxJobsList, DxProfileJobslist
+    param5: last: display last job only
+    param6: startdate: filter by start date
+    param7: enddate: filter by end date
+    param8: details
+    param9: joblist_class - DxJobsList, DxProfileJobslist
     return 0 if environment found
     """
 
@@ -925,39 +946,56 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
         return 1
 
     data = DataFormatter()
+
+    if jobtype == 'masking':
     
-    if details:
+        if details:
+            data_header = [
+                    ("Engine name", 30),
+                    ("Environment name", 30),
+                    ("Job name", 30),  
+                    ("ExecId", 6),               
+                    ("Meta name", 12),
+                    ("Masked Rows", 10),   
+                    ("Started", 20),                                                              
+                    ("Completed", 20),
+                    ("Status", 20),
+                    ("Runtime", 20)                  
+                    ]
+        else:
+            data_header = [
+                            ("Engine name", 30),
+                            ("Environment name", 30),
+                            ("Job name", 30),
+                            ("Job Id", 6),                    
+                            ("Min Memory", 10),
+                            ("Max Memory", 10), 
+                            ("Streams", 7),                                              
+                            ("On The Fly", 10),
+                            ("Ruleset Type", 12),
+                            ("ExecId", 6),
+                            ("Total Rows", 10),
+                            ("Masked Rows", 10),   
+                            ("Started", 20),                                                              
+                            ("Completed", 20),
+                            ("Status", 20),
+                            ("Runtime", 20)                  
+                        ]
+
+    else:
         data_header = [
                 ("Engine name", 30),
                 ("Environment name", 30),
                 ("Job name", 30),  
-                ("ExecId", 6),               
-                ("Meta name", 12),
-                ("Masked Rows", 10),   
+                ("Ruleset Type", 12),
+                ("ExecId", 6),                 
                 ("Started", 20),                                                              
                 ("Completed", 20),
                 ("Status", 20),
                 ("Runtime", 20)                  
                 ]
-    else:
-        data_header = [
-                        ("Engine name", 30),
-                        ("Environment name", 30),
-                        ("Job name", 30),
-                        ("Job Id", 6),                    
-                        ("Min Memory", 10),
-                        ("Max Memory", 10), 
-                        ("Streams", 7),                                              
-                        ("On The Fly", 10),
-                        ("Ruleset Type", 12),
-                        ("ExecId", 6),
-                        ("Total Rows", 10),
-                        ("Masked Rows", 10),   
-                        ("Started", 20),                                                              
-                        ("Completed", 20),
-                        ("Status", 20),
-                        ("Runtime", 20)                  
-                    ]
+
+
     data.create_header(data_header)
     data.format_type = p_format
 
@@ -971,7 +1009,10 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
         envlist.LoadEnvironments()
         rulesetlist = DxRulesetList()
         connectorlist = DxConnectorsList()
-        joblist = DxJobsList()
+        if jobtype == 'masking':
+            joblist = DxJobsList()
+        else:
+            joblist = DxProfileJobsList()
 
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
 
@@ -1035,53 +1076,92 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
 
                     if details == False:
 
-                        if jobexec is not None:
-                            status = jobexec.status
-                            execid = jobexec.execution_id
-                            rowsmasked = jobexec.rows_masked
-                            rowstotal = jobexec.rows_total
-                            if jobexec.start_time is not None:
-                                starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                        if jobtype == 'masking':
+
+                            if jobexec is not None:
+                                status = jobexec.status
+                                execid = jobexec.execution_id
+                                rowsmasked = jobexec.rows_masked
+                                rowstotal = jobexec.rows_total
+                                if jobexec.start_time is not None:
+                                    starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                                else:
+                                    starttime = 'N/A'
+                                if (jobexec.end_time is not None) and \
+                                (jobexec.start_time is not None):
+                                    endtime = jobexec.end_time \
+                                        .strftime("%Y-%m-%d %H:%M:%S")
+                                    runtimetemp = jobexec.end_time \
+                                        - jobexec.start_time
+                                    runtime = str(runtimetemp)
+                                else:
+                                    endtime = 'N/A'
+                                    runtime = 'N/A'
                             else:
-                                starttime = 'N/A'
-                            if (jobexec.end_time is not None) and \
-                            (jobexec.start_time is not None):
-                                endtime = jobexec.end_time \
-                                    .strftime("%Y-%m-%d %H:%M:%S")
-                                runtimetemp = jobexec.end_time \
-                                    - jobexec.start_time
-                                runtime = str(runtimetemp)
-                            else:
+                                status = 'N/A'
                                 endtime = 'N/A'
+                                starttime = 'N/A'
                                 runtime = 'N/A'
+                                execid = 'N/A'
+                                rowsmasked = 'N/A'
+                                rowstotal = 'N/A'
+
+                            data.data_insert(
+                                            engine_tuple[0],
+                                            envobjname,
+                                            jobobj.job_name,
+                                            jobobj.masking_job_id,
+                                            jobobj.min_memory,
+                                            jobobj.max_memory,
+                                            jobobj.num_input_streams,
+                                            jobobj.on_the_fly_masking,
+                                            ruleset_type,
+                                            execid,
+                                            rowstotal,
+                                            rowsmasked,
+                                            starttime,
+                                            endtime,
+                                            status,
+                                            runtime
+                                            )
                         else:
-                            status = 'N/A'
-                            endtime = 'N/A'
-                            starttime = 'N/A'
-                            runtime = 'N/A'
-                            execid = 'N/A'
-                            rowsmasked = 'N/A'
-                            rowstotal = 'N/A'
 
-                        data.data_insert(
-                                        engine_tuple[0],
-                                        envobjname,
-                                        jobobj.job_name,
-                                        jobobj.masking_job_id,
-                                        jobobj.min_memory,
-                                        jobobj.max_memory,
-                                        jobobj.num_input_streams,
-                                        jobobj.on_the_fly_masking,
-                                        ruleset_type,
-                                        execid,
-                                        rowstotal,
-                                        rowsmasked,
-                                        starttime,
-                                        endtime,
-                                        status,
-                                        runtime
-                                        )
+                            if jobexec is not None:
+                                status = jobexec.status
+                                execid = jobexec.execution_id
+                                if jobexec.start_time is not None:
+                                    starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                                else:
+                                    starttime = 'N/A'
+                                if (jobexec.end_time is not None) and \
+                                (jobexec.start_time is not None):
+                                    endtime = jobexec.end_time \
+                                        .strftime("%Y-%m-%d %H:%M:%S")
+                                    runtimetemp = jobexec.end_time \
+                                        - jobexec.start_time
+                                    runtime = str(runtimetemp)
+                                else:
+                                    endtime = 'N/A'
+                                    runtime = 'N/A'
+                            else:
+                                status = 'N/A'
+                                endtime = 'N/A'
+                                starttime = 'N/A'
+                                runtime = 'N/A'
+                                execid = 'N/A'
 
+
+                            data.data_insert(
+                                            engine_tuple[0],
+                                            envobjname,
+                                            jobobj.job_name,
+                                            ruleset_type,
+                                            execid,
+                                            starttime,
+                                            endtime,
+                                            status,
+                                            runtime
+                                            )
 
                     else:
                         # details here      

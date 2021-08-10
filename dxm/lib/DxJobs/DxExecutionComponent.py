@@ -32,13 +32,12 @@ from dateutil.parser import parse
 
 
 
-class DxExecution(object):
+class DxExecutionComponent(object):
 
     swagger_types = {
+        'execution_component_id': 'int',
+        'component_name': 'str',
         'execution_id': 'int',
-        'job_id': 'int',
-        'source_connector_id': 'int',
-        'target_connector_id': 'int',
         'status': 'str',
         'rows_masked': 'int',
         'rows_total': 'int',
@@ -47,10 +46,9 @@ class DxExecution(object):
     }
 
     swagger_map = {
+        'execution_component_id': 'executionComponentId',
+        'component_name': 'componentName',
         'execution_id': 'executionId',
-        'job_id': 'jobId',
-        'source_connector_id': 'sourceConnectorId',
-        'target_connector_id': 'targetConnectorId',
         'status': 'status',
         'rows_masked': 'rowsMasked',
         'rows_total': 'rowsTotal',
@@ -59,9 +57,8 @@ class DxExecution(object):
     }
 
 
-    def __init__(self, job_id):
+    def __init__(self):
         self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
-        self.__obj.job_id = job_id
 
 
     def from_exec(self, exe):
@@ -84,9 +81,16 @@ class DxExecution(object):
             return None
 
     @property
-    def job_id(self):
-        if self.obj is not None and hasattr(self.obj, 'job_id'):
-            return self.obj.job_id
+    def execution_component_id(self):
+        if self.obj is not None and hasattr(self.obj, 'execution_component_id'):
+            return self.obj.execution_component_id
+        else:
+            return None
+
+    @property
+    def component_name(self):
+        if self.obj is not None and hasattr(self.obj, 'component_name'):
+            return self.obj.component_name
         else:
             return None
 
@@ -96,26 +100,6 @@ class DxExecution(object):
             return self.obj.status
         else:
             return None
-
-    @property
-    def source_connector_id(self):
-        if self.obj is not None and hasattr(self.obj, 'source_connector_id'):
-            return self.obj.source_connector_id
-        else:
-            return None
-
-    @property
-    def target_connector_id(self):
-        if self.obj is not None and hasattr(self.obj, 'target_connector_id'):
-            return self.obj.target_connector_id
-        else:
-            return None
-
-
-    @target_connector_id.setter
-    def target_connector_id(self, value):
-        self.obj.target_connector_id = value
-
 
     @property
     def rows_masked(self):

@@ -159,55 +159,6 @@ class DxMaskingEngine(object):
         :return autorization key for a session
         """
 
-        # if "masking_api.api" in sys.modules.keys():
-        #     is_api5 = True
-        #     version = 5
-        # else:
-        #     is_api5 = False
-
-        # if "dxm.lib.masking_api.api" in sys.modules.keys():
-        #     is_api6 = True
-        #     version = 6
-        # else:
-        #     is_api6 = False
-
-        
-
-        self.get_session_worker(version=version)
-        print (self.get_version())
-        # if self.get_version()<"6.0.0.0":
-        #     if is_api5:    
-        #         self.__logger.debug("Change API from 6 to 5") 
-        #         self.get_session_worker(version=5) 
-        #     else:
-        #         print_error("Delphix Engine version is not supported by compiled API. Please generate SDK with proper version")
-        #         sys.exit(1)
-
-        # if self.get_version()>="6.0.0.0" and is_api6 == False:
-        #     print_error("Delphix Engine version is not supported by compiled API. Please generate SDK with proper version")
-        #     sys.exit(1)         
-        
-
-
-
-    @classmethod
-    def get_session_worker(self, version):
-        """
-        Create a session with a Masking engine
-        :return autorization key for a session
-        """
-
-        # if version==5:
-        #     self.api_client = DxApiClient5(self.config)
-        # else:
-        #     try:
-        #         print("Version 6")
-        #         self.api_client = DxApiClient(self.config)
-        #     except NameError:
-        #         self.__logger.debug("No 6 libs, failing back to 5") 
-        #         self.api_client = DxApiClient5(self.config)
-
-
         self.api_client = DxApiClient(self.config)
         #set number of retries to one
         # set timeout on request level as it is overwritten anyway

@@ -88,6 +88,7 @@ from dxm.lib.DxJobs.jobs_worker import profilejob_add
 from dxm.lib.DxJobs.jobs_worker import profilejob_update
 from dxm.lib.DxJobs.jobs_worker import profilejob_delete
 from dxm.lib.DxJobs.jobs_worker import profilejob_cancel
+from dxm.lib.DxJobs.jobs_worker import profilejobs_report
 from dxm.lib.DxSync.sync_worker import sync_list
 from dxm.lib.DxSync.sync_worker import sync_export
 from dxm.lib.DxSync.sync_worker import sync_import
@@ -2017,6 +2018,29 @@ def list(dxm_state, jobname, envname):
     if jobname is not found.
     """
     exit(profilejobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
+
+
+
+@profilejob.command()
+@click.option('--jobname', help="Filter jobs using jobname")
+@click.option('--envname', help='Filter jobs belongs to one environment')
+@click.option('--last', help='Display only last execution', is_flag=True)
+@click.option('--details', help='Display execution details', is_flag=True, default=False)
+@click.option('--startdate', help='Display jobs started after startdate', type=click.DateTime())
+@click.option('--enddate', help='Display jobs finished before enddate', type=click.DateTime())
+@common_options
+@pass_state
+def report(dxm_state, jobname, envname, last, startdate, enddate, details):
+    """
+    Display report of jobs defined in Masking Engine
+
+    If no filter options are specified, all jobs will be displayed.
+    If --envname or --jobname is set, output list will
+    be limited by value of this option and return non-zero return code
+    if jobname is not found.
+    """
+    exit(profilejobs_report(dxm_state.engine, jobname, envname, dxm_state.format, 
+                     last, startdate, enddate, details))
 
 @profilejob.command()
 @click.option(
