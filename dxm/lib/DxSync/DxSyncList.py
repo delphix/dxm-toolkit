@@ -29,6 +29,12 @@ from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.masking_api.api.sync_api import SyncApi
 from dxm.lib.masking_api.rest import ApiException
 
+
+supported_alg_list = {
+    "5.3" : ["SEGMENT", "DATE_SHIFT", "LOOKUP", "TOKENIZATION"], 
+    "6.0.4" : ["SEGMENT", "DATE_SHIFT", "LOOKUP", "TOKENIZATION", "USER_ALGORITHM"]
+}
+
 class DxSyncList(object):
 
     __syncableList = {}
@@ -58,19 +64,27 @@ class DxSyncList(object):
         self.__api = SyncApi
         self.__apiexc = ApiException
 
+        api_sync_response = None
+
+        if self.__engine.version_le("6.0.3"): # to check
+            alglist = supported_alg_list["5.3"]
+        else:
+            alglist = supported_alg_list["6.0.4"]
+
         try:
             api_sync = self.__api(self.__engine.api_client)
             if objecttype:
                 objecttype = objecttype.upper()
+
             if objecttype and self.__engine.version_ge("5.3"):
                 if objecttype == "ALGORITHM":
-                    for atype in ["SEGMENT", "DATE_SHIFT",
-                                  "LOOKUP", "TOKENIZATION"]:
+                    for atype in alglist:
+                        print("trying to get {}".format(atype))
                         partres = paginator(
                                       api_sync,
                                       "get_all_syncable_objects",
                                       object_type=atype)
-                        if api_sync_response.response_list is None:
+                        if api_sync_response is None:
                             api_sync_response = partres
                         else:
                             api_sync_response.response_list = \
@@ -100,14 +114,13 @@ class DxSyncList(object):
                     syncobj.from_sync(c)
                     stype = syncobj.object_type
 
-                    if stype in ["LOOKUP", "DATE_SHIFT",
-                                 "SEGMENT", "TOKENIZATION"]:
+                    if stype in alglist:
                         stype = "ALGORITHM"
 
                     # print(type(syncobj))
                     # print(type(syncobj.object_identifier))
 
-                    sid = list(syncobj.object_identifier.values())[0]
+                    sid = list(syncobj.object_identifier.to_dict().values())[0]
                     if stype not in self.__syncableList:
                         self.__syncableList[stype] = {}
                     self.__syncableList[stype][sid] = syncobj
@@ -135,7 +148,7 @@ class DxSyncList(object):
 
         # check with older engine 
         return sorted(allalg, key=lambda k:
-                      allalg[k].object_identifier["algorithm_name"].lower())
+                      allalg[k].object_identifier.algorithm_name.lower())
 
     @classmethod
     def get_object_by_type_name(self, objecttype, name):

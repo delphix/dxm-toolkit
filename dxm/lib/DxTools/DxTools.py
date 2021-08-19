@@ -263,3 +263,11 @@ def algname_mapping_export():
 def algname_mapping_import():
     mapping = {val: key for (key, val) in algname_mapping_export().items()}
     return mapping
+
+
+def feature_support(engine, version):
+    if engine.version_le(version):
+        print_error("Feature not supported on version {}".format(version))
+        return False
+    else:
+        return True

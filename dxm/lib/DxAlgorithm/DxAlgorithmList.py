@@ -73,7 +73,7 @@ class DxAlgorithmList(object):
                     alg = DxAlgorithm(self.__engine)
                     alg.from_alg(c)
 
-                    dom = DxDomainList.get_domain_by_algorithm(c.algorithm_name)
+                    dom = DxDomainList.get_domain_by_algorithm(c.algorithm_name, report_error=False)
 
                     if dom:
                         alg.domain_name = dom

@@ -81,6 +81,15 @@ class DxSync(object):
         self.__obj = sync
         self.__obj.swagger_map = self.swagger_map
         self.__obj.swagger_types = self.swagger_types
+        self.__obj.object_identifier.swagger_map = {
+            'id' : 'id',
+            'algorithm_name' : 'algorithmName'
+        }
+        self.__obj.object_identifier.swagger_types = {
+            'id' : 'int',
+            'algorithm_name' : 'str'
+        }
+
 
     @property
     def obj(self):
@@ -99,7 +108,7 @@ class DxSync(object):
     @property
     def object_identifier(self):
         if self.obj is not None and hasattr(self.obj,'object_identifier'):
-            return self.obj.object_identifier.to_dict()
+            return self.obj.object_identifier
         else:
             return None
             

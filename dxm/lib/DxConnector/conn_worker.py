@@ -29,8 +29,11 @@ from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
 from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
+from dxm.lib.DxConnector.ExtendedConnector import ExtendedConnector
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
+from dxm.lib.DxJDBC.DxJDBCList import DxJDBCList
+
 # from masking_api_60.models.database_connector import DatabaseConnector
 
 # from masking_api_60.models.connection_info import ConnectionInfo
@@ -38,7 +41,7 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 
 database_types = ['oracle', 'sybase', 'mssql', 'aurora_postgres', 'db2',
                   'db2_iseries', 'db2_mainframe', 'generic', 'mysql',
-                  'postgres', 'rds_oracle', 'rds_postgres']
+                  'postgres', 'rds_oracle', 'rds_postgres', 'extended']
 
 file_types = ['delimited', 'excel', 'fixed_width', 'xml']
 
@@ -93,6 +96,9 @@ def connector_add(p_engine, params):
             elif params['type'] == 'sybase':
                 connobj = SybaseConnector(engine_obj)
                 dbtype = 'SYBASE'
+            elif params['type'] == 'extended':
+                connobj = ExtendedConnector(engine_obj)
+                dbtype = 'EXTENDED'
             else:
                 connobj = DxConnector(engine_obj)
                 dbtype = params['type'].upper()
@@ -110,11 +116,16 @@ def connector_add(p_engine, params):
             connobj.host = host
 
             if port:
-                connobj.port = port + 0
+                connobj.port = int(port)
             connobj.sid = params['sid']
             connobj.jdbc = params['jdbc']
             connobj.instance_name = params['instancename']
             connobj.database_name = params['databasename']
+
+            if params['jdbc_driver_name']:
+                jdbclist = DxJDBCList()
+                driver_id = jdbclist.get_driver_id_by_name(params['jdbc_driver_name'])
+                connobj.jdbc_driver_id = driver_id
 
         elif params['type'] in file_types:
             path = params['path']

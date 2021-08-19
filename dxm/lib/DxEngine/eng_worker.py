@@ -23,6 +23,7 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
+from dxm.lib.DxEngine.DxEngineFiles import DxEngineFiles
 
 
 def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
@@ -161,3 +162,19 @@ def engine_logs(p_engine, outputlog, page_size,level):
         if engine_obj.get_session():
             continue
         engine_obj.getlogs(outputlog,page_size,level)
+
+
+def engine_upload(p_engine, filename='/Users/pioro/Downloads/sqlcl/lib/ojdbc8.jar'):
+
+    enginelist = get_list_of_engines(p_engine)
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple)
+        if engine_obj.get_session():
+            continue
+        
+        files_obj = DxEngineFiles()
+        print(files_obj.upload_file(filename))

@@ -109,15 +109,18 @@ class DxDomainList(object):
         return self.get_by_ref(name)
 
     @classmethod
-    def get_domain_by_algorithm(self, alg):
+    def get_domain_by_algorithm(self, alg, report_error=True):
         domains = get_objref_by_val_and_attribute(alg, self, 'default_algorithm_code')
+
         if len(domains) < 1:
-            print_error("Domain for algorithm %s not found" % alg)
+            if report_error:
+                print_error("Domain for algorithm %s not found" % alg)
             self.__logger.error("Domain for algorithm %s not found" % alg)
             return None
 
         if len(domains) > 1:
-            print_error("Domain for algorithm %s is not unique" % alg)
+            if report_error:
+                print_error("Domain for algorithm %s is not unique" % alg)
             self.__logger.error("Domain for algorithm %s is not unique" % alg)
             return None
 

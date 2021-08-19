@@ -22,6 +22,7 @@ from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
 from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
+from dxm.lib.DxConnector.ExtendedConnector import ExtendedConnector
 from dxm.lib.DxConnector.DxConnector import DxConnector
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
@@ -110,6 +111,8 @@ class DxConnectorsList(object):
                         connector = MSSQLConnector(self.__engine)
                     elif (c.database_type == 'SYBASE'):
                         connector = SybaseConnector(self.__engine)
+                    elif (c.database_type == 'EXTENDED'):
+                        connector = ExtendedConnector(self.__engine)
                     else:
                         connector = DxConnector(self.__engine)
 

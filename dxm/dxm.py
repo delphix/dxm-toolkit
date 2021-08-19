@@ -48,6 +48,7 @@ from dxm.lib.DxEngine.eng_worker import engine_delete
 from dxm.lib.DxEngine.eng_worker import engine_update
 from dxm.lib.DxEngine.eng_worker import engine_logout
 from dxm.lib.DxEngine.eng_worker import engine_logs
+from dxm.lib.DxEngine.eng_worker import engine_upload
 from dxm.lib.DxJobs.jobs_worker import jobs_list
 from dxm.lib.DxJobs.jobs_worker import job_add
 from dxm.lib.DxJobs.jobs_worker import job_start
@@ -92,6 +93,7 @@ from dxm.lib.DxJobs.jobs_worker import profilejobs_report
 from dxm.lib.DxSync.sync_worker import sync_list
 from dxm.lib.DxSync.sync_worker import sync_export
 from dxm.lib.DxSync.sync_worker import sync_import
+from dxm.lib.DxSync.sync_worker import supported_sync_objects_type
 from dxm.lib.DxRole.role_worker import role_list
 from dxm.lib.DxUser.user_worker import user_list
 from dxm.lib.DxUser.user_worker import user_add
@@ -101,6 +103,9 @@ from dxm.lib.DxDomain.domain_worker import domain_list
 from dxm.lib.DxDomain.domain_worker import domain_add
 from dxm.lib.DxDomain.domain_worker import domain_delete
 from dxm.lib.DxDomain.domain_worker import domain_update
+from dxm.lib.DxJDBC.jdbc_worker import driver_list
+from dxm.lib.DxJDBC.jdbc_worker import driver_add
+from dxm.lib.DxJDBC.jdbc_worker import driver_delete
 
 # from lib.DxLogging import print_error
 from dxm.lib.DxLogging import logging_est
@@ -334,6 +339,13 @@ def domain(dxm_state):
     Domain group allow to control domains
     """
 
+@dxm.group()
+@pass_state
+def jdbc(dxm_state):
+    """
+    JDBC group allows to control JDBC drivers
+    """
+
 @engine.command()
 @click.option('--engine', help='Engine name (or alias)', required=True)
 @click.option('--ip',  help='IP or FQDN of engine', required=True)
@@ -471,6 +483,18 @@ def logs(dxm_state, enginelog,page_size,level):
     exit(engine_logs(dxm_state.engine, enginelog, page_size,level))
 
 
+@engine.command()
+@click.option(
+    '--filename', required=True,
+    help="Name with path of the file to upload")
+@debug_options
+@pass_state
+def upload(dxm_state, filename):
+    """
+    Save Masking Engine log into file
+    """
+    exit(engine_upload(dxm_state.engine, filename))
+
 @application.command()
 @click.option('--appname', help='Filter output by application name')
 @common_options
@@ -603,11 +627,16 @@ def list(dxm_state, connectorname, envname, details):
 @click.option(
     '--servertype', type=click.Choice(['sftp', 'ftp']),
     help='Server type for FILE connector type')
+@click.option(
+    '--jdbc_driver_name',
+    help='Driver name')
+
+    
 @common_options
 @pass_state
 def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         schemaname, password, sid, instancename, databasename, path,
-        servertype, jdbc):
+        servertype, jdbc, jdbc_driver_name):
     """
     Add connector to Masking Engine.
     List of required parameters depend on connector type:
@@ -654,7 +683,8 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         'type': connectortype,
         'path': path,
         'servertype': servertype,
-        'jdbc': jdbc
+        'jdbc': jdbc,
+        'jdbc_driver_name': jdbc_driver_name
     }
     exit(connector_add(dxm_state.engine, params))
 
@@ -2239,16 +2269,7 @@ def delete(dxm_state, jobname, envname):
 @click.option('--objectname', help="Filter object using a name")
 @click.option('--objecttype', help="Filter object using a type",
               type=click.Choice(
-                ['database_connector',
-                 'algorithm',
-                 'database_ruleset',
-                 'domain',
-                 'file_connector',
-                 'file_format',
-                 'file_ruleset',
-                 'global_object',
-                 'key',
-                 'masking_job']
+                supported_sync_objects_type
               ))
 @click.option('--envname', help="Filter using a environment name")
 @common_options
@@ -2263,10 +2284,13 @@ def list(dxm_state, objecttype, objectname, envname):
                    envname, dxm_state.format))
 
 @sync.command()
-@click.option('--objecttype', help="Filter object using a type")
+@click.option('--objecttype', help="Filter object using a type", 
+              type=click.Choice(
+                supported_sync_objects_type
+              ))
 @click.option('--objectname', help="Filter object using a name")
 @click.option('--envname', help="Filter using a environment name")
-@click.option('--path', help="Path to export", default=".")
+@click.option('--path', help="Path to export", required=True)
 @common_options
 @pass_state
 def export(dxm_state, objecttype, objectname, envname, path):
@@ -2432,3 +2456,39 @@ def update(dxm_state, domainname, classification, algname):
 
     """
     exit(domain_update(dxm_state.engine, domainname, classification, algname))
+
+
+@jdbc.command()
+@click.option('--driver_name', help="Filter jdbc drivers using a name")
+@common_options
+@pass_state
+def list(dxm_state, driver_name):
+    """
+    Display list of JDBC drivers from Masking Engine
+
+    If no filter options are specified, all drivers will be displayed.
+    """
+    exit(driver_list(dxm_state.engine, dxm_state.format, driver_name))
+
+
+@jdbc.command()
+@click.option('--driver_name', help="Name of JDBC driver to add", required=True)
+@click.option('--driver_class', help="Name of JDBC driver class to add", required=True)
+@click.option('--driver_file', help="Path to driver JAR file", required=True)
+@common_options
+@pass_state
+def add(dxm_state, driver_name, driver_class, driver_file):
+    """
+    Add JDBC driver to Delphix Engine
+    """
+    exit(driver_add(dxm_state.engine, driver_name, driver_class, driver_file))
+
+@jdbc.command()
+@click.option('--driver_name', help="Filter jdbc drivers using a name", required=True)
+@common_options
+@pass_state
+def delete(dxm_state, driver_name):
+    """
+    Delete JDBC driver from Delphix Engine
+    """
+    exit(driver_delete(dxm_state.engine, driver_name))

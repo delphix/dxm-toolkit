@@ -18,6 +18,8 @@
 
 
 import logging
+import pprint
+import json
 
 
 from dxm.lib.DxLogging import print_error
@@ -42,7 +44,9 @@ class DxDBColumn(object):
         'is_primary_key': 'bool',
         'is_index': 'bool',
         'is_foreign_key': 'bool',
-        'notes': 'str'
+        'notes': 'str',
+        'algorithm_field_id': 'int',
+        'algorithm_group_no': 'int'
     }
 
     swagger_map = {
@@ -59,7 +63,9 @@ class DxDBColumn(object):
         'is_primary_key': 'isPrimaryKey',
         'is_index': 'isIndex',
         'is_foreign_key': 'isForeignKey',
-        'notes': 'notes'
+        'notes': 'notes',
+        'algorithm_field_id': 'algorithmFieldId',
+        'algorithm_group_no': 'algorithmGroupNo'
     }
 
     def __init__(self, engine):
@@ -89,9 +95,12 @@ class DxDBColumn(object):
         set obj property with ColumnMetadata object
         :param column: ColumnMetadata object
         """
+        if column.notes == 'N/A':
+            column.notes = None
         self.__obj = column
         self.__obj.swagger_types = self.swagger_types
         self.__obj.swagger_map = self.swagger_map
+
 
     @property
     def cf_metadata_id(self):
@@ -218,6 +227,27 @@ class DxDBColumn(object):
         else:
             raise ValueError("Object needs to be initialized first")
 
+    @property
+    def algorithm_field_id(self):
+        if self.obj is not None and hasattr(self.obj,'algorithm_field_id'):
+            return self.obj.algorithm_field_id
+        else:
+            return None   
+
+    @property
+    def algorithm_group_no(self):
+        if self.obj is not None and hasattr(self.obj,'algorithm_group_no'):
+            return self.obj.algorithm_group_no
+        else:
+            return None   
+
+    @property
+    def notes(self):
+        if self.obj is not None and hasattr(self.obj,'notes'):
+            return self.obj.notes
+        else:
+            return None   
+
     def update(self):
         """
         Update column data to Masking engine and print status message
@@ -246,3 +276,12 @@ class DxDBColumn(object):
             print_error(e.body)
             self.__logger.error(e)
             return 1
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()
