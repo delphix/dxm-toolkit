@@ -399,7 +399,7 @@ class DxProfileJob(object):
         """
         exec_api = self.__apiexec(self.__engine.api_client)
 
-        execjob = DxExecution(job_id = self.masking_job_id)
+        execjob = DxExecution(job_id = self.profile_job_id)
 
         if (self.multi_tenant):
             # target is mandatory
