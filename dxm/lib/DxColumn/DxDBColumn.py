@@ -95,7 +95,7 @@ class DxDBColumn(object):
         set obj property with ColumnMetadata object
         :param column: ColumnMetadata object
         """
-        if column.notes == 'N/A':
+        if hasattr(column, "notes") and column.notes == 'N/A':
             column.notes = None
         self.__obj = column
         self.__obj.swagger_types = self.swagger_types
