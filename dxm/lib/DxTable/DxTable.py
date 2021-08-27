@@ -93,38 +93,49 @@ class DxTable(object):
         return self.obj.table_metadata_id
 
     @property
+    def table_metadata_id(self):
+        if self.obj is not None and hasattr(self.obj,'table_metadata_id'):
+            return self.obj.table_metadata_id
+        else:
+            return None
+
+    @table_metadata_id.setter
+    def table_metadata_id(self, table_metadata_id):
+        if self.obj is not None:
+            self.obj.table_metadata_id = table_metadata_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def table_name(self):
+        if self.obj is not None and hasattr(self.obj,'table_name'):
+            return self.obj.table_name
+        else:
+            return None
+
+    @table_name.setter
+    def table_name(self, table_name):
+        if self.obj is not None:
+            self.obj.table_name = table_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
     def ruleset_id(self):
-        return self.obj.ruleset_id
-
-    @property
-    def key_column(self):
-        if self.obj is not None and hasattr(self.obj,'key_column'):
-            return self.obj.key_column
+        if self.obj is not None and hasattr(self.obj,'ruleset_id'):
+            return self.obj.ruleset_id
         else:
             return None
 
-    @key_column.setter
-    def key_column(self, key_column):
-        self.obj.ruleset_name = key_column
-
-    @property
-    def having_clause(self):
-        return self.obj.having_clause
-
-    @having_clause.setter
-    def having_clause(self, having_clause):
-        self.obj.ruleset_name = having_clause
-
-    @property
-    def where_clause(self):
-        if self.obj is not None and hasattr(self.obj,'where_clause'):
-            return self.obj.where_clause
+    @ruleset_id.setter
+    def ruleset_id(self, ruleset_id):
+        if self.obj is not None:
+            self.obj.ruleset_id = ruleset_id
         else:
-            return None
+            raise ValueError("Object needs to be initialized first")
 
-    @where_clause.setter
-    def where_clause(self, where_clause):
-        self.obj.ruleset_name = where_clause
 
     @property
     def custom_sql(self):
@@ -135,7 +146,55 @@ class DxTable(object):
 
     @custom_sql.setter
     def custom_sql(self, custom_sql):
-        self.obj.ruleset_name = custom_sql
+        if self.obj is not None:
+            self.obj.custom_sql = custom_sql
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def where_clause(self):
+        if self.obj is not None and hasattr(self.obj,'where_clause'):
+            return self.obj.where_clause
+        else:
+            return None
+
+    @where_clause.setter
+    def where_clause(self, where_clause):
+        if self.obj is not None:
+            self.obj.where_clause = where_clause
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def having_clause(self):
+        if self.obj is not None and hasattr(self.obj,'having_clause'):
+            return self.obj.having_clause
+        else:
+            return None
+
+    @having_clause.setter
+    def having_clause(self, having_clause):
+        if self.obj is not None:
+            self.obj.having_clause = having_clause
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def key_column(self):
+        if self.obj is not None and hasattr(self.obj,'key_column'):
+            return self.obj.key_column
+        else:
+            return None
+
+    @key_column.setter
+    def key_column(self, key_column):
+        if self.obj is not None:
+            self.obj.key_column = key_column
+        else:
+            raise ValueError("Object needs to be initialized first")
 
 
     def create_table(self, table_name, ruleset_id, custom_sql, where_clause, having_clause, key_column):

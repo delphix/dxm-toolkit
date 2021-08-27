@@ -20,6 +20,7 @@
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 import logging
 import json
+from copy import deepcopy
 from operator import xor
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -310,7 +311,7 @@ def ruleset_refresh(p_engine, p_username,  rulesetname, envname):
     param3: envname: environment name
     return 0 if added, non 0 for error
     """
-    return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
+    return ruleset_worker(p_engine=p_engine, p_username=p_username, rulesetname=rulesetname,
                           envname=envname, function_to_call='do_refresh')
 
 def ruleset_clone(p_engine, p_username,  rulesetname, envname, newname):
@@ -322,7 +323,7 @@ def ruleset_clone(p_engine, p_username,  rulesetname, envname, newname):
     param4: newname: new ruleset name
     return 0 if added, non 0 for error
     """
-    return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
+    return ruleset_worker(p_engine=p_engine, p_username=p_username, rulesetname=rulesetname,
                           envname=envname, function_to_call='do_clone',
                           newname=newname)
 
@@ -408,7 +409,10 @@ def do_meta_copy(engine_obj, ruleref, newref):
     metalist = DxMetaList()
     metalist.LoadMeta(ruleref)
 
-    for meta_id in metalist.get_allref():
+    allmeta = metalist.get_allref()
+    allmeta_copy = deepcopy(allmeta)
+
+    for meta_id in allmeta_copy:
         newmeta_id = metalist.copymeta(meta_id, newref)
         if newmeta_id:
             ret = ret + columns_copy(engine_obj, meta_id, newmeta_id)

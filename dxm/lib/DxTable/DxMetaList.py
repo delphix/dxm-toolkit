@@ -147,7 +147,7 @@ class DxMetaList(object):
         """
         return a list of all references
         """
-        return self.__tableList.keys()
+        return list(self.__tableList.keys())
 
     @classmethod
     def get_MetadataId_by_name(self, name, skip_out=None):
