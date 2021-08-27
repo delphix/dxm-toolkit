@@ -94,6 +94,7 @@ class DxMaskingEngine(object):
         tuple:
         engine_name,ip_address,username,password, protocol,port, defengine, auth_id
         """
+
         self.__address = engine_tuple[1]
         self.__name = engine_tuple[0]
         self.__username = engine_tuple[2]
@@ -268,7 +269,7 @@ class DxMaskingEngine(object):
         # pickle.dump(apikey, binary_file)
         # binary_file.close()
         config = DxConfig()
-        config.set_key(self.__name, None, apikey)
+        config.set_key(self.__name, self.__username, apikey)
 
 
 
@@ -287,7 +288,7 @@ class DxMaskingEngine(object):
         #     self.__logger.error("Session file not found")
 
         config = DxConfig()
-        auth_key = config.get_key(self.__name, None)
+        auth_key = config.get_key(self.__name, self.__username)
         return auth_key
 
     @classmethod

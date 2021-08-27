@@ -103,7 +103,10 @@ def application_list(p_engine, format, appname):
                               engine_tuple[0],
                               appobj.application_name
                             )
-        print("")
-        print (data.data_output(False))
-        print("")
-        return ret
+
+    print("")
+    print (data.data_output(False))
+    print("")
+    
+    
+    return ret

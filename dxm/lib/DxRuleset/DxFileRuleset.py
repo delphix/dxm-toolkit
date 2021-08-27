@@ -194,7 +194,7 @@ class DxFileRuleset(object):
         enclosure = file_params["file_enclosure"]
 
         connlist = DxConnectorsList()
-        connlist.LoadConnectors(None)
+        #connlist.LoadConnectors(None)
 
         connobj = connlist.get_by_ref(self.connectorId)
 

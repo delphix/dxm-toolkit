@@ -76,10 +76,10 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
-        connlist = DxConnectorsList()
-        connlist.LoadConnectors(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
+        connlist = DxConnectorsList(envname)
+        #connlist.LoadConnectors()
 
         if rulesetname:
             rulesetref_list = rulelist.get_all_rulesetId_by_name(rulesetname)
@@ -174,8 +174,8 @@ def ruleset_addmeta(p_engine, params, inputfile, fromconnector, bulk):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
 
         if ruleref:
@@ -219,8 +219,8 @@ def ruleset_deletemeta(p_engine, rulesetname, metaname, envname):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
 
         metalist = DxMetaList()
@@ -265,8 +265,8 @@ def ruleset_add(p_engine, rulesetname, connectorname, envname):
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
         rulelist = DxRulesetList()
-        connlist = DxConnectorsList()
-        connlist.LoadConnectors(envname)
+        connlist = DxConnectorsList(envname)
+        #connlist.LoadConnectors()
         logger.debug("Connector is %s" % connectorname)
         connref = connlist.get_connectorId_by_name(connectorname)
         connobj = connlist.get_by_ref(connref)
@@ -482,8 +482,8 @@ def ruleset_list_worker(**kwargs):
             continue
 
         #envlist = DxEnvironmentList()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
 
         if rulesetName is None:
             rulesets = rulelist.get_allref()

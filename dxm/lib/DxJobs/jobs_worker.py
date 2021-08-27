@@ -108,12 +108,12 @@ def profilejob_add(p_engine, params):
 
         joblist = DxProfileJobsList()
         envlist = DxEnvironmentList()
-        rulesetlist = DxRulesetList()
+        rulesetlist = DxRulesetList(envname)
         profilesetlist = DxProfilesList()
         profileref = profilesetlist.get_profileSetId_by_name(profilename)
         envlist.LoadEnvironments()
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
-        rulesetlist.LoadRulesets(envname)
+        #rulesetlist.LoadRulesets()
         rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
 
 
@@ -164,10 +164,10 @@ def job_add(p_engine, params):
 
         joblist = DxJobsList()
         envlist = DxEnvironmentList()
-        rulesetlist = DxRulesetList()
         envlist.LoadEnvironments()
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
-        rulesetlist.LoadRulesets(envname)
+        rulesetlist = DxRulesetList(envname)
+
 
         rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
 
@@ -329,7 +329,7 @@ def do_update(**kwargs):
         # job metadata doesn't return environment id so it has to be
         # found by linking old ruleset via connector id to environment
         rulesetlist = DxRulesetList()
-        rulesetlist.LoadRulesets(None)
+        #rulesetlist.LoadRulesets(None)
         connlist = DxConnectorsList()
         connlist.LoadConnectors(None)
         oldrulesetref = jobobj.ruleset_id
@@ -719,7 +719,7 @@ def do_start(**kwargs):
     if jobobj.multi_tenant:
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        connectorlist = DxConnectorsList()
+        
 
         if tgt_connector is None:
             print_error("Target connector is required for multitenant job")
@@ -733,8 +733,9 @@ def do_start(**kwargs):
             lock.release()
             return 1
 
-        connectorlist.LoadConnectors(tgt_connector_env)
-        targetconnector = DxConnectorsList.get_connectorId_by_name(
+        connectorlist = DxConnectorsList(tgt_connector_env)
+        #connectorlist.LoadConnectors()
+        targetconnector = connectorlist.get_connectorId_by_name(
                             tgt_connector)
         if targetconnector:
             targetconnector = targetconnector[1:]
@@ -1007,8 +1008,8 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
         # load all objects
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulesetlist = DxRulesetList()
-        connectorlist = DxConnectorsList()
+        rulesetlist = DxRulesetList(envname)
+        connectorlist = DxConnectorsList(envname)
         if jobtype == 'masking':
             joblist = DxJobsList()
         else:
@@ -1017,8 +1018,8 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
         logger.debug("Envname is %s, job name is %s" % (envname, jobname))
 
         joblist.LoadJobs(envname)
-        rulesetlist.LoadRulesets(envname)
-        connectorlist.LoadConnectors(envname)
+        #rulesetlist.LoadRulesets(envname)
+        #connectorlist.LoadConnectors(envname)
 
         if jobname is None:
             jobs = joblist.get_allref()

@@ -71,17 +71,9 @@ class DxRulesetList(object):
         Return None if OK
         """
 
-        if self.__loaded_engine is None:
-            self.__loaded_engine = self.__engine.get_name()
 
-        
-        if self.__loaded_engine == self.__engine.get_name() and self.__rulesetList != {}:
-           return None
-        else:
-            # delete a list as we can have multi engines
-            self.__rulesetList.clear()
-            self.__loaded_engine = self.__engine.get_name()
 
+        self.__rulesetList.clear()
         DxConnectorsList(environment_name)
 
         self.__api = DatabaseRulesetApi
@@ -130,6 +122,7 @@ class DxRulesetList(object):
                                         % environment_name)
                 else:
                     self.__logger.error("No database ruleset found")
+
 
             api_instance = self.__fileapi(self.__engine.api_client)
 

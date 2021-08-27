@@ -125,10 +125,10 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
-        connlist = DxConnectorsList()
-        connlist.LoadConnectors(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
+        connlist = DxConnectorsList(envname)
+        #connlist.LoadConnectors()
 
         if rulesetname:
             rulesetref_all = rulelist.get_all_rulesetId_by_name(rulesetname)
@@ -253,8 +253,8 @@ def tab_selector(p_engine, rulesetname, envname, metaname, function_to_call,
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
         if rulesetname:
             ruleref = rulelist.get_rulesetId_by_name(rulesetname)
         else:
