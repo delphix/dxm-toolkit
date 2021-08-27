@@ -28,7 +28,7 @@ from dxm.lib.DxEnvironment.DxEnvironment import DxEnvironment
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 
 
-def environment_add(p_engine, envname, appname, purpose):
+def environment_add(p_engine, p_username,  envname, appname, purpose):
     """
     Add application to Masking engine
     param1: p_engine: engine name from configuration
@@ -40,7 +40,7 @@ def environment_add(p_engine, envname, appname, purpose):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -63,7 +63,7 @@ def environment_add(p_engine, envname, appname, purpose):
     return ret
 
 
-def environment_delete(p_engine, envname):
+def environment_delete(p_engine, p_username,  envname):
     """
     Delete application from Masking engine
     param1: p_engine: engine name from configuration
@@ -73,7 +73,7 @@ def environment_delete(p_engine, envname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -92,7 +92,7 @@ def environment_delete(p_engine, envname):
     return ret
 
 
-def environment_list(p_engine, format, envname):
+def environment_list(p_engine, p_username,  format, envname):
     """
     Print list of environments
     param1: p_engine: engine name from configuration
@@ -103,7 +103,7 @@ def environment_list(p_engine, format, envname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

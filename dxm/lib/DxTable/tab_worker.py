@@ -33,7 +33,7 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxTable.DxMetaList import DxMetaList
 
 
-def tab_listtable_details(p_engine, p_format, rulesetname, envname, metaname):
+def tab_listtable_details(p_engine, p_username,  p_format, rulesetname, envname, metaname):
     """
     List details of tables/file from ruleset
     param1: p_engine: engine name from configuration
@@ -51,7 +51,7 @@ def tab_listtable_details(p_engine, p_format, rulesetname, envname, metaname):
         metaname,
         'Database')
 
-def tab_listfile_details(p_engine, p_format, rulesetname, envname, metaname):
+def tab_listfile_details(p_engine, p_username,  p_format, rulesetname, envname, metaname):
     """
     List details of tables/file from ruleset
     param1: p_engine: engine name from configuration
@@ -69,7 +69,7 @@ def tab_listfile_details(p_engine, p_format, rulesetname, envname, metaname):
         metaname,
         'File')
 
-def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
+def tab_list_details(p_engine, p_username,  p_format, rulesetname, envname, metaname, what):
     """
     List details of tables/file from ruleset
     param1: p_engine: engine name from configuration
@@ -112,7 +112,7 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
 
     data.format_type = p_format
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -217,14 +217,14 @@ def tab_list_details(p_engine, p_format, rulesetname, envname, metaname, what):
             print_error("Table %s not found" % metaname)
         return ret
 
-def tab_update_meta(p_engine, params):
+def tab_update_meta(p_engine, p_username,  params):
     rulesetname = params["rulesetname"]
     metaname = params["metaname"]
     envname = params["envname"]
-    return tab_selector(p_engine, rulesetname, envname, metaname, None, params)
+    return tab_selector(p_engine, p_username,  rulesetname, envname, metaname, None, params)
 
 
-def tab_selector(p_engine, rulesetname, envname, metaname, function_to_call,
+def tab_selector(p_engine, p_username,  rulesetname, envname, metaname, function_to_call,
                  params):
     """
     List details of tables/file from ruleset
@@ -240,7 +240,7 @@ def tab_selector(p_engine, rulesetname, envname, metaname, function_to_call,
     ret = 0
     update = False
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

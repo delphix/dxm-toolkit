@@ -28,7 +28,7 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
-def expression_add(p_engine, expname, domainname, level, regex):
+def expression_add(p_engine, p_username,  expname, domainname, level, regex):
     """
     Add expression to engine
     param1: p_engine: engine name from configuration
@@ -41,7 +41,7 @@ def expression_add(p_engine, expname, domainname, level, regex):
 
     ret = 0
     logger = logging.getLogger()
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -70,7 +70,7 @@ def expression_add(p_engine, expname, domainname, level, regex):
 
     return ret
 
-def profile_add(p_engine, profilename, expname, description):
+def profile_add(p_engine, p_username,  profilename, expname, description):
     """
     Add profile to engine
     param1: p_engine: engine name from configuration
@@ -82,7 +82,7 @@ def profile_add(p_engine, profilename, expname, description):
 
     ret = 0
     logger = logging.getLogger()
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -114,7 +114,7 @@ def profile_add(p_engine, profilename, expname, description):
 
     return ret
 
-def expression_list(p_engine, expname, p_format):
+def expression_list(p_engine, p_username,  expname, p_format):
     """
     Print list of expressions
     param1: p_engine: engine name from configuration
@@ -147,7 +147,7 @@ def expression_list(p_engine, expname, p_format):
     print("")
     return ret
 
-def expression_update(p_engine, expname, domainname, level, regex):
+def expression_update(p_engine, p_username,  expname, domainname, level, regex):
     """
     Update expression definition on engine
     param1: p_engine: engine name from configuration
@@ -166,7 +166,7 @@ def expression_update(p_engine, expname, domainname, level, regex):
                              function_to_call='do_expresionupdate')
 
 
-def expression_delete(p_engine, expname):
+def expression_delete(p_engine, p_username,  expname):
     """
     Remove expression from engine
     param1: p_engine: engine name from configuration
@@ -266,9 +266,11 @@ def expression_worker(**kwargs):
 
     p_engine = kwargs.get('p_engine')
     expname = kwargs.get('expname')
+    p_username = kwargs.get('p_username')
     function_to_call = kwargs.get('function_to_call')
+    
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -306,7 +308,7 @@ def expression_worker(**kwargs):
     return ret
 
 
-def profile_addexpression(p_engine, profilename, expname):
+def profile_addexpression(p_engine, p_username,  profilename, expname):
     """
     Add expression to Profile set
     param1: p_engine: engine name from configuration
@@ -318,7 +320,7 @@ def profile_addexpression(p_engine, profilename, expname):
                           expname=expname, function_to_call='do_addexpression')
 
 
-def profile_deleteexpression(p_engine, profilename, expname):
+def profile_deleteexpression(p_engine, p_username,  profilename, expname):
     """
     Delete expression from Profile set
     param1: p_engine: engine name from configuration
@@ -333,7 +335,7 @@ def profile_deleteexpression(p_engine, profilename, expname):
             function_to_call='do_deleteexpression')
 
 
-def profile_list(p_engine, profilename, expname, p_format, mapping):
+def profile_list(p_engine, p_username,  profilename, expname, p_format, mapping):
     """
     Print list of Profile sets
     param1: p_engine: engine name from configuration
@@ -376,7 +378,7 @@ def profile_list(p_engine, profilename, expname, p_format, mapping):
     return ret
 
 
-def profile_delete(p_engine, profilename):
+def profile_delete(p_engine, p_username,  profilename):
     """
     Print list of Profile sets
     param1: p_engine: engine name from configuration
@@ -387,7 +389,7 @@ def profile_delete(p_engine, profilename):
                         function_to_call='do_deleteprofile'))
 
 
-def profile_export(p_engine, profilename, exportfile):
+def profile_export(p_engine, p_username,  profilename, exportfile):
     """
     Export list of Profile sets into csv
     param1: p_engine: engine name from configuration
@@ -602,13 +604,14 @@ def profile_worker(**kwargs):
     expressions
     """
     p_engine = kwargs.get('p_engine')
+    p_username = kwargs.get('p_username')
     profilename = kwargs.get('profilename')
     expname = kwargs.get('expname')
     function_to_call = kwargs.get('function_to_call')
     mapping = kwargs.get('mapping')
 
     ret = 0
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

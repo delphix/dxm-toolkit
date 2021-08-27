@@ -78,7 +78,7 @@ optional_options_list = ("commit_size",
                          "disable_triggers",
                          "truncate_tables")
 
-def profilejob_add(p_engine, params):
+def profilejob_add(p_engine, p_username,  params):
     """
     Add profile job to Masking engine
     param1: p_engine: engine name from configuration
@@ -88,7 +88,7 @@ def profilejob_add(p_engine, params):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     logger = logging.getLogger()
 
@@ -135,7 +135,7 @@ def profilejob_add(p_engine, params):
 
     return ret
 
-def job_add(p_engine, params):
+def job_add(p_engine, p_username,  params):
     """
     Add masking job to Masking engine
     param1: p_engine: engine name from configuration
@@ -145,7 +145,7 @@ def job_add(p_engine, params):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     logger = logging.getLogger()
 
@@ -232,7 +232,7 @@ def job_add(p_engine, params):
 
     return ret
 
-def job_copy(p_engine, jobname, envname, newjobname):
+def job_copy(p_engine, p_username,  jobname, envname, newjobname):
     """
     Copy masking job in Masking engine
     param1: p_engine: engine name from configuration
@@ -241,9 +241,9 @@ def job_copy(p_engine, jobname, envname, newjobname):
     param4: newjobname: new job name
     return 0 if deleted, non 0 for error
     """
-    return job_copy_worker(p_engine, jobname, envname, newjobname, "DxJobsList")
+    return job_copy_worker(p_engine, p_username,  jobname, envname, newjobname, "DxJobsList")
 
-def profilejob_copy(p_engine, jobname, envname, newjobname):
+def profilejob_copy(p_engine, p_username,  jobname, envname, newjobname):
     """
     Copy profile job in Masking engine
     param1: p_engine: engine name from configuration
@@ -252,9 +252,9 @@ def profilejob_copy(p_engine, jobname, envname, newjobname):
     param4: newjobname: new job name
     return 0 if deleted, non 0 for error
     """
-    return job_copy_worker(p_engine, jobname, envname, newjobname, "DxProfileJobsList")
+    return job_copy_worker(p_engine, p_username,  jobname, envname, newjobname, "DxProfileJobsList")
 
-def job_copy_worker(p_engine, jobname, envname, newjobname, joblist_class):
+def job_copy_worker(p_engine, p_username,  jobname, envname, newjobname, joblist_class):
     """
     Copy job in Masking engine
     param1: p_engine: engine name from configuration
@@ -272,7 +272,7 @@ def job_copy_worker(p_engine, jobname, envname, newjobname, joblist_class):
         newjobname=newjobname,
         joblist_class=joblist_class)
 
-def job_update(p_engine, jobname, envname, params):
+def job_update(p_engine, p_username,  jobname, envname, params):
     """
     Update a job in Masking engine
     param1: p_engine: engine name from configuration
@@ -281,9 +281,9 @@ def job_update(p_engine, jobname, envname, params):
     param4: params: dict with job parameters
     return 0 if updated, non 0 for error
     """
-    return job_update_worker(p_engine, jobname, envname, params, "DxJobsList")
+    return job_update_worker(p_engine, p_username,  jobname, envname, params, "DxJobsList")
 
-def profilejob_update(p_engine, jobname, envname, params):
+def profilejob_update(p_engine, p_username,  jobname, envname, params):
     """
     Update a job in Masking engine
     param1: p_engine: engine name from configuration
@@ -292,9 +292,9 @@ def profilejob_update(p_engine, jobname, envname, params):
     param4: params: dict with job parameters
     return 0 if updated, non 0 for error
     """
-    return job_update_worker(p_engine, jobname, envname, params, "DxProfileJobsList")
+    return job_update_worker(p_engine, p_username,  jobname, envname, params, "DxProfileJobsList")
 
-def job_update_worker(p_engine, jobname, envname, params, joblist_class):
+def job_update_worker(p_engine, p_username,  jobname, envname, params, joblist_class):
     """
     Update a job in Masking engine
     param1: p_engine: engine name from configuration
@@ -434,7 +434,7 @@ def do_cancel(**kwargs):
     jobobj = joblist.get_by_ref(jobref)
     return jobobj.cancel()
 
-def job_cancel(p_engine, jobname, envname):
+def job_cancel(p_engine, p_username,  jobname, envname):
     """
     Delete job from Masking engine
     param1: p_engine: engine name from configuration
@@ -442,9 +442,9 @@ def job_cancel(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
-    return job_cancel_worker(p_engine, jobname, envname, "DxJobsList")
+    return job_cancel_worker(p_engine, p_username,  jobname, envname, "DxJobsList")
 
-def profilejob_cancel(p_engine, jobname, envname):
+def profilejob_cancel(p_engine, p_username,  jobname, envname):
     """
     Delete job from Masking engine
     param1: p_engine: engine name from configuration
@@ -452,9 +452,9 @@ def profilejob_cancel(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
-    return job_cancel_worker(p_engine, jobname, envname, "DxProfileJobsList")
+    return job_cancel_worker(p_engine, p_username,  jobname, envname, "DxProfileJobsList")
 
-def job_cancel_worker(p_engine, jobname, envname, joblist_class):
+def job_cancel_worker(p_engine, p_username,  jobname, envname, joblist_class):
     """
     Delete job from Masking engine
     param1: p_engine: engine name from configuration
@@ -470,7 +470,7 @@ def job_cancel_worker(p_engine, jobname, envname, joblist_class):
         function_to_call='do_cancel',
         joblist_class=joblist_class)
 
-def job_delete(p_engine, jobname, envname):
+def job_delete(p_engine, p_username,  jobname, envname):
     """
     Delete job from Masking engine
     param1: p_engine: engine name from configuration
@@ -478,9 +478,9 @@ def job_delete(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
-    return job_delete_worker(p_engine, jobname, envname, "DxJobsList")
+    return job_delete_worker(p_engine, p_username,  jobname, envname, "DxJobsList")
 
-def profilejob_delete(p_engine, jobname, envname):
+def profilejob_delete(p_engine, p_username,  jobname, envname):
     """
     Delete job from Masking engine
     param1: p_engine: engine name from configuration
@@ -488,9 +488,9 @@ def profilejob_delete(p_engine, jobname, envname):
     param3: envname: environment name
     return 0 if deleted, non 0 for error
     """
-    return job_delete_worker(p_engine, jobname, envname, "DxProfileJobsList")
+    return job_delete_worker(p_engine, p_username,  jobname, envname, "DxProfileJobsList")
 
-def job_delete_worker(p_engine, jobname, envname, joblist_class):
+def job_delete_worker(p_engine, p_username,  jobname, envname, joblist_class):
     """
     Delete job from Masking engine
     param1: p_engine: engine name from configuration
@@ -522,9 +522,10 @@ def job_selector(**kwargs):
     function_to_call = kwargs.get('function_to_call')
     joblist_class = kwargs.get('joblist_class')
     lock = kwargs.get('lock')
+    p_username = kwargs.get('p_username')
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -563,7 +564,7 @@ def job_selector(**kwargs):
     return ret
 
 
-def job_start(p_engine, jobname, envname, tgt_connector,
+def job_start(p_engine, p_username,  jobname, envname, tgt_connector,
               tgt_connector_env, nowait, parallel, monitor):
     """
     Start job
@@ -578,11 +579,11 @@ def job_start(p_engine, jobname, envname, tgt_connector,
     return 0 if environment found
     """
     return job_start_worker(
-                p_engine, jobname, envname, tgt_connector,
+                p_engine, p_username, jobname, envname, tgt_connector,
                 tgt_connector_env, nowait, parallel, monitor,
                 "DxJobsList")
 
-def profilejob_start(p_engine, jobname, envname, nowait, parallel, monitor,
+def profilejob_start(p_engine, p_username,  jobname, envname, nowait, parallel, monitor,
                      tgt_connector, tgt_connector_env):
     """
     Start profile job
@@ -597,12 +598,12 @@ def profilejob_start(p_engine, jobname, envname, nowait, parallel, monitor,
     return 0 if environment found
     """
     return job_start_worker(
-                p_engine, jobname, envname, tgt_connector,
+                p_engine, p_username, jobname, envname, tgt_connector,
                 tgt_connector_env, nowait, parallel, monitor,
                 "DxProfileJobsList")
 
 
-def job_start_worker(p_engine, jobname, envname, tgt_connector,
+def job_start_worker(p_engine, p_username,  jobname, envname, tgt_connector,
                      tgt_connector_env, nowait, parallel, monitor,
                      joblist_class):
     """
@@ -757,7 +758,7 @@ def do_start(**kwargs):
 
 
 
-def jobs_list(p_engine, jobname, envname, p_format):
+def jobs_list(p_engine, p_username,  jobname, envname, p_format):
     """
     Print list of masking jobs
     param1: p_engine: engine name from configuration
@@ -766,9 +767,9 @@ def jobs_list(p_engine, jobname, envname, p_format):
     param4: p_format: output format
     return 0 if environment found
     """
-    return jobs_list_worker(p_engine, jobname, envname, p_format, "DxJobsList")
+    return jobs_list_worker(p_engine, p_username,  jobname, envname, p_format, "DxJobsList")
 
-def jobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+def jobs_report(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details):
     """
     Print report of masking jobs
     param1: p_engine: engine name from configuration
@@ -777,10 +778,10 @@ def jobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, 
     param4: p_format: output format
     return 0 if environment found
     """
-    return jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details)
+    return jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details)
 
 
-def profilejobs_report(p_engine, jobname, envname, p_format, last, startdate, enddate, details):
+def profilejobs_report(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details):
     """
     Print report of masking jobs
     param1: p_engine: engine name from configuration
@@ -794,9 +795,9 @@ def profilejobs_report(p_engine, jobname, envname, p_format, last, startdate, en
         print_error("Details option not supported for profile jobs")
         return -1
 
-    return jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details, 'profile')
+    return jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details, 'profile')
 
-def profilejobs_list(p_engine, jobname, envname, p_format):
+def profilejobs_list(p_engine, p_username,  jobname, envname, p_format):
     """
     Print list of profile jobs
     param1: p_engine: engine name from configuration
@@ -805,9 +806,9 @@ def profilejobs_list(p_engine, jobname, envname, p_format):
     param4: p_format: output format
     return 0 if environment found
     """
-    return jobs_list_worker(p_engine, jobname, envname, p_format, "DxProfileJobsList")
+    return jobs_list_worker(p_engine, p_username,  jobname, envname, p_format, "DxProfileJobsList")
 
-def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
+def jobs_list_worker(p_engine, p_username,  jobname, envname, p_format, joblist_class):
     """
     Print list of jobs
     param1: p_engine: engine name from configuration
@@ -822,7 +823,7 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -922,7 +923,7 @@ def jobs_list_worker(p_engine, jobname, envname, p_format, joblist_class):
         print("")
         return ret
 
-def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, enddate, details, jobtype='masking'):
+def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details, jobtype='masking'):
     """
     Print report of jobs
     param1: p_engine: engine name from configuration
@@ -941,7 +942,7 @@ def jobs_report_worker(p_engine, jobname, envname, p_format, last, startdate, en
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

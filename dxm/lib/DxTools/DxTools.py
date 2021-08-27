@@ -49,16 +49,22 @@ def paginator(object, function_to_call, **kwargs):
 
     return ret
 
-def get_list_of_engines(p_engine):
+def get_list_of_engines(p_engine, p_username):
     logger = logging.getLogger()
     # read engine from config or read all and put into list
     config = DxConfig()
-    enginelist = config.get_engine_info(p_engine, None)
+
+    enginelist = config.get_engine_info(p_engine, p_username)
     logger.debug("p_engine %s enginelist %s" % (p_engine, enginelist))
 
     if enginelist is None or len(enginelist) == 0:
         print_error("Engine name %s not found in configuration" % p_engine)
         logger.error("Engine name %s not found in configuration" % p_engine)
+        return None
+
+    if p_engine is not None and p_engine.lower() != 'all' and len(enginelist)!=1:
+        print_error("Engine name %s is not unique - add username parameter" % p_engine)
+        logger.error("Engine name %s is not unique - add username parameter" % p_engine)
         return None
     else:
         return enginelist

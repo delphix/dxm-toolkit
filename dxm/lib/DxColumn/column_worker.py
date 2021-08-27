@@ -78,7 +78,7 @@ def columns_copy(engine_obj, meta_id, new_meta_id):
 
     return ret
 
-def column_setmasking(p_engine, rulesetname, envname, metaname, columnname,
+def column_setmasking(p_engine, p_username,  rulesetname, envname, metaname, columnname,
                       algname, domainname, dateformat, idmethod):
     """
     Set masking for column
@@ -93,13 +93,13 @@ def column_setmasking(p_engine, rulesetname, envname, metaname, columnname,
     :param8 idmethod: can column be overwritten by profiler
     """
 
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
+    return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, algname, True, domainname,
                          'update_algorithm', dateformat=dateformat,
                          idmethod=idmethod)
 
 
-def column_unsetmasking(p_engine, rulesetname, envname, metaname, columnname):
+def column_unsetmasking(p_engine, p_username,  rulesetname, envname, metaname, columnname):
     """
     Set masking for column
     :param1 p_engine: masking engine
@@ -111,12 +111,12 @@ def column_unsetmasking(p_engine, rulesetname, envname, metaname, columnname):
     :param7 domainname: domain name
     """
 
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
+    return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, None, False, None,
                          'update_algorithm')
 
 
-def column_replace(p_engine, rulesetname, envname, metaname, columnname,
+def column_replace(p_engine, p_username,  rulesetname, envname, metaname, columnname,
                    algname, newalgname, newdomain):
     """
     Change masking algorithm from algname to newalgname for columns limited by
@@ -132,12 +132,12 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
 
     Return 0 if all updates happend without issue, non-zero return for errors
     """
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
+    return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, algname, None, newalgname, True,
                          newdomain, 'update_algorithm')
 
 
-def column_check(p_engine, rulesetname, envname, column, columncount):
+def column_check(p_engine, p_username,  rulesetname, envname, column, columncount):
     """
     Check if column exists for condition set by parameters
     :param1 p_engine: masking engine
@@ -153,7 +153,7 @@ def column_check(p_engine, rulesetname, envname, column, columncount):
     metaname = column["Metadata name"]
     columnname = column["Column name"]
     colcount = []
-    ret = column_worker(p_engine, None, rulesetname, envname, metaname,
+    ret = column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, None, None,
                          None, 'do_compare', cmpcolumn=column,
                          colcount=colcount)
@@ -199,6 +199,11 @@ def do_compare(**kwargs):
     else:
         cmp_domain_name = None
 
+    if cmpcolumn["dateformat"] != '':
+        cmp_dateformat = cmpcolumn["dateformat"]
+    else:
+        cmp_dateformat = None
+
     ret = -1
 
     if cmp_is_masked != enginecolumn.is_masked:
@@ -223,7 +228,8 @@ def do_compare(**kwargs):
                     .format(cmpcolumn["Metadata name"],
                             cmpcolumn["Column name"]))
         ret = ret - 1
-    if cmpcolumn["dateformat"] != enginecolumn.date_format:
+
+    if cmp_dateformat != enginecolumn.date_format:
         print_error("Date format for table {} column {} is different"
                     .format(cmpcolumn["Metadata name"],
                             cmpcolumn["Column name"]))
@@ -232,7 +238,7 @@ def do_compare(**kwargs):
     return ret
 
 
-def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
+def column_list(p_engine, p_username,  format, sortby, rulesetname, envname, metaname,
                 columnname, algname, is_masked):
     """
     Print column list
@@ -264,7 +270,7 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
     data.create_header(data_header)
     data.format_type = format
     ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
         None, 'do_print', data=data)
 
@@ -276,7 +282,7 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
 
 
 
-def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
+def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, columnname,
                 algname, is_masked, file, inventory):
     """
     Print column list
@@ -297,7 +303,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                     "at same time")
         return 1
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -374,7 +380,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
     data.format_type = "csv"
 
     ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
         None, worker, data=data, inventory=inventory)
 
@@ -394,7 +400,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
         return ret
 
 
-def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
+def column_export(p_engine, p_username,  sortby, rulesetname, envname, metaname, columnname,
                   algname):
     """
     Print column list
@@ -424,7 +430,7 @@ def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
     data.format_type = "json"
 
     ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, None, None, None,
         None, 'do_export', data=data)
 
@@ -506,7 +512,7 @@ def do_export(**kwargs):
         print_idmethod = 'N'
 
     if colobj.date_format is None:
-        print_dateformat = None
+        print_dateformat = ''
     else:
         print_dateformat = colobj.date_format
 
@@ -722,7 +728,7 @@ def do_save_file(**kwargs):
 
     return 0
 
-def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
+def column_worker(p_engine, p_username,  sortby, rulesetname, envname, metaname, columnname,
                   filter_algname, filter_is_masked, algname, is_masked,
                   domainname, function_to_call, data=None, inventory=None,
                   **kwargs):
@@ -750,7 +756,7 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -897,7 +903,7 @@ def update_algorithm(**kwargs):
                          colobj.cf_meta_name))
         return 0
 
-def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
+def column_batch(p_engine, p_username,  rulesetname, envname, inputfile, inventory):
     """
     Update all columns defined in file
     param1: p_engine: engine name from configuration
@@ -911,7 +917,7 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

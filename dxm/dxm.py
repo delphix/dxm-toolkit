@@ -121,6 +121,7 @@ class dxm_state(object):
         self.debug = False
         self.engine = None
         self.format = None
+        self.username = None
 
 
 pass_state = click.make_pass_decorator(dxm_state, ensure=True)
@@ -148,6 +149,17 @@ def engine_option(f):
     return click.option('--engine',
                         expose_value=False,
                         help='Engine name',
+                        callback=callback)(f)
+
+
+def user_option(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(dxm_state)
+        state.engineuser = value
+        return value
+    return click.option('--engineuser',
+                        expose_value=False,
+                        help='User name',
                         callback=callback)(f)
 
 
@@ -181,6 +193,7 @@ def common_options(f):
     f = debug_option(f)
     f = engine_option(f)
     f = format_option(f)
+    f = user_option(f)
     return f
 
 def debug_options(f):
@@ -460,7 +473,7 @@ def delete(dxm_state):
     """
     Delete entry from configuration database
     """
-    exit(engine_delete(dxm_state.engine, None))
+    exit(engine_delete(dxm_state.engine, dxm_state.engineuser))
 
 
 @engine.command()
@@ -480,7 +493,7 @@ def logs(dxm_state, enginelog,page_size,level):
     """
     Save Masking Engine log into file
     """
-    exit(engine_logs(dxm_state.engine, enginelog, page_size,level))
+    exit(engine_logs(dxm_state.engine, dxm_state.engineuser, enginelog, page_size,level))
 
 
 @engine.command()
@@ -493,7 +506,7 @@ def upload(dxm_state, filename):
     """
     Save Masking Engine log into file
     """
-    exit(engine_upload(dxm_state.engine, filename))
+    exit(engine_upload(dxm_state.engine, dxm_state.engineuser, filename))
 
 @application.command()
 @click.option('--appname', help='Filter output by application name')
@@ -506,7 +519,7 @@ def list(dxm_state, appname):
     If --appname is set, output list will be limited by value of this option
     and return non-zero return code if application is not found.
     """
-    exit(application_list(dxm_state.engine, dxm_state.format, appname))
+    exit(application_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, appname))
 
 
 @application.command()
@@ -520,7 +533,7 @@ def add(dxm_state, appname):
     Option --appname is required. Exit code will be set to 0
     if application was added and to non-zero value if there was an error
     """
-    exit(application_add(dxm_state.engine, appname))
+    exit(application_add(dxm_state.engine, dxm_state.engineuser, appname))
 
 
 @environment.command()
@@ -534,7 +547,7 @@ def list(dxm_state, envname):
     If --envname is set, output list will be limited by value of this option
     and return non-zero return code if environment is not found.
     """
-    exit(environment_list(dxm_state.engine, dxm_state.format, envname))
+    exit(environment_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, envname))
 
 
 @environment.command()
@@ -552,7 +565,7 @@ def add(dxm_state, envname, appname, purpose):
     Options --envname and --appname are required. Exit code will be set to 0
     if environment was added and to non-zero value if there was an error
     """
-    exit(environment_add(dxm_state.engine, envname, appname, purpose))
+    exit(environment_add(dxm_state.engine, dxm_state.engineuser, envname, appname, purpose))
 
 
 @environment.command()
@@ -565,7 +578,7 @@ def delete(dxm_state, envname):
     Option --envname is required. Exit code will be set to 0
     if environemnt was deleted and to non-zero value if there was an error
     """
-    exit(environment_delete(dxm_state.engine, envname))
+    exit(environment_delete(dxm_state.engine, dxm_state.engineuser, envname))
 
 
 @connector.command()
@@ -585,7 +598,7 @@ def list(dxm_state, connectorname, envname, details):
     Option --details will display additional column with connector details
     """
     exit(connector_list(
-        dxm_state.engine, dxm_state.format, envname, connectorname,
+        dxm_state.engine, dxm_state.engineuser, dxm_state.format, envname, connectorname,
         details))
 
 
@@ -686,7 +699,7 @@ def add(dxm_state, connectorname, envname, connectortype, host, port, username,
         'jdbc': jdbc,
         'jdbc_driver_name': jdbc_driver_name
     }
-    exit(connector_add(dxm_state.engine, params))
+    exit(connector_add(dxm_state.engine, dxm_state.engineuser, params))
 
 
 @connector.command()
@@ -744,7 +757,7 @@ def update(dxm_state, envname, connectorname, host, port, username,
         'path': path,
         'jdbc': jdbc
     }
-    exit(connector_update(dxm_state.engine, params))
+    exit(connector_update(dxm_state.engine, dxm_state.engineuser, params))
 
 
 @connector.command()
@@ -760,7 +773,7 @@ def delete(dxm_state, connectorname, envname):
     Option --connectorname is required. Exit code will be set to 0
     if connector was deleted and to non-zero value if there was an error
     """
-    exit(connector_delete(dxm_state.engine, connectorname, envname))
+    exit(connector_delete(dxm_state.engine, dxm_state.engineuser, connectorname, envname))
 
 
 @connector.command()
@@ -774,7 +787,7 @@ def test(dxm_state, connectorname, envname):
     Option --connectorname is required. Exit code will be set to 0
     if test was succesful and to non-zero value if there was an error
     """
-    exit(connector_test(dxm_state.engine, connectorname, envname))
+    exit(connector_test(dxm_state.engine, dxm_state.engineuser, connectorname, envname))
 
 
 @connector.command()
@@ -791,7 +804,7 @@ def fetch_meta(dxm_state, connectorname, envname):
 
     Exit code will be set to non-zero value if there was an error
     """
-    exit(connector_fetch(dxm_state.engine, connectorname, envname,
+    exit(connector_fetch(dxm_state.engine, dxm_state.engineuser, connectorname, envname,
                          dxm_state.format))
 
 
@@ -811,7 +824,7 @@ def list(dxm_state, rulesetname, envname):
     if ruleset is not found.
     """
     exit(ruleset_list(
-        dxm_state.engine, dxm_state.format, rulesetname, envname))
+        dxm_state.engine, dxm_state.engineuser, dxm_state.format, rulesetname, envname))
 
 
 @ruleset.command()
@@ -837,7 +850,7 @@ def add(dxm_state, rulesetname, connectorname, envname):
 
     Return non-zero code if there was a problem with adding ruleset
     """
-    exit(ruleset_add(dxm_state.engine, rulesetname, connectorname, envname))
+    exit(ruleset_add(dxm_state.engine, dxm_state.engineuser, rulesetname, connectorname, envname))
 
 
 @ruleset.command()
@@ -852,7 +865,7 @@ def delete(dxm_state, rulesetname, envname):
     Delete ruleset from Masking engine.
     Return non-zero code if there was a problem with deleting ruleset
     """
-    exit(ruleset_delete(dxm_state.engine, rulesetname, envname))
+    exit(ruleset_delete(dxm_state.engine, dxm_state.engineuser, rulesetname, envname))
 
 @ruleset.command()
 @click.option(
@@ -866,7 +879,7 @@ def refresh(dxm_state, rulesetname, envname):
     Refresh a ruleset on the Masking engine
     Return non-zero code if there was a problem with deleting ruleset
     """
-    exit(ruleset_refresh(dxm_state.engine, rulesetname, envname))
+    exit(ruleset_refresh(dxm_state.engine, dxm_state.engineuser, rulesetname, envname))
 
 @ruleset.command()
 @click.option(
@@ -883,7 +896,7 @@ def clone(dxm_state, rulesetname, envname, newrulesetname):
     Clone ruleset to new one inside same environment
     Return non-zero code if there was a problem with cloning ruleset
     """
-    exit(ruleset_clone(dxm_state.engine, rulesetname, envname,
+    exit(ruleset_clone(dxm_state.engine, dxm_state.engineuser, rulesetname, envname,
                        newrulesetname))
 
 
@@ -912,7 +925,7 @@ def exportrule(dxm_state, rulesetname, envname, outputfile,
     Export ruleset into a JSON file
     """
     exit(ruleset_export(
-        dxm_state.engine, rulesetname, envname,
+        dxm_state.engine, dxm_state.engineuser, rulesetname, envname,
         outputfile, exportmeta, metaname))
 
 
@@ -935,7 +948,7 @@ def importrule(dxm_state, inputfile, rulesetname, envname, connectorname):
     Import a ruleset from a JSON file created by exportrule command
     """
     exit(ruleset_import(
-        dxm_state.engine, inputfile, rulesetname, connectorname, envname))
+        dxm_state.engine, dxm_state.engineuser, inputfile, rulesetname, connectorname, envname))
 
 @ruleset.command()
 @click.option(
@@ -948,7 +961,7 @@ def checkrule(dxm_state, inputfile):
     Compare ruleset from file generated by exportrule command 
     with ruleset on the Masking engine
     """
-    exit(ruleset_check(dxm_state.engine, inputfile))
+    exit(ruleset_check(dxm_state.engine, dxm_state.engineuser, inputfile))
 
 @ruleset.command()
 @click.option(
@@ -1052,7 +1065,7 @@ def addmeta(dxm_state, rulesetname, metaname, custom_sql, where_clause,
         "envname": envname,
         "fetchfilter": fetchfilter
     }
-    exit(ruleset_addmeta(dxm_state.engine, params, inputfile, fromconnector, bulk))
+    exit(ruleset_addmeta(dxm_state.engine, dxm_state.engineuser, params, inputfile, fromconnector, bulk))
 
 
 @ruleset.command()
@@ -1071,7 +1084,7 @@ def listmeta(dxm_state, rulesetname, envname, metaname):
     if metaname is not found.
     """
     exit(ruleset_listmeta(
-        dxm_state.engine, dxm_state.format, rulesetname, envname, metaname))
+        dxm_state.engine, dxm_state.engineuser, dxm_state.format, rulesetname, envname, metaname))
 
 
 @ruleset.command()
@@ -1089,7 +1102,7 @@ def deletemeta(dxm_state, metaname, rulesetname, envname):
     Delete a table or file from ruleset.
     Return non-zero return code for error.
     """
-    exit(ruleset_deletemeta(dxm_state.engine, rulesetname, metaname, envname))
+    exit(ruleset_deletemeta(dxm_state.engine, dxm_state.engineuser, rulesetname, metaname, envname))
 
 
 @job.command()
@@ -1106,7 +1119,7 @@ def list(dxm_state, jobname, envname):
     be limited by value of this option and return non-zero return code
     if jobname is not found.
     """
-    exit(jobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
+    exit(jobs_list(dxm_state.engine, dxm_state.engineuser, jobname, envname, dxm_state.format))
 
 @job.command()
 @click.option('--jobname', help="Filter jobs using jobname")
@@ -1126,7 +1139,7 @@ def report(dxm_state, jobname, envname, last, startdate, enddate, details):
     be limited by value of this option and return non-zero return code
     if jobname is not found.
     """
-    exit(jobs_report(dxm_state.engine, jobname, envname, dxm_state.format, 
+    exit(jobs_report(dxm_state.engine, dxm_state.engineuser, jobname, envname, dxm_state.format, 
                      last, startdate, enddate, details))
 
 @job.command()
@@ -1242,7 +1255,7 @@ def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "prescript": prescript,
         "postscript": postscript
     }
-    exit(job_add(dxm_state.engine, params))
+    exit(job_add(dxm_state.engine, dxm_state.engineuser, params))
 
 
 @job.command()
@@ -1363,7 +1376,7 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "prescript": f_prescript,
         "postscript": f_postscript
     }
-    exit(job_update(dxm_state.engine, jobname, envname, params))
+    exit(job_update(dxm_state.engine, dxm_state.engineuser, jobname, envname, params))
 
 
 @job.command()
@@ -1391,7 +1404,7 @@ def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
     If --nowait flag is specified script doesn't monitor job and release
     control after job is started.
     """
-    exit(job_start(dxm_state.engine, jobname, envname, tgt_connector,
+    exit(job_start(dxm_state.engine, dxm_state.engineuser, jobname, envname, tgt_connector,
                    tgt_connector_env, nowait, parallel, monitor))
 
 
@@ -1407,7 +1420,7 @@ def delete(dxm_state, jobname, envname):
     Delete an existing job from Masking Engine.
     Return non zero code if there was problem with deleting a job
     """
-    exit(job_delete(dxm_state.engine, jobname, envname))
+    exit(job_delete(dxm_state.engine, dxm_state.engineuser, jobname, envname))
 
 # clarification with API develeopers needed about canceling job
 # @job.command()
@@ -1422,7 +1435,7 @@ def delete(dxm_state, jobname, envname):
 #     Cancel execution of running job.
 #     Return non zero code if there was problem with canceling a job
 #     """
-#     exit(job_cancel(dxm_state.engine, jobname, envname))
+#     exit(job_cancel(dxm_state.engine, dxm_state.engineuser, jobname, envname))
 
 
 @job.command()
@@ -1439,7 +1452,7 @@ def copy(dxm_state, jobname, envname, newjobname):
     Copy an existing job to a new one.
     Return non zero code if there was problem with canceling a job
     """
-    exit(job_copy(dxm_state.engine, jobname, envname, newjobname))
+    exit(job_copy(dxm_state.engine, dxm_state.engineuser, jobname, envname, newjobname))
 
 
 @fileformat.command()
@@ -1448,7 +1461,7 @@ def copy(dxm_state, jobname, envname, newjobname):
 @pass_state
 def delete(dxm_state, fileformatname):
     """ FileFormat list """
-    exit(fileformat_delete(dxm_state.engine, fileformatname))
+    exit(fileformat_delete(dxm_state.engine, dxm_state.engineuser, fileformatname))
 
 
 @fileformat.command()
@@ -1460,7 +1473,7 @@ def delete(dxm_state, fileformatname):
 def list(dxm_state, fileformattype, fileformatname):
     """ FileFormat list """
     exit(fileformat_list(
-        dxm_state.engine, dxm_state.format, fileformattype, fileformatname))
+        dxm_state.engine, dxm_state.engineuser, dxm_state.format, fileformattype, fileformatname))
 
 
 @fileformat.command()
@@ -1472,7 +1485,7 @@ def list(dxm_state, fileformattype, fileformatname):
 @pass_state
 def add(dxm_state, fileformattype, fileformatfile):
     """ FileFormat add """
-    exit(fileformat_add(dxm_state.engine, fileformattype, fileformatfile))
+    exit(fileformat_add(dxm_state.engine, dxm_state.engineuser, fileformattype, fileformatfile))
 
 
 @column.command()
@@ -1509,7 +1522,7 @@ def list(dxm_state, rulesetname, envname, metaname, columnname, algname,
     and return non-zero return code if columnname is not found.
     """
     exit(column_list(
-        dxm_state.engine, dxm_state.format, sortby, rulesetname, envname,
+        dxm_state.engine, dxm_state.engineuser, dxm_state.format, sortby, rulesetname, envname,
         metaname, columnname, algname, is_masked))
 
 
@@ -1538,7 +1551,7 @@ def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
     Save column masking rules (inventory) into CSV file which can be loaded
     later using toolkit.
     """
-    exit(column_save(dxm_state.engine, sortby, rulesetname, envname, metaname,
+    exit(column_save(dxm_state.engine, dxm_state.engineuser, sortby, rulesetname, envname, metaname,
          columnname, algname, is_masked, outputfile, inventory))
 
 
@@ -1574,7 +1587,7 @@ def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
     masked.
     Return non-zero return code if there was a problem with setting masking.
     """
-    exit(column_setmasking(dxm_state.engine, rulesetname, envname,
+    exit(column_setmasking(dxm_state.engine, dxm_state.engineuser, rulesetname, envname,
          metaname, columnname, algname, domainname, dateformat, idmethod))
 
 
@@ -1597,7 +1610,7 @@ def unsetmasking(dxm_state, rulesetname, envname, metaname, columnname):
     unmasked.
     Return non-zero return code if there was a problem with setting unmasking.
     """
-    exit(column_unsetmasking(dxm_state.engine, rulesetname, envname,
+    exit(column_unsetmasking(dxm_state.engine, dxm_state.engineuser, rulesetname, envname,
          metaname, columnname))
 
 
@@ -1627,7 +1640,7 @@ def replace(dxm_state, rulesetname, envname, metaname, columnname, algname,
     Change an algorithm for column(s) from algname to newalgname.
     Return non-zero return code if there was a problem with changing algorithm
     """
-    exit(column_replace(dxm_state.engine, rulesetname, envname, metaname,
+    exit(column_replace(dxm_state.engine, dxm_state.engineuser, rulesetname, envname, metaname,
          columnname, algname, newalgname, newdomain))
 
 
@@ -1674,7 +1687,7 @@ def batch(dxm_state, rulesetname, envname, inputfile, inventory):
 
 
     """
-    exit(column_batch(dxm_state.engine, rulesetname, envname, inputfile,
+    exit(column_batch(dxm_state.engine, dxm_state.engineuser, rulesetname, envname, inputfile,
                       inventory))
 
 
@@ -1688,7 +1701,7 @@ def list(dxm_state, algname):
     Output list will be limited by value of --algname options if set
     and return non-zero return code if algname is not found.
     """
-    exit(algorithm_list(dxm_state.engine, dxm_state.format, algname))
+    exit(algorithm_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, algname))
 
 
 # @algorithms.command()
@@ -1701,7 +1714,7 @@ def list(dxm_state, algname):
 #     Output list will be limited by value of --algname options if set
 #     and return non-zero return code if algname is not found.
 #     """
-#     exit(algorithm_export(dxm_state.engine, algname, None))
+#     exit(algorithm_export(dxm_state.engine, dxm_state.engineuser, algname, None))
 #
 #
 # @algorithms.command()
@@ -1714,7 +1727,7 @@ def list(dxm_state, algname):
 #     Output list will be limited by value of --algname options if set
 #     and return non-zero return code if algname is not found.
 #     """
-#     exit(algorithm_import(dxm_state.engine, None))
+#     exit(algorithm_import(dxm_state.engine, dxm_state.engineuser, None))
 
 
 @meta.command()
@@ -1822,7 +1835,7 @@ def update(dxm_state, rulesetname, metaname, custom_sql, where_clause,
         "file_eor_custom": file_eor_custom,
         "envname": envname
     }
-    exit(tab_update_meta(dxm_state.engine, params))
+    exit(tab_update_meta(dxm_state.engine, dxm_state.engineuser, params))
 
 
 @profileset.command()
@@ -1856,7 +1869,7 @@ def export(dxm_state, profilename, exportfile):
     Output list will be limited by value of --profilename options if set
     and return non-zero return code if profilename is not found.
     """
-    exit(profile_export(dxm_state.engine, profilename, exportfile))
+    exit(profile_export(dxm_state.engine, dxm_state.engineuser, profilename, exportfile))
 
 
 @profileset.command()
@@ -2047,7 +2060,7 @@ def list(dxm_state, jobname, envname):
     be limited by value of this option and return non-zero return code
     if jobname is not found.
     """
-    exit(profilejobs_list(dxm_state.engine, jobname, envname, dxm_state.format))
+    exit(profilejobs_list(dxm_state.engine, dxm_state.engineuser, jobname, envname, dxm_state.format))
 
 
 
@@ -2069,7 +2082,7 @@ def report(dxm_state, jobname, envname, last, startdate, enddate, details):
     be limited by value of this option and return non-zero return code
     if jobname is not found.
     """
-    exit(profilejobs_report(dxm_state.engine, jobname, envname, dxm_state.format, 
+    exit(profilejobs_report(dxm_state.engine, dxm_state.engineuser, jobname, envname, dxm_state.format, 
                      last, startdate, enddate, details))
 
 @profilejob.command()
@@ -2097,7 +2110,7 @@ def start(dxm_state, jobname, envname,
     If --nowait flag is specified script doesn't monitor job and release
     control after job is started.
     """
-    exit(profilejob_start(dxm_state.engine, jobname, envname,
+    exit(profilejob_start(dxm_state.engine, dxm_state.engineuser, jobname, envname,
                           nowait, parallel, monitor, tgt_connector,
                           tgt_connector_env))
 
@@ -2115,7 +2128,7 @@ def copy(dxm_state, jobname, envname, newjobname):
     Copy an existing job to a new one.
     Return non zero code if there was problem with canceling a job
     """
-    exit(profilejob_copy(dxm_state.engine, jobname, envname, newjobname))
+    exit(profilejob_copy(dxm_state.engine, dxm_state.engineuser, jobname, envname, newjobname))
 
 @profilejob.command()
 @click.option(
@@ -2180,7 +2193,7 @@ def add(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "num_input_streams": num_streams,
         "multi_tenant": multi_tenant
     }
-    exit(profilejob_add(dxm_state.engine, params))
+    exit(profilejob_add(dxm_state.engine, dxm_state.engineuser, params))
 
 @profilejob.command()
 @click.option('--jobname', required=True, help="Name of job to update")
@@ -2233,7 +2246,7 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
         "num_input_streams": num_streams,
         "multi_tenant": multi_tenant
     }
-    exit(profilejob_update(dxm_state.engine, jobname, envname, params))
+    exit(profilejob_update(dxm_state.engine, dxm_state.engineuser, jobname, envname, params))
 
 @profilejob.command()
 @click.option(
@@ -2247,7 +2260,7 @@ def delete(dxm_state, jobname, envname):
     Delete an existing job from Masking Engine.
     Return non zero code if there was problem with deleting a job
     """
-    exit(profilejob_delete(dxm_state.engine, jobname, envname))
+    exit(profilejob_delete(dxm_state.engine, dxm_state.engineuser, jobname, envname))
 
 
 # doesn't work with profile job
@@ -2263,7 +2276,7 @@ def delete(dxm_state, jobname, envname):
 #     Cancel execution of running job.
 #     Return non zero code if there was problem with canceling a job
 #     """
-#     exit(profilejob_cancel(dxm_state.engine, jobname, envname))
+#     exit(profilejob_cancel(dxm_state.engine, dxm_state.engineuser, jobname, envname))
 
 @sync.command()
 @click.option('--objectname', help="Filter object using a name")
@@ -2280,7 +2293,7 @@ def list(dxm_state, objecttype, objectname, envname):
 
     If no filter options are specified, all objects types will be displayed.
     """
-    exit(sync_list(dxm_state.engine, objecttype, objectname,
+    exit(sync_list(dxm_state.engine, dxm_state.engineuser, objecttype, objectname,
                    envname, dxm_state.format))
 
 @sync.command()
@@ -2297,7 +2310,7 @@ def export(dxm_state, objecttype, objectname, envname, path):
     """
     Export an object to file in specified path
     """
-    exit(sync_export(dxm_state.engine, objecttype, objectname,
+    exit(sync_export(dxm_state.engine, dxm_state.engineuser, objecttype, objectname,
                      envname, path))
 
 
@@ -2316,7 +2329,7 @@ def load(dxm_state, target_envname, inputfile, inputpath, force):
     """
     Load an object from file into Masking Engine
     """
-    exit(sync_import(dxm_state.engine, target_envname, inputfile,
+    exit(sync_import(dxm_state.engine, dxm_state.engineuser, target_envname, inputfile,
                      inputpath, force))
 
 @role.command()
@@ -2329,7 +2342,7 @@ def list(dxm_state, rolename):
 
     If no filter options are specified, all roles will be displayed.
     """
-    exit(role_list(dxm_state.engine, dxm_state.format, rolename))
+    exit(role_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, rolename))
 
 
 @user.command()
@@ -2342,7 +2355,7 @@ def list(dxm_state, username):
 
     If no filter options are specified, all users will be displayed.
     """
-    exit(user_list(dxm_state.engine, dxm_state.format, username))
+    exit(user_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, username))
 
 @user.command()
 @click.option('--username', help="User name", required=True)
@@ -2364,7 +2377,7 @@ def add(dxm_state, username, firstname, lastname, email, password, user_type,
     """
     Add user to Masking Engine
     """
-    exit(user_add(dxm_state.engine, username, firstname, lastname, email,
+    exit(user_add(dxm_state.engine, dxm_state.engineuser, username, firstname, lastname, email,
                   password, user_type, user_environments, user_role))
 
 @user.command()
@@ -2377,7 +2390,7 @@ def delete(dxm_state, username, force):
     Delete an user from Masking Engine
     To delete admin user, please use force option. Use this with care !!!
     """
-    exit(user_delete(dxm_state.engine, username, force))
+    exit(user_delete(dxm_state.engine, dxm_state.engineuser, username, force))
 
 @user.command()
 @click.option('--username', help="User name", required=True)
@@ -2402,7 +2415,7 @@ def update(dxm_state, username, firstname, lastname, email, password, user_type,
     if password == '':
         password = click.prompt('Please enter a password', hide_input=True,
                                 confirmation_prompt=True)
-    exit(user_update(dxm_state.engine, username, firstname, lastname, email,
+    exit(user_update(dxm_state.engine, dxm_state.engineuser, username, firstname, lastname, email,
                      password, user_type, user_environments, user_role))
 
 @domain.command()
@@ -2415,7 +2428,7 @@ def list(dxm_state, domainname):
 
     If no filter options are specified, all domains will be displayed.
     """
-    exit(domain_list(dxm_state.engine, dxm_state.format, domainname))
+    exit(domain_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, domainname))
 
 
 @domain.command()
@@ -2431,7 +2444,7 @@ def add(dxm_state, domainname, classification, algname):
 
     If no filter options are specified, all domains will be displayed.
     """
-    exit(domain_add(dxm_state.engine, domainname, classification, algname))
+    exit(domain_add(dxm_state.engine, dxm_state.engineuser, domainname, classification, algname))
 
 @domain.command()
 @click.option('--domainname', help="Domain name to delete", required=True)
@@ -2441,7 +2454,7 @@ def delete(dxm_state, domainname):
     """
     Delete the domain from the Masking Engine
     """
-    exit(domain_delete(dxm_state.engine, domainname))
+    exit(domain_delete(dxm_state.engine, dxm_state.engineuser, domainname))
 
 @domain.command()
 @click.option('--domainname', help="Domain name to update", required=True)
@@ -2455,7 +2468,7 @@ def update(dxm_state, domainname, classification, algname):
     Update the domain in the Masking Engine
 
     """
-    exit(domain_update(dxm_state.engine, domainname, classification, algname))
+    exit(domain_update(dxm_state.engine, dxm_state.engineuser, domainname, classification, algname))
 
 
 @jdbc.command()
@@ -2468,7 +2481,7 @@ def list(dxm_state, driver_name):
 
     If no filter options are specified, all drivers will be displayed.
     """
-    exit(driver_list(dxm_state.engine, dxm_state.format, driver_name))
+    exit(driver_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, driver_name))
 
 
 @jdbc.command()
@@ -2481,7 +2494,7 @@ def add(dxm_state, driver_name, driver_class, driver_file):
     """
     Add JDBC driver to Delphix Engine
     """
-    exit(driver_add(dxm_state.engine, driver_name, driver_class, driver_file))
+    exit(driver_add(dxm_state.engine, dxm_state.engineuser, driver_name, driver_class, driver_file))
 
 @jdbc.command()
 @click.option('--driver_name', help="Filter jdbc drivers using a name", required=True)
@@ -2491,4 +2504,4 @@ def delete(dxm_state, driver_name):
     """
     Delete JDBC driver from Delphix Engine
     """
-    exit(driver_delete(dxm_state.engine, driver_name))
+    exit(driver_delete(dxm_state.engine, dxm_state.engineuser, driver_name))

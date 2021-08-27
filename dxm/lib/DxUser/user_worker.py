@@ -32,7 +32,7 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxAppSetting.DxAppSettingList import DxAppSettingList
 
 
-def user_delete(p_engine, username, force):
+def user_delete(p_engine, p_username,  username, force):
     """
     Delete user from Engine
     param1: p_engine: engine name from configuration
@@ -43,7 +43,7 @@ def user_delete(p_engine, username, force):
 
     ret = 0
     logger = logging.getLogger()
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
     if enginelist is None:
         return 1
 
@@ -65,7 +65,7 @@ def user_delete(p_engine, username, force):
             print_error("User %s not found" % username)
             logger.debug("User %s not found" % username)
 
-def user_update(p_engine, username, firstname, lastname, email, password,
+def user_update(p_engine, p_username,  username, firstname, lastname, email, password,
              user_type, user_environments, user_role):
     """
     Update user in Engine
@@ -85,7 +85,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
     update = 0
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
     if enginelist is None:
         return 1
 
@@ -171,7 +171,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
     return ret
 
 
-def user_add(p_engine, username, firstname, lastname, email, password,
+def user_add(p_engine, p_username,  username, firstname, lastname, email, password,
              user_type, user_environments, user_role):
     """
     Add user to Engine
@@ -194,7 +194,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
             print_error("User role is required for non-admin user")
             return 1
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
     if enginelist is None:
         return 1
 
@@ -255,7 +255,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
 
     return ret
 
-def user_list(p_engine, format, username):
+def user_list(p_engine, p_username,  format, username):
     """
     Print list of users
     param1: p_engine: engine name from configuration
@@ -266,7 +266,7 @@ def user_list(p_engine, format, username):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

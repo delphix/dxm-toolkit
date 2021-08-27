@@ -29,7 +29,7 @@ from dxm.lib.DxJDBC.DxJDBCList import DxJDBCList
 from dxm.lib.DxEngine.DxEngineFiles import DxEngineFiles
 
 
-def driver_add(p_engine, driver_name, driver_class_name, driver_file_name):
+def driver_add(p_engine, p_username,  driver_name, driver_class_name, driver_file_name):
     """
     Add application to Masking engine
     param1: p_engine: engine name from configuration
@@ -39,7 +39,7 @@ def driver_add(p_engine, driver_name, driver_class_name, driver_file_name):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -68,7 +68,7 @@ def driver_add(p_engine, driver_name, driver_class_name, driver_file_name):
     return ret
 
 
-def driver_delete(p_engine, driver_name):
+def driver_delete(p_engine, p_username,  driver_name):
     """
     Delete driver from engine
     """
@@ -77,7 +77,7 @@ def driver_delete(p_engine, driver_name):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -101,7 +101,7 @@ def driver_delete(p_engine, driver_name):
 
 
 
-def driver_list(p_engine, format, driver_name):
+def driver_list(p_engine, p_username,  format, driver_name):
     """
     Print list of file formats
     param1: p_engine: engine name from configuration
@@ -115,7 +115,7 @@ def driver_list(p_engine, format, driver_name):
     logger = logging.getLogger()
     logger.debug("driver_name {}".format(driver_name))
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

@@ -25,7 +25,7 @@ from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from dxm.lib.DxApplication.DxApplication import DxApplication
 
 
-def application_add(p_engine, appname):
+def application_add(p_engine, p_username,  appname):
     """
     Add application to Masking engine
     param1: p_engine: engine name from configuration
@@ -35,7 +35,7 @@ def application_add(p_engine, appname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -59,7 +59,7 @@ def application_add(p_engine, appname):
     return ret
 
 
-def application_list(p_engine, format, appname):
+def application_list(p_engine, p_username,  format, appname):
     """
     Print list of applications
     param1: p_engine: engine name from configuration
@@ -70,7 +70,7 @@ def application_list(p_engine, format, appname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

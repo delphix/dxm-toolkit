@@ -298,7 +298,7 @@ class DxMaskingEngine(object):
         Tuple (connect_timeout, read_timeout)
         """
         return (5, 15)
-        """    enginelist = get_list_of_engines(p_engine)
+        """    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

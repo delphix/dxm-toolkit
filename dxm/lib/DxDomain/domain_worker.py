@@ -28,7 +28,7 @@ from dxm.lib.DxDomain.DxDomainList import DxDomainList
 from dxm.lib.DxDomain.DxDomain import DxDomain
 
 
-def domain_list(p_engine, format, domainname):
+def domain_list(p_engine, p_username,  format, domainname):
     """
     Print list of algorithms
     param1: p_engine: engine name from configuration
@@ -48,7 +48,7 @@ def domain_list(p_engine, format, domainname):
     data.format_type = format
     data.create_header(data_header)
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -87,7 +87,7 @@ def domain_list(p_engine, format, domainname):
 
     return ret
 
-def domain_add(p_engine, domain_name, classification, default_algname):
+def domain_add(p_engine, p_username,  domain_name, classification, default_algname):
     """
     Add the domain to the Masking Engine
     param1: p_engine: engine name from configuration
@@ -99,7 +99,7 @@ def domain_add(p_engine, domain_name, classification, default_algname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -120,7 +120,7 @@ def domain_add(p_engine, domain_name, classification, default_algname):
 
     return ret
 
-def domain_delete(p_engine, domain_name):
+def domain_delete(p_engine, p_username,  domain_name):
     """
     Delete the domain from the Masking Engine
     param1: p_engine: engine name from configuration
@@ -130,7 +130,7 @@ def domain_delete(p_engine, domain_name):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -148,7 +148,7 @@ def domain_delete(p_engine, domain_name):
     return ret
 
 
-def domain_update(p_engine, domain_name, classification, default_algname):
+def domain_update(p_engine, p_username,  domain_name, classification, default_algname):
     """
     Update the domain to the Masking Engine
     param1: p_engine: engine name from configuration
@@ -160,7 +160,7 @@ def domain_update(p_engine, domain_name, classification, default_algname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

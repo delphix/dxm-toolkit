@@ -97,6 +97,7 @@ class DxDBColumn(object):
         """
         if hasattr(column, "notes") and column.notes == 'N/A':
             column.notes = None
+
         self.__obj = column
         self.__obj.swagger_types = self.swagger_types
         self.__obj.swagger_map = self.swagger_map
@@ -105,13 +106,6 @@ class DxDBColumn(object):
     @property
     def cf_metadata_id(self):
         return self.obj.column_metadata_id
-
-    @property
-    def column_metadata_id(self):
-        if hasattr(self.obj, 'column_metadata_id'):
-            return self.obj.column_metadata_id
-        else:
-            return None
 
     @property
     def cf_meta_name(self):
@@ -138,115 +132,244 @@ class DxDBColumn(object):
 
         return ret.strip()
 
+    @property
+    def column_metadata_id(self):
+        if self.obj is not None and hasattr(self.obj,'column_metadata_id'):
+            return self.obj.column_metadata_id
+        else:
+            return None
+
+    @column_metadata_id.setter
+    def column_metadata_id(self, column_metadata_id):
+        if self.obj is not None:
+            self.obj.column_metadata_id = column_metadata_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def column_name(self):
+        if self.obj is not None and hasattr(self.obj,'column_name'):
+            return self.obj.column_name
+        else:
+            return None
+
+    @column_name.setter
+    def column_name(self, column_name):
+        if self.obj is not None:
+            self.obj.column_name = column_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def table_metadata_id(self):
+        if self.obj is not None and hasattr(self.obj,'table_metadata_id'):
+            return self.obj.table_metadata_id
+        else:
+            return None
+
+    @table_metadata_id.setter
+    def table_metadata_id(self, table_metadata_id):
+        if self.obj is not None:
+            self.obj.table_metadata_id = table_metadata_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     @property
     def algorithm_name(self):
         if self.obj is not None and hasattr(self.obj,'algorithm_name'):
-            return self.__obj.algorithm_name
+            return self.obj.algorithm_name
         else:
             return None
 
     @algorithm_name.setter
     def algorithm_name(self, algorithm_name):
-        """
-        algorithm_name
-        :param algorithm_name: algorithm_name 
-        """
-
         if self.obj is not None:
             self.obj.algorithm_name = algorithm_name
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
     def domain_name(self):
-        return self.obj.domain_name
+        if self.obj is not None and hasattr(self.obj,'domain_name'):
+            return self.obj.domain_name
+        else:
+            return None
 
     @domain_name.setter
     def domain_name(self, domain_name):
-        """
-        domain_name
-        :param domain_name: domain_name 
-        """
-
         if self.obj is not None:
             self.obj.domain_name = domain_name
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
-    def is_masked(self):
-        return self.obj.is_masked
+    def data_type(self):
+        if self.obj is not None and hasattr(self.obj,'data_type'):
+            return self.obj.data_type
+        else:
+            return None
 
-    @is_masked.setter
-    def is_masked(self, is_masked):
-        """
-        is_masked
-        :param is_masked: is_masked flag
-        """
-
+    @data_type.setter
+    def data_type(self, data_type):
         if self.obj is not None:
-            self.obj.is_masked = is_masked
+            self.obj.data_type = data_type
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
     def date_format(self):
-        if hasattr(self.obj, 'date_format'):
+        if self.obj is not None and hasattr(self.obj,'date_format'):
             return self.obj.date_format
         else:
             return None
 
     @date_format.setter
     def date_format(self, date_format):
-        """
-        date_format
-        :param date_format: date_format flag
-        """
-
         if self.obj is not None:
             self.obj.date_format = date_format
         else:
             raise ValueError("Object needs to be initialized first")
 
 
+    @property
+    def column_length(self):
+        if self.obj is not None and hasattr(self.obj,'column_length'):
+            return self.obj.column_length
+        else:
+            return None
+
+    @column_length.setter
+    def column_length(self, column_length):
+        if self.obj is not None:
+            self.obj.column_length = column_length
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def is_masked(self):
+        if self.obj is not None and hasattr(self.obj,'is_masked'):
+            return self.obj.is_masked
+        else:
+            return None
+
+    @is_masked.setter
+    def is_masked(self, is_masked):
+        if self.obj is not None:
+            self.obj.is_masked = is_masked
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     @property
     def is_profiler_writable(self):
-        return self.obj.is_profiler_writable
+        if self.obj is not None and hasattr(self.obj,'is_profiler_writable'):
+            return self.obj.is_profiler_writable
+        else:
+            return None
 
     @is_profiler_writable.setter
     def is_profiler_writable(self, is_profiler_writable):
-        """
-        is_profiler_writable
-        :param is_profiler_writable: is_profiler_writable flag
-        """
-
         if self.obj is not None:
             self.obj.is_profiler_writable = is_profiler_writable
         else:
             raise ValueError("Object needs to be initialized first")
 
-    @property
-    def algorithm_field_id(self):
-        if self.obj is not None and hasattr(self.obj,'algorithm_field_id'):
-            return self.obj.algorithm_field_id
-        else:
-            return None   
 
     @property
-    def algorithm_group_no(self):
-        if self.obj is not None and hasattr(self.obj,'algorithm_group_no'):
-            return self.obj.algorithm_group_no
+    def is_primary_key(self):
+        if self.obj is not None and hasattr(self.obj,'is_primary_key'):
+            return self.obj.is_primary_key
         else:
-            return None   
+            return None
+
+    @is_primary_key.setter
+    def is_primary_key(self, is_primary_key):
+        if self.obj is not None:
+            self.obj.is_primary_key = is_primary_key
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def is_index(self):
+        if self.obj is not None and hasattr(self.obj,'is_index'):
+            return self.obj.is_index
+        else:
+            return None
+
+    @is_index.setter
+    def is_index(self, is_index):
+        if self.obj is not None:
+            self.obj.is_index = is_index
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def is_foreign_key(self):
+        if self.obj is not None and hasattr(self.obj,'is_foreign_key'):
+            return self.obj.is_foreign_key
+        else:
+            return None
+
+    @is_foreign_key.setter
+    def is_foreign_key(self, is_foreign_key):
+        if self.obj is not None:
+            self.obj.is_foreign_key = is_foreign_key
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     @property
     def notes(self):
         if self.obj is not None and hasattr(self.obj,'notes'):
             return self.obj.notes
         else:
-            return None   
+            return None
+
+    @notes.setter
+    def notes(self, notes):
+        if self.obj is not None:
+            self.obj.notes = notes
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def algorithm_field_id(self):
+        if self.obj is not None and hasattr(self.obj,'algorithm_field_id'):
+            return self.obj.algorithm_field_id
+        else:
+            return None
+
+    @algorithm_field_id.setter
+    def algorithm_field_id(self, algorithm_field_id):
+        if self.obj is not None:
+            self.obj.algorithm_field_id = algorithm_field_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def algorithm_group_no(self):
+        if self.obj is not None and hasattr(self.obj,'algorithm_group_no'):
+            return self.obj.algorithm_group_no
+        else:
+            return None
+
+    @algorithm_group_no.setter
+    def algorithm_group_no(self, algorithm_group_no):
+        if self.obj is not None:
+            self.obj.algorithm_group_no = algorithm_group_no
+        else:
+            raise ValueError("Object needs to be initialized first")
 
     def update(self):
         """
