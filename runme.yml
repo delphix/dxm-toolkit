@@ -1,0 +1,36 @@
+---
+ - hosts: localhost
+   vars:
+      engine: "--engine myengine --engineuser admin"
+
+   tasks:
+    - name: create an environment
+      vars:
+        commpar:
+          command: "environment"
+          par: "--envname slon6 --appname app1"
+          check: "--envname slon6"
+      include: create_check.yml
+      with_items:
+        - commpar
+
+    - name: create a connector
+      vars:
+        commpar:
+          command: "connector"
+          par: "--connectorname slon6 --envname slon6 --connectortype oracle --host 172.16.180.129 --port 1521 --sid test19 --schemaname SCOTT --username SCOTT --password tiger"
+          check: "--connectorname slon6"
+      include: create_check.yml
+      with_items:
+        - commpar
+
+
+    - name: create a ruleset
+      vars:
+        commpar:
+          command: "ruleset"
+          par: "--rulesetname slon6 --envname slon6 --connectorname slon6"
+          check: "--rulesetname slon6"
+      include: create_check.yml
+      with_items:
+        - commpar

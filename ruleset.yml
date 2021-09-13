@@ -1,0 +1,30 @@
+---
+ - hosts: localhost
+   vars:
+      engine: "--engine myengine --engineuser admin"
+
+   tasks:
+    - name: exportrule test
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py ruleset exportrule {{ engine }} --rulesetname autotest1 --outputfile /tmp/autotest.json 
+
+    - name: checkrule test
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py ruleset checkrule {{ engine }}  --inputfile /tmp/autotest.json 
+
+    - name: drop ruleset test
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py ruleset delete {{ engine }} --rulesetname autotest1
+
+    - name: importrule test
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py ruleset importrule {{ engine }} --inputfile /tmp/autotest.json 
+
+    - name: checkrule test
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py ruleset checkrule {{ engine }}  --inputfile /tmp/autotest.json 

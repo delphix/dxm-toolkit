@@ -1,0 +1,26 @@
+---
+
+  - name: check and delete if needed
+    shell: |
+      . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+      python dxmc.py {{ commpar.command }} list {{ engine }} {{ commpar.check }}
+    register: check
+    ignore_errors: yes
+
+
+  - name: Delete 
+    shell: |
+      . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+      python dxmc.py {{ commpar.command }} delete {{ engine }} {{ commpar.check }}
+    when: check.rc == 0
+
+  - name: create
+    shell: |
+      . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+      python dxmc.py {{ commpar.command }} add {{ engine }} {{ commpar.par }}
+
+
+  - name: check
+    shell: |
+      . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+      python dxmc.py {{ commpar.command }} list {{ engine }} {{ commpar.check }}
