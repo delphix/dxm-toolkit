@@ -49,25 +49,6 @@ from dxm.lib.masking_api.api.system_information_api import SystemInformationApi
 from dxm.lib.masking_api.api.logging_api import LoggingApi
 from dxm.lib.masking_api.api.file_download_api import FileDownloadApi
 
-class DxApiClient(ApiClient):
-
-    def request(self, method, url, query_params=None, headers=None,
-            post_params=None, body=None, _preload_content=True,
-            _request_timeout=None):
-        
-        if logging.getLogger('debugfile').getEffectiveLevel() == 9:
-            logging_file("SAVE TO FILE {} {} {}".format(url, query_params, body))
-        response = super(DxApiClient, self).request(method, url, query_params, headers,
-                                        post_params, body, _preload_content,
-                                        _request_timeout)
-
-        if logging.getLogger('debugfile').getEffectiveLevel() == 9:
-            logging_file("SAVE TO FILE {} {} {}".format(response.status, response.reason, response.data))
-        return response
-
-
-def logging_file(message):
-    pass
 
 class DxMaskingEngine(object):
 
@@ -160,7 +141,7 @@ class DxMaskingEngine(object):
         :return autorization key for a session
         """
 
-        self.api_client = DxApiClient(self.config)
+        self.api_client = ApiClient(self.config)
         #set number of retries to one
         # set timeout on request level as it is overwritten anyway
         # to do
@@ -298,26 +279,7 @@ class DxMaskingEngine(object):
         Tuple (connect_timeout, read_timeout)
         """
         return (5, 15)
-        """    enginelist = get_list_of_engines(p_engine, p_username)
 
-    if enginelist is None:
-        return 1
-
-    data = DataFormatter()
-    data_header = [
-                    ("Engine name", 30),
-                    ("Application name", 30),
-                  ]
-    data.create_header(data_header)
-    data.format_type = format
-    for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple)
-        if engine_obj.get_session():
-            continue
-        applist = DxApplicationList()
-        # load all objects
-        applist.LoadApplications()
-      """
     @classmethod
     def getlogs(self, outputlog,page_size,level):
         """
@@ -338,7 +300,8 @@ class DxMaskingEngine(object):
         loglist = arr.response_list
         loglist.reverse()
 
-        print(loglist)
+        self.__logger.debug("List of log files")
+        self.__logger.debug(loglist)
 
         for l in loglist:
             try:

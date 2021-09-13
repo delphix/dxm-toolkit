@@ -33,6 +33,7 @@ from multiprocessing.pool import ThreadPool
 import os
 import re
 import tempfile
+import logging
 
 from dxm.lib.masking_api.genericmodel import GenericModel
 
@@ -432,20 +433,26 @@ class ApiClient(object):
                 post_params=None, body=None, _preload_content=True,
                 _request_timeout=None):
         """Makes the HTTP request using RESTClient."""
+
+        if logging.getLogger('debugfile').getEffectiveLevel() == 9:
+            pass
+            ##logging.debug("SAVE TO FILE {} {} {}".format(url, query_params, body))
+
+
         if method == "GET":
-            return self.rest_client.GET(url,
+            response = self.rest_client.GET(url,
                                         query_params=query_params,
                                         _preload_content=_preload_content,
                                         _request_timeout=_request_timeout,
                                         headers=headers)
         elif method == "HEAD":
-            return self.rest_client.HEAD(url,
+            response = self.rest_client.HEAD(url,
                                          query_params=query_params,
                                          _preload_content=_preload_content,
                                          _request_timeout=_request_timeout,
                                          headers=headers)
         elif method == "OPTIONS":
-            return self.rest_client.OPTIONS(url,
+            response = self.rest_client.OPTIONS(url,
                                             query_params=query_params,
                                             headers=headers,
                                             post_params=post_params,
@@ -453,7 +460,7 @@ class ApiClient(object):
                                             _request_timeout=_request_timeout,
                                             body=body)
         elif method == "POST":
-            return self.rest_client.POST(url,
+            response = self.rest_client.POST(url,
                                          query_params=query_params,
                                          headers=headers,
                                          post_params=post_params,
@@ -461,7 +468,7 @@ class ApiClient(object):
                                          _request_timeout=_request_timeout,
                                          body=body)
         elif method == "PUT":
-            return self.rest_client.PUT(url,
+            response = self.rest_client.PUT(url,
                                         query_params=query_params,
                                         headers=headers,
                                         post_params=post_params,
@@ -469,7 +476,7 @@ class ApiClient(object):
                                         _request_timeout=_request_timeout,
                                         body=body)
         elif method == "PATCH":
-            return self.rest_client.PATCH(url,
+            response = self.rest_client.PATCH(url,
                                           query_params=query_params,
                                           headers=headers,
                                           post_params=post_params,
@@ -477,7 +484,7 @@ class ApiClient(object):
                                           _request_timeout=_request_timeout,
                                           body=body)
         elif method == "DELETE":
-            return self.rest_client.DELETE(url,
+            response = self.rest_client.DELETE(url,
                                            query_params=query_params,
                                            headers=headers,
                                            _preload_content=_preload_content,
@@ -488,6 +495,13 @@ class ApiClient(object):
                 "http method must be `GET`, `HEAD`, `OPTIONS`,"
                 " `POST`, `PATCH`, `PUT` or `DELETE`."
             )
+
+        if logging.getLogger('debugfile').getEffectiveLevel() == 9:
+            pass
+            ##logging.debug("SAVE TO FILE {} {} {}".format(response.status, response.reason, response.data))
+        
+        return response
+
 
     def parameters_to_tuples(self, params, collection_formats):
         """Get parameters as list of tuples, formatting collections.

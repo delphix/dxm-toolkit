@@ -198,6 +198,7 @@ def common_options(f):
 
 def debug_options(f):
     f = engine_option(f)
+    f = user_option(f)
     f = debug_option(f)
     return f
 
@@ -411,7 +412,9 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
     '--protocol', help='Communication protocol',
     type=click.Choice(['http', 'https']))
 @click.option(
-    '--username', help='Username used by toolkit')
+    '--username', help='New username used by toolkit')
+@click.option(
+    '--engineuser', help='Existing username defined for engine')
 @click.option(
     '--default', help='Setting engine as default engine for toolkit',
     type=click.Choice(['Y', 'N']))
@@ -430,7 +433,7 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
 @debug_options
 @pass_state
 def update(dxm_state, engine, ip, port, protocol, username, password, default,
-           proxyurl, proxyuser, proxypassword):
+           proxyurl, proxyuser, proxypassword, engineuser):
     """
     Update engine entry in configuration database
     """
@@ -440,19 +443,18 @@ def update(dxm_state, engine, ip, port, protocol, username, password, default,
     if proxypassword == '':
         proxypassword = click.prompt('Please enter a password', hide_input=True,
                                 confirmation_prompt=True)
-    exit(engine_update(engine, ip, username, password,
+    exit(engine_update(engine, engineuser, ip, username, password,
          protocol, port, default, proxyurl, proxyuser, proxypassword))
 
 
 @engine.command()
-@click.option('--engine', help='Engine name (or alias)', required=True)
-@debug_option
+@common_options
 @pass_state
-def logout(dxm_state, engine):
+def logout(dxm_state):
     """
     Logout user
     """
-    exit(engine_logout(engine))
+    exit(engine_logout(dxm_state.engine, dxm_state.engineuser))
 
 
 @engine.command()
@@ -1748,6 +1750,7 @@ def list_table_details(dxm_state, rulesetname, envname, metaname):
     """
     exit(tab_listtable_details(
         dxm_state.engine,
+        dxm_state.engineuser,
         dxm_state.format,
         rulesetname,
         envname,
@@ -1772,6 +1775,7 @@ def list_file_details(dxm_state, rulesetname, envname, metaname):
     """
     exit(tab_listfile_details(
         dxm_state.engine,
+        dxm_state.engineuser,
         dxm_state.format,
         rulesetname,
         envname,
@@ -1888,6 +1892,7 @@ def listmapping(dxm_state, profilename, expressionname):
     """
     exit(profile_list(
             dxm_state.engine,
+            dxm_state.engineuser,
             profilename,
             expressionname,
             dxm_state.format,
@@ -1909,6 +1914,7 @@ def add(dxm_state, profilename, expressionname, description):
     """
     exit(profile_add(
             dxm_state.engine,
+            dxm_state.engineuser,
             profilename,
             expressionname,
             description))
@@ -1925,6 +1931,7 @@ def delete(dxm_state, profilename):
     """
     exit(profile_delete(
             dxm_state.engine,
+            dxm_state.engineuser,
             profilename))
 
 
@@ -1942,6 +1949,7 @@ def addexpression(dxm_state, profilename, expressionname):
     """
     exit(profile_addexpression(
             dxm_state.engine,
+            dxm_state.engineuser,
             profilename,
             expressionname))
 
@@ -1960,6 +1968,7 @@ def deleteexpression(dxm_state, profilename, expressionname):
     """
     exit(profile_deleteexpression(
             dxm_state.engine,
+            dxm_state.engineuser,
             profilename,
             expressionname))
 
@@ -1977,6 +1986,7 @@ def list(dxm_state, expressionname):
     """
     exit(expression_list(
             dxm_state.engine,
+            dxm_state.engineuser,
             expressionname,
             dxm_state.format))
 
@@ -2001,6 +2011,7 @@ def add(dxm_state, expressionname, domainname, level, regex):
     """
     exit(expression_add(
             dxm_state.engine,
+            dxm_state.engineuser,
             expressionname,
             domainname,
             level,
@@ -2018,6 +2029,7 @@ def delete(dxm_state, expressionname):
     """
     exit(expression_delete(
             dxm_state.engine,
+            dxm_state.engineuser,
             expressionname))
 
 
@@ -2041,6 +2053,7 @@ def update(dxm_state, expressionname, domainname, level, regex):
     """
     exit(expression_update(
             dxm_state.engine,
+            dxm_state.engineuser,
             expressionname,
             domainname,
             level,

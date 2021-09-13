@@ -132,6 +132,10 @@ class DxConfig(object):
 
         if self.__conn:
             try:
+
+                if p_default == 'Y' and self.check_default() == -1:
+                    return -1
+
                 sql = "INSERT INTO dxm_engine_info(engine_name," \
                       "ip_address, username, password, protocol," \
                       "port, defengine, proxy_url, proxy_user) VALUES (?,?,?,?,?,?,?,?,?)"
@@ -247,7 +251,38 @@ class DxConfig(object):
             sys.exit(-1)
 
 
-    def update_engine(self, engine_name,
+    def check_uniqness(self, engine_name, engineuser):
+        # check if engine_name can be identified without a username
+
+        if engineuser is None:
+            sql = "select count(*) from dxm_engine_info where engine_name = ?"
+            self.__cursor.execute(sql, tuple([engine_name]))
+        else:
+            sql = "select count(*) from dxm_engine_info where engine_name = ? and username = ?"
+            self.__cursor.execute(sql, tuple([engine_name, engineuser]))
+        rowscount = self.__cursor.fetchone()
+
+        if rowscount[0] > 1:
+            print_error("Please add an engineuser parameter to uniquly identify an engine")
+            return -1
+        else:
+            return rowscount[0]
+
+    def check_default(self):
+        # check there is already default engine - only one can be default
+
+
+        sql = "select count(*) from dxm_engine_info where defengine = 'Y'"
+        self.__cursor.execute(sql)
+        rowscount = self.__cursor.fetchone()
+
+        if rowscount[0] > 0:
+            print_error("There can be only one default engine. Please select current default to N and add / update next")
+            return -1
+        else:
+            return rowscount[0]
+
+    def update_engine(self, engine_name, engineuser,
                       ip_address,
                       username,
                       password,
@@ -264,6 +299,13 @@ class DxConfig(object):
 
         if self.__conn:
             try:
+                
+                if self.check_uniqness(engine_name, engineuser) == -1:
+                    return -1
+
+                if default == 'Y' and self.check_default() == -1:
+                    return -1
+
                 sql = "UPDATE dxm_engine_info " \
                       "set "
 
@@ -337,8 +379,14 @@ class DxConfig(object):
 
                 if update:
                     data.append(engine_name)
-                    sql = sql + ' engine_name = engine_name ' \
-                                ' where engine_name = ? '
+
+                    if engineuser is not None:
+                        data.append(engineuser)
+                        sql = sql + ' engine_name = engine_name ' \
+                                    ' where engine_name = ? and username = ?'
+                    else:
+                        sql = sql + ' engine_name = engine_name ' \
+                                    ' where engine_name = ?'
                     self.__logger.debug(sql)
                     self.__logger.debug(tuple(data))
                     ret = self.__cursor.execute(sql, tuple(data))
@@ -360,6 +408,7 @@ class DxConfig(object):
                         return None
             except lite.Error as e:
                 self.__logger.error("Error %s:" % e.args)
+                print(sql)
                 return -1
         else:
             print_error("No connection")

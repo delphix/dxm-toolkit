@@ -55,7 +55,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
         config.close()
         return None
 
-def engine_update(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
+def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protocol, p_port,
                   p_default, p_proxyurl, p_proxyuser, p_proxypassword):
     """
     Update engine in configuration
@@ -70,10 +70,10 @@ def engine_update(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     """
     config = DxConfig()
     config.init_metadata()
-    config.update_engine(p_engine, p_ip, p_username, p_password,
+    config.update_engine(p_engine, p_engineuser, p_ip, p_username, p_password,
                          p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword)
 
-def engine_logout(p_engine):
+def engine_logout(p_engine, p_engineuser):
     """
     logout engine in configuration
     param1: p_engine: name of Masking engine
@@ -81,9 +81,13 @@ def engine_logout(p_engine):
     """
     config = DxConfig()
     config.init_metadata()
-    config.set_key(p_engine, None, '')
+    if config.check_uniqness(p_engine, p_engineuser) == -1:
+        return -1
+    config.set_key(p_engine, p_engineuser, '')
+    print_message("Session logged out - auth key deleted")
+    return 0
 
-def engine_delete(p_engine, p_username):
+def engine_delete(p_engine, p_engineuser):
     """
     Delete Masking engines from configuration file
     param1: p_engine: name of Masking engine
@@ -92,7 +96,9 @@ def engine_delete(p_engine, p_username):
     """
     config = DxConfig()
     config.init_metadata()
-    if config.delete_engine_info(p_engine, p_username):
+    if config.check_uniqness(p_engine, p_engineuser) == -1:
+        return -1
+    if config.delete_engine_info(p_engine, p_engineuser):
         print_error("Problem with deleting engine from database")
         config.close()
         return -1
@@ -150,9 +156,9 @@ def engine_list(p_engine, p_username, p_format):
     return None
 
 
-def engine_logs(p_engine, outputlog, page_size,level):
+def engine_logs(p_engine, p_engineuser, outputlog, page_size,level):
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_engineuser)
 
     if enginelist is None:
         return 1
@@ -164,9 +170,9 @@ def engine_logs(p_engine, outputlog, page_size,level):
         engine_obj.getlogs(outputlog,page_size,level)
 
 
-def engine_upload(p_engine, filename='/Users/pioro/Downloads/sqlcl/lib/ojdbc8.jar'):
+def engine_upload(p_engine, p_engineuser,  filename):
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_engineuser)
 
     if enginelist is None:
         return 1
