@@ -45,6 +45,7 @@ def tab_listtable_details(p_engine, p_username,  p_format, rulesetname, envname,
     """
     return tab_list_details(
         p_engine,
+        p_username,
         p_format,
         rulesetname,
         envname,
@@ -63,6 +64,7 @@ def tab_listfile_details(p_engine, p_username,  p_format, rulesetname, envname, 
     """
     return tab_list_details(
         p_engine,
+        p_username,
         p_format,
         rulesetname,
         envname,
