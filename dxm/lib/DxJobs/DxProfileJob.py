@@ -461,7 +461,7 @@ class DxProfileJob(object):
                 print_message('Profile job %s finished.' % self.job_name)
             else:
                 self.__logger.debug('Profile job %s finished' % self.job_name)
-                self.__logger.debug('%s rows masked' % execjob.rows_masked)
+                #self.__logger.debug('%s rows masked' % execjob.rows_masked)
             return 0
         else:
             if not self.monitor:
