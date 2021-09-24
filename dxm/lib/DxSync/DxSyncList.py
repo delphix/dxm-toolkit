@@ -26,7 +26,14 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.DxSync.DxSync import DxSync
 from dxm.lib.DxTools.DxTools import paginator
+from dxm.lib.masking_api.api.sync_api import SyncApi
+from dxm.lib.masking_api.rest import ApiException
 
+
+supported_alg_list = {
+    "5.3" : ["SEGMENT", "DATE_SHIFT", "LOOKUP", "TOKENIZATION"], 
+    "6.0.4" : ["SEGMENT", "DATE_SHIFT", "LOOKUP", "TOKENIZATION", "USER_ALGORITHM"]
+}
 
 class DxSyncList(object):
 
@@ -54,33 +61,30 @@ class DxSyncList(object):
 
         self.__syncableList = {}
 
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.sync_api import SyncApi
-            from masking_api_60.models.export_object_metadata_list import ExportObjectMetadataList
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.sync_api import SyncApi
-            from masking_api_53.models.export_object_metadata_list import ExportObjectMetadataList
-            from masking_api_53.rest import ApiException
-
         self.__api = SyncApi
-        self.__model = ExportObjectMetadataList
         self.__apiexc = ApiException
+
+        api_sync_response = None
+
+        if self.__engine.version_le("6.0.3"): # to check
+            alglist = supported_alg_list["5.3"]
+        else:
+            alglist = supported_alg_list["6.0.4"]
 
         try:
             api_sync = self.__api(self.__engine.api_client)
             if objecttype:
                 objecttype = objecttype.upper()
+
             if objecttype and self.__engine.version_ge("5.3"):
                 if objecttype == "ALGORITHM":
-                    api_sync_response = self.__model()
-                    for atype in ["SEGMENT", "DATE_SHIFT",
-                                  "LOOKUP", "TOKENIZATION"]:
+                    for atype in alglist:
+                        print("trying to get {}".format(atype))
                         partres = paginator(
                                       api_sync,
                                       "get_all_syncable_objects",
                                       object_type=atype)
-                        if api_sync_response.response_list is None:
+                        if api_sync_response is None:
                             api_sync_response = partres
                         else:
                             api_sync_response.response_list = \
@@ -110,11 +114,13 @@ class DxSyncList(object):
                     syncobj.from_sync(c)
                     stype = syncobj.object_type
 
-                    if stype in ["LOOKUP", "DATE_SHIFT",
-                                 "SEGMENT", "TOKENIZATION"]:
+                    if stype in alglist:
                         stype = "ALGORITHM"
 
-                    sid = list(syncobj.object_identifier.values())[0]
+                    # print(type(syncobj))
+                    # print(type(syncobj.object_identifier))
+
+                    sid = list(syncobj.object_identifier.to_dict().values())[0]
                     if stype not in self.__syncableList:
                         self.__syncableList[stype] = {}
                     self.__syncableList[stype][sid] = syncobj
@@ -137,8 +143,12 @@ class DxSyncList(object):
         """
 
         allalg = self.__syncableList["ALGORITHM"]
+
+        #print(allalg[0].object_identifier.__dict__)
+
+        # check with older engine 
         return sorted(allalg, key=lambda k:
-                      allalg[k].object_identifier["algorithmName"].lower())
+                      allalg[k].object_identifier.algorithm_name.lower())
 
     @classmethod
     def get_object_by_type_name(self, objecttype, name):

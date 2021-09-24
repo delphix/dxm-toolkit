@@ -27,7 +27,7 @@ from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
 from dxm.lib.DxFileFormat.DxFileFormat import DxFileFormat
 
 
-def fileformat_add(p_engine, fileformat_type, fileformat_file):
+def fileformat_add(p_engine, p_username,  fileformat_type, fileformat_file):
     """
     Add application to Masking engine
     param1: p_engine: engine name from configuration
@@ -37,7 +37,7 @@ def fileformat_add(p_engine, fileformat_type, fileformat_file):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -59,7 +59,7 @@ def fileformat_add(p_engine, fileformat_type, fileformat_file):
     return ret
 
 
-def fileformat_delete(p_engine, fileformat_name):
+def fileformat_delete(p_engine, p_username,  fileformat_name):
     """
     Delete application from Masking engine
     param1: p_engine: engine name from configuration
@@ -71,7 +71,7 @@ def fileformat_delete(p_engine, fileformat_name):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -91,7 +91,7 @@ def fileformat_delete(p_engine, fileformat_name):
 
 
 
-def fileformat_list(p_engine, format, fileformat_type, fileformat_name):
+def fileformat_list(p_engine, p_username,  format, fileformat_type, fileformat_name):
     """
     Print list of file formats
     param1: p_engine: engine name from configuration
@@ -107,7 +107,7 @@ def fileformat_list(p_engine, format, fileformat_type, fileformat_name):
     logger.debug("fileformat type %s fileformat name %s"
                  % (fileformat_type, fileformat_name))
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

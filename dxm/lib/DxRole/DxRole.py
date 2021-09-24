@@ -21,8 +21,51 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.role_api import RoleApi
+from dxm.lib.masking_api.rest import ApiException
+
 
 class DxRole(object):
+
+    swagger_types = {
+        'role_id': 'int',
+        'role_name': 'str',
+        'environment': 'Privilege',
+        'connector': 'Privilege',
+        'ruleset': 'Privilege',
+        'inventory': 'Privilege',
+        'profile_job': 'Privilege',
+        'masking_job': 'Privilege',
+        'tokenize_job': 'Privilege',
+        'reidentify_job': 'Privilege',
+        'scheduler': 'Privilege',
+        'domain': 'Privilege',
+        'algorithm': 'Privilege',
+        'profile_expression': 'Privilege',
+        'profile_set': 'Privilege',
+        'file_format': 'Privilege',
+        'user': 'Privilege'
+    }
+
+    swagger_map = {
+        'role_id': 'roleId',
+        'role_name': 'roleName',
+        'environment': 'environment',
+        'connector': 'connector',
+        'ruleset': 'ruleset',
+        'inventory': 'inventory',
+        'profile_job': 'profileJob',
+        'masking_job': 'maskingJob',
+        'tokenize_job': 'tokenizeJob',
+        'reidentify_job': 'reidentifyJob',
+        'scheduler': 'scheduler',
+        'domain': 'domain',
+        'algorithm': 'algorithm',
+        'profile_expression': 'profileExpression',
+        'profile_set': 'profileSet',
+        'file_format': 'fileFormat',
+        'user': 'user'
+    }
 
     def __init__(self, engine):
         """
@@ -32,22 +75,15 @@ class DxRole(object):
         #Role.__init__(self)
         self.__logger = logging.getLogger()
         self.__engine = engine
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.role import Role
-            from masking_api_60.api.role_api import RoleApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.role import Role
-            from masking_api_53.api.role_api import RoleApi
-            from masking_api_53.rest import ApiException
 
         self.__api = RoleApi
-        self.__model = Role
         self.__apiexc = ApiException
         self.__obj = None
 
     def from_role(self, role):
         self.__obj = role
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
 
     @property
     def obj(self):

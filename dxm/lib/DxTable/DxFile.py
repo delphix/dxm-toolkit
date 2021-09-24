@@ -24,7 +24,36 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 
+from dxm.lib.masking_api.api.file_metadata_api import FileMetadataApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
+
+
 class DxFile(object):
+
+    swagger_types = {
+        'file_metadata_id': 'int',
+        'file_name': 'str',
+        'ruleset_id': 'int',
+        'file_format_id': 'int',
+        'file_type': 'str',
+        'delimiter': 'str',
+        'enclosure': 'str',
+        'end_of_record': 'str',
+        'name_is_regular_expression': 'bool'
+    }
+
+    swagger_map = {
+        'file_metadata_id': 'fileMetadataId',
+        'file_name': 'fileName',
+        'ruleset_id': 'rulesetId',
+        'file_format_id': 'fileFormatId',
+        'file_type': 'fileType',
+        'delimiter': 'delimiter',
+        'enclosure': 'enclosure',
+        'end_of_record': 'endOfRecord',
+        'name_is_regular_expression': 'nameIsRegularExpression'
+    }
 
     def __init__(self, engine):
         """
@@ -35,17 +64,8 @@ class DxFile(object):
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFile object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.file_metadata import FileMetadata
-            from masking_api_60.api.file_metadata_api import FileMetadataApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.file_metadata import FileMetadata
-            from masking_api_53.api.file_metadata_api import FileMetadataApi
-            from masking_api_53.rest import ApiException
 
         self.__api = FileMetadataApi
-        self.__model = FileMetadata
         self._apiexc = ApiException
         self.__obj = None
 
@@ -55,6 +75,65 @@ class DxFile(object):
         :param file: FileMetadata object
         """
         self.__obj = file
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
+
+
+    @property
+    def obj(self):
+        if self.__obj is not None:
+            return self.__obj
+        else:
+            return None
+
+    @property
+    def meta_name(self):
+        return self.obj.file_name
+
+    @property
+    def meta_id(self):
+        return self.obj.file_metadata_id
+
+    @property
+    def file_format_id(self):
+        if hasattr(self.obj,'file_format_id'):
+            return self.obj.file_format_id
+        else: 
+            return None
+
+
+    @property
+    def end_of_record(self):
+        if hasattr(self.obj,'end_of_record'):
+            return self.obj.end_of_record
+        else: 
+            return None
+
+    @property
+    def file_type(self):
+        if hasattr(self.obj,'file_type'):
+            return self.obj.file_type
+        else: 
+            return None
+
+    @property
+    def delimiter(self):
+        if hasattr(self.obj,'delimiter'):
+            return self.obj.delimiter
+        else: 
+            return None
+
+    @property
+    def enclosure(self):
+        if hasattr(self.obj,'enclosure'):
+            return self.obj.enclosure
+        else: 
+            return None
+
+    @property
+    def name_is_regular_expression(self):
+        return self.obj.name_is_regular_expression
+
 
     def create_file(self, file_name, ruleset_id, file_format_id, file_type, delimiter, enclosure, end_of_record, name_is_regular_expression):
         """
@@ -78,50 +157,18 @@ class DxFile(object):
             elif len(end_of_record) > 0:
                 eor_string = end_of_record
 
-        self.__obj = self.__model(file_name=file_name, ruleset_id=ruleset_id, file_format_id=fileformat_id, 
-                                  file_type=file_type, delimiter=delimiter, enclosure=enclosure, end_of_record=eor_string, 
-                                  name_is_regular_expression=name_is_regular_expression)
+
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj.file_name = file_name
+        self.obj.ruleset_id = ruleset_id
+        self.obj.file_format_id = fileformat_id
+        self.obj.file_type = file_type
+        self.obj.delimiter = delimiter
+        self.obj.enclosure = enclosure
+        self.obj.end_of_record = eor_string
+        self.obj.name_is_regular_expression = name_is_regular_expression
 
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
-
-    @property
-    def meta_name(self):
-        return self.obj.file_name
-
-    @property
-    def meta_id(self):
-        return self.obj.file_metadata_id
-
-    @property
-    def file_format_id(self):
-        return self.obj.file_format_id
-
-
-    @property
-    def end_of_record(self):
-        return self.obj.end_of_record
-
-    @property
-    def file_type(self):
-        return self.obj.file_type
-
-    @property
-    def delimiter(self):
-        return self.obj.delimiter
-
-    @property
-    def enclosure(self):
-        return self.obj.enclosure
-
-    @property
-    def name_is_regular_expression(self):
-        return self.obj.name_is_regular_expression
 
     def add(self):
         """

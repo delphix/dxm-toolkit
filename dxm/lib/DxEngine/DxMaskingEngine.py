@@ -22,235 +22,33 @@ import logging
 import requests
 import sys
 import re
+import urllib3
+import ssl
+import certifi
 from packaging import version
 from datetime import datetime, timedelta
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
 import os
-import urllib3
-import ssl
-import certifi
+
+import json
+
+import six
 from urllib3 import make_headers, ProxyManager, PoolManager
 
 #import pickle
 from dxm.lib.DxEngine.DxConfig import DxConfig
-try:
-    from masking_api_60.rest import ApiException
-    from masking_api_60.configuration import Configuration
-    from masking_api_60.api_client import ApiClient
-    from masking_api_60.models.login import Login
-    from masking_api_60.api.login_api import LoginApi
-    from masking_api_60.api.application_api import ApplicationApi
-    from masking_api_60.api.system_information_api import SystemInformationApi
-    from masking_api_60.api.logging_api import LoggingApi
-    from masking_api_60.api.file_download_api import FileDownloadApi
 
-    class DxApiClient(ApiClient):
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.configuration import Configuration
+from dxm.lib.masking_api.api_client import ApiClient
+from dxm.lib.masking_api.api.login_api import LoginApi
+from dxm.lib.masking_api.api.application_api import ApplicationApi
+from dxm.lib.masking_api.api.system_information_api import SystemInformationApi
+from dxm.lib.masking_api.api.logging_api import LoggingApi
+from dxm.lib.masking_api.api.file_download_api import FileDownloadApi
 
-        def __init__(self, configuration=None, header_name=None, header_value=None,
-                    cookie=None):
-
-            super(DxApiClient, self).__init__(configuration=configuration, header_name=header_name, header_value=header_value,
-                                            cookie=cookie)
-
-
-            if configuration.verify_ssl:
-                cert_reqs = ssl.CERT_REQUIRED
-            else:
-                cert_reqs = ssl.CERT_NONE
-
-            # ca_certs
-            if configuration.ssl_ca_cert:
-                ca_certs = configuration.ssl_ca_cert
-            else:
-                # if not set certificate file, use Mozilla's root certificates.
-                ca_certs = certifi.where()
-
-            addition_pool_args = {}
-            if configuration.assert_hostname is not None:
-                addition_pool_args['assert_hostname'] = configuration.assert_hostname  # noqa: E501
-
-            maxsize = 4
-            if maxsize is None:
-                if configuration.connection_pool_maxsize is not None:
-                    maxsize = configuration.connection_pool_maxsize
-                else:
-                    maxsize = 4
-
-            # https pool manager
-            if configuration.proxy:
-                if configuration.proxyuser:
-                    default_headers = make_headers(proxy_basic_auth='{}:{}'.format(configuration.proxyuser, configuration.proxypass))
-                else:
-                    default_headers = make_headers()
-                self.rest_client.pool_manager = urllib3.ProxyManager(
-                    num_pools=4,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=ca_certs,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    proxy_url=configuration.proxy,
-                    proxy_headers = default_headers,
-                    **addition_pool_args
-                )
-            else:
-                self.rest_client.pool_manager = urllib3.PoolManager(
-                    num_pools=4,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=ca_certs,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    **addition_pool_args
-                )
-
-        def _ApiClient__deserialize_file(self, response):
-            """Deserializes body to file
-
-            Return a body of request
-
-            :param response:  RESTResponse.
-            :return: file path.
-            """
-
-            return response.data
-
-
-        def request(self, method, url, query_params=None, headers=None,
-                post_params=None, body=None, _preload_content=True,
-                _request_timeout=None):
-            
-            if logging.getLogger('debugfile').getEffectiveLevel() == 9:
-                logging_file("SAVE TO FILE {} {} {}".format(url, query_params, body))
-            response = super(DxApiClient, self).request(method, url, query_params, headers,
-                                            post_params, body, _preload_content,
-                                            _request_timeout)
-
-            if logging.getLogger('debugfile').getEffectiveLevel() == 9:
-                logging_file("SAVE TO FILE {} {} {}".format(response.status, response.reason, response.data))
-            return response
-
-
-except ModuleNotFoundError:
-    try:
-        from masking_api_53.rest import ApiException 
-        from masking_api_53.configuration import Configuration
-        from masking_api_53.api_client import ApiClient
-        from masking_api_53.models.login import Login
-        from masking_api_53.api.login_api import LoginApi
-        from masking_api_53.api.application_api import ApplicationApi
-        from masking_api_53.api.system_information_api import SystemInformationApi
-        from masking_api_53.api.logging_api import LoggingApi
-        from masking_api_53.api.file_download_api import FileDownloadApi
-    except ModuleNotFoundError:
-        print_error("You need to have at least one Masking API installed.")
-        sys.exit(1)    
-
-
-
-
-
-
-
-def logging_file(message):
-    pass
-
-
-try:
-
-    from masking_api_53.api_client import ApiClient as ApiClient5
-
-    class DxApiClient5(ApiClient5):
-
-        def __init__(self, configuration=None, header_name=None, header_value=None,
-                    cookie=None):
-
-            super(DxApiClient5, self).__init__(configuration=configuration, header_name=header_name, header_value=header_value,
-                                            cookie=cookie)
-
-
-            if configuration.verify_ssl:
-                cert_reqs = ssl.CERT_REQUIRED
-            else:
-                cert_reqs = ssl.CERT_NONE
-
-            # ca_certs
-            if configuration.ssl_ca_cert:
-                ca_certs = configuration.ssl_ca_cert
-            else:
-                # if not set certificate file, use Mozilla's root certificates.
-                ca_certs = certifi.where()
-
-            addition_pool_args = {}
-            if configuration.assert_hostname is not None:
-                addition_pool_args['assert_hostname'] = configuration.assert_hostname  # noqa: E501
-
-            maxsize = 4
-            if maxsize is None:
-                if configuration.connection_pool_maxsize is not None:
-                    maxsize = configuration.connection_pool_maxsize
-                else:
-                    maxsize = 4
-
-            # https pool manager
-            if configuration.proxy:
-                if configuration.proxyuser:
-                    default_headers = make_headers(proxy_basic_auth='{}:{}'.format(configuration.proxyuser, configuration.proxypass))
-                else:
-                    default_headers = make_headers()
-                self.rest_client.pool_manager = urllib3.ProxyManager(
-                    num_pools=4,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=ca_certs,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    proxy_url=configuration.proxy,
-                    proxy_headers = default_headers,
-                    **addition_pool_args
-                )
-            else:
-                self.rest_client.pool_manager = urllib3.PoolManager(
-                    num_pools=4,
-                    maxsize=maxsize,
-                    cert_reqs=cert_reqs,
-                    ca_certs=ca_certs,
-                    cert_file=configuration.cert_file,
-                    key_file=configuration.key_file,
-                    **addition_pool_args
-                )
-
-        def _ApiClient__deserialize_file(self, response):
-            """Deserializes body to file
-
-            Return a body of request
-
-            :param response:  RESTResponse.
-            :return: file path.
-            """
-
-            return response.data
-
-
-
-        def request(self, method, url, query_params=None, headers=None,
-                post_params=None, body=None, _preload_content=True,
-                _request_timeout=None):
-            
-            if logging.getLogger().getEffectiveLevel() == 9:
-                logging_file("SAVE TO FILE 5 {} {} {}".format(url, query_params, body))
-            response = super(DxApiClient5, self).request(method, url, query_params, headers,
-                                            post_params, body, _preload_content,
-                                            _request_timeout)
-
-            if logging.getLogger().getEffectiveLevel() == 9:
-                logging_file("SAVE TO FILE 5 {} {} {}".format(response.status, response.reason, response.data))
-            return response
-
-except ModuleNotFoundError:
-    pass
 
 class DxMaskingEngine(object):
 
@@ -277,6 +75,7 @@ class DxMaskingEngine(object):
         tuple:
         engine_name,ip_address,username,password, protocol,port, defengine, auth_id
         """
+
         self.__address = engine_tuple[1]
         self.__name = engine_tuple[0]
         self.__username = engine_tuple[2]
@@ -296,6 +95,7 @@ class DxMaskingEngine(object):
         self.config = Configuration()
         self.config.host = self.__base_url
         self.config.debug = False
+        self.config.client_side_validation = False
 
         if engine_tuple[8]:
             #proxy settings
@@ -321,6 +121,11 @@ class DxMaskingEngine(object):
 
 
     @classmethod
+    def get_config(self):
+        return self.config
+
+
+    @classmethod
     def get_username(self):
         return self.__username
 
@@ -336,51 +141,7 @@ class DxMaskingEngine(object):
         :return autorization key for a session
         """
 
-        if "masking_api_53.api" in sys.modules.keys():
-            is_api5 = True
-            version = 5
-        else:
-            is_api5 = False
-
-        if "masking_api_60.api" in sys.modules.keys():
-            is_api6 = True
-            version = 6
-        else:
-            is_api6 = False
-
-        self.get_session_worker(version=version)
-        if self.get_version()<"6.0.0.0":
-            if is_api5:    
-                self.__logger.debug("Change API from 6 to 5") 
-                self.get_session_worker(version=5) 
-            else:
-                print_error("Delphix Engine version is not supported by compiled API. Please generate SDK with proper version")
-                sys.exit(1)
-
-        if self.get_version()>="6.0.0.0" and is_api6 == False:
-            print_error("Delphix Engine version is not supported by compiled API. Please generate SDK with proper version")
-            sys.exit(1)         
-        
-
-
-
-    @classmethod
-    def get_session_worker(self, version):
-        """
-        Create a session with a Masking engine
-        :return autorization key for a session
-        """
-
-        if version==5:
-            self.api_client = DxApiClient5(self.config)
-        else:
-            try:
-                self.api_client = DxApiClient(self.config)
-            except NameError:
-                self.__logger.debug("No 6 libs, failing back to 5") 
-                self.api_client = DxApiClient5(self.config)
-
-
+        self.api_client = ApiClient(self.config)
         #set number of retries to one
         # set timeout on request level as it is overwritten anyway
         # to do
@@ -404,7 +165,10 @@ class DxMaskingEngine(object):
                     return 1
                 self.__logger.debug("Logging into Delphix Masking")
                 login_api = LoginApi(self.api_client)
-                login = Login(self.__username, password)
+                login = { 
+                    "username": self.__username, 
+                    "password": password
+                }
                 try:
                     self.__logger.debug("sending a login request. "
                                         "Username {}".format(self.__username))
@@ -467,6 +231,16 @@ class DxMaskingEngine(object):
         return version.parse(engine_ver) >= version.parse(version_engine)
 
     @classmethod
+    def version_le(self, version_engine):
+        """
+        Compare an input parameter with engine version.
+        param1: version_engine: version number to compare ex. "5.3"
+        return: True if engine has higher or equal version
+        """
+        engine_ver = self.get_version()
+        return version.parse(engine_ver) <= version.parse(version_engine)
+
+    @classmethod
     def save(self, apikey):
         """
         Save session to file or database
@@ -476,7 +250,7 @@ class DxMaskingEngine(object):
         # pickle.dump(apikey, binary_file)
         # binary_file.close()
         config = DxConfig()
-        config.set_key(self.__name, None, apikey)
+        config.set_key(self.__name, self.__username, apikey)
 
 
 
@@ -495,7 +269,7 @@ class DxMaskingEngine(object):
         #     self.__logger.error("Session file not found")
 
         config = DxConfig()
-        auth_key = config.get_key(self.__name, None)
+        auth_key = config.get_key(self.__name, self.__username)
         return auth_key
 
     @classmethod
@@ -505,26 +279,7 @@ class DxMaskingEngine(object):
         Tuple (connect_timeout, read_timeout)
         """
         return (5, 15)
-        """    enginelist = get_list_of_engines(p_engine)
 
-    if enginelist is None:
-        return 1
-
-    data = DataFormatter()
-    data_header = [
-                    ("Engine name", 30),
-                    ("Application name", 30),
-                  ]
-    data.create_header(data_header)
-    data.format_type = format
-    for engine_tuple in enginelist:
-        engine_obj = DxMaskingEngine(engine_tuple)
-        if engine_obj.get_session():
-            continue
-        applist = DxApplicationList()
-        # load all objects
-        applist.LoadApplications()
-      """
     @classmethod
     def getlogs(self, outputlog,page_size,level):
         """
@@ -545,7 +300,8 @@ class DxMaskingEngine(object):
         loglist = arr.response_list
         loglist.reverse()
 
-        print(loglist)
+        self.__logger.debug("List of log files")
+        self.__logger.debug(loglist)
 
         for l in loglist:
             try:

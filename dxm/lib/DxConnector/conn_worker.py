@@ -29,8 +29,11 @@ from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
 from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
+from dxm.lib.DxConnector.ExtendedConnector import ExtendedConnector
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
+from dxm.lib.DxJDBC.DxJDBCList import DxJDBCList
+
 # from masking_api_60.models.database_connector import DatabaseConnector
 
 # from masking_api_60.models.connection_info import ConnectionInfo
@@ -38,12 +41,12 @@ from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 
 database_types = ['oracle', 'sybase', 'mssql', 'aurora_postgres', 'db2',
                   'db2_iseries', 'db2_mainframe', 'generic', 'mysql',
-                  'postgres', 'rds_oracle', 'rds_postgres']
+                  'postgres', 'rds_oracle', 'rds_postgres', 'extended']
 
 file_types = ['delimited', 'excel', 'fixed_width', 'xml']
 
 
-def connector_add(p_engine, params):
+def connector_add(p_engine, p_username,  params):
     """
     Add application to Masking engine
     param1: p_engine: engine name from configuration
@@ -54,7 +57,7 @@ def connector_add(p_engine, params):
     ret = 0
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -93,6 +96,9 @@ def connector_add(p_engine, params):
             elif params['type'] == 'sybase':
                 connobj = SybaseConnector(engine_obj)
                 dbtype = 'SYBASE'
+            elif params['type'] == 'extended':
+                connobj = ExtendedConnector(engine_obj)
+                dbtype = 'EXTENDED'
             else:
                 connobj = DxConnector(engine_obj)
                 dbtype = params['type'].upper()
@@ -110,11 +116,16 @@ def connector_add(p_engine, params):
             connobj.host = host
 
             if port:
-                connobj.port = port + 0
+                connobj.port = int(port)
             connobj.sid = params['sid']
             connobj.jdbc = params['jdbc']
             connobj.instance_name = params['instancename']
             connobj.database_name = params['databasename']
+
+            if params['jdbc_driver_name']:
+                jdbclist = DxJDBCList()
+                driver_id = jdbclist.get_driver_id_by_name(params['jdbc_driver_name'])
+                connobj.jdbc_driver_id = driver_id
 
         elif params['type'] in file_types:
             path = params['path']
@@ -197,7 +208,7 @@ def do_print_meta(**kwargs):
     print("")
     return 0
 
-def connector_delete(p_engine, connectorname, envname):
+def connector_delete(p_engine, p_username,  connectorname, envname):
     """
     Delete connector from Masking engine
     param1: p_engine: engine name from configuration
@@ -205,9 +216,9 @@ def connector_delete(p_engine, connectorname, envname):
     param3: envname: environment name
     return 0 if added, non 0 for error
     """
-    return connector_selector(p_engine, connectorname, envname, 'do_delete')
+    return connector_selector(p_engine, p_username,  connectorname, envname, 'do_delete')
 
-def connector_selector(p_engine, connectorname, envname, function_to_call,
+def connector_selector(p_engine, p_username,  connectorname, envname, function_to_call,
                        format='fixed'):
     """
     Select unique connector from Masking engine and run function on it
@@ -220,7 +231,7 @@ def connector_selector(p_engine, connectorname, envname, function_to_call,
     """
 
     ret = 0
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -251,7 +262,7 @@ def connector_selector(p_engine, connectorname, envname, function_to_call,
 
     return ret
 
-def connector_test(p_engine, connectorname, envname):
+def connector_test(p_engine, p_username,  connectorname, envname):
     """
     Test connector from Masking engine
     param1: p_engine: engine name from configuration
@@ -259,9 +270,9 @@ def connector_test(p_engine, connectorname, envname):
     return 0 if added, non 0 for error
     """
 
-    return connector_selector(p_engine, connectorname, envname, 'do_test')
+    return connector_selector(p_engine, p_username,  connectorname, envname, 'do_test')
 
-def connector_fetch(p_engine, connectorname, envname, format):
+def connector_fetch(p_engine, p_username,  connectorname, envname, format):
     """
     Test connector from Masking engine
     param1: p_engine: engine name from configuration
@@ -271,10 +282,10 @@ def connector_fetch(p_engine, connectorname, envname, format):
     return 0 if added, non 0 for error
     """
 
-    return connector_selector(p_engine, connectorname, envname,
+    return connector_selector(p_engine, p_username,  connectorname, envname,
                               'do_print_meta', format)
 
-def connector_update(p_engine, params):
+def connector_update(p_engine, p_username,  params):
     """
     Update connector from Masking engine
     param1: p_engine: engine name from configuration
@@ -287,7 +298,7 @@ def connector_update(p_engine, params):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -360,7 +371,7 @@ def connector_update(p_engine, params):
 
     return ret
 
-def connector_list(p_engine, format, envname, connector_name, details):
+def connector_list(p_engine, p_username,  format, envname, connector_name, details):
     """
     Print list of connectors
     param1: p_engine: engine name from configuration
@@ -373,7 +384,7 @@ def connector_list(p_engine, format, envname, connector_name, details):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

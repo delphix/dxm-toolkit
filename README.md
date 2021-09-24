@@ -3,7 +3,7 @@
 ## What is it
 
 Dxtoolkit for masking is a command line script to manipulate Delphix Masking Engine and it is delivered by Delphix professional services team.
-Dxmc script is a single command with parameters and arguments delivered as executable file with libraries. Dxm is written in Python, but no knowledge of Python is required unless you want to extend it.  In fact, no programming experience whatsoever is required to use the Dxtoolkit for masking.
+Dxmc script is a single command with parameters and arguments delivered as executable file with libraries. Dxm is written in Python, but no knowledge of Python is equired unless you want to extend it.  In fact, no programming experience whatsoever is required to use the Dxtoolkit for masking.
 
 Supperted Delphix Engine version: >= 5.3.X and 6.0.X
 
@@ -26,7 +26,7 @@ Configure a masking engine using the following steps:
 
 * add engine
 ```
-dxmc engine engine add --engine testeng --ip testeng.foo.com --username delphix_admin --default Y
+dxmc engine add --engine testeng --ip testeng.foo.com --username delphix_admin --default Y
 Password:
 Repeat for confirmation:
 Engine added to configuration
@@ -38,7 +38,7 @@ dxmc engine list
 
 Engine name                     IP                              username                        protocol  port   default
 ==============================  ==============================  ==============================  ========  =====  =======
-testeng                         testeng.foo.com                 delphix_admin                   http      8282   Y       
+testeng                         testeng.foo.com                 delphix_admin                   http      8282   Y
 
 ```
 
@@ -55,38 +55,16 @@ Check a [documentation](https://github.com/delphix/dxm-toolkit/wiki) for more de
 
 ### Known issues
 
-- No pagination support
-- No password encryption in configuration database - it will be addressed in next release
+N/A
 
 ### Source version
 
-Python 3.7.X
+Python 3.7.X or higher
 
 **Required packages**
 - Check setup.py for list standard Python packages
-- Delphix Masking Engine Swagger SDK is required
-
-To generate Masking SDK version 6.0.X run the following commands where _myengine_ is a name or IP of Delphix Masking Engine
 
 ```
-mkdir masking_api_60
-
-docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_60 -DpackageName=masking_api_60
-
-cd masking_api_60
-
-python setup.py install
-```
-
-To generate Masking SDK version 5.3.X run the following commands where _myengine_ is a name or IP of Delphix Masking Engine:
-
-```
-mkdir masking_api_53
-
-docker run --rm -v ${PWD}:/local swaggerapi/swagger-codegen-cli generate -DapiDocs=false -DapiTests=false -DmodelTests=false -DmodelDocs=false -i http://myengine/masking/api/swagger-basepath.json -l python -o /local/masking_api_53 -DpackageName=masking_api_53
-
-cd masking_api_53
-
 python setup.py install
 ```
 

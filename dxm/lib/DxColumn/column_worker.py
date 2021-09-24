@@ -33,6 +33,8 @@ from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxTable.DxMetaList import DxMetaList
 
+from dxm.lib.DxAlgorithm.DxAlgorithmList import DxAlgorithmList
+from collections import namedtuple
 
 def columns_copy(engine_obj, meta_id, new_meta_id):
     """
@@ -76,7 +78,7 @@ def columns_copy(engine_obj, meta_id, new_meta_id):
 
     return ret
 
-def column_setmasking(p_engine, rulesetname, envname, metaname, columnname,
+def column_setmasking(p_engine, p_username,  rulesetname, envname, metaname, columnname,
                       algname, domainname, dateformat, idmethod):
     """
     Set masking for column
@@ -91,13 +93,13 @@ def column_setmasking(p_engine, rulesetname, envname, metaname, columnname,
     :param8 idmethod: can column be overwritten by profiler
     """
 
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
+    return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, algname, True, domainname,
                          'update_algorithm', dateformat=dateformat,
                          idmethod=idmethod)
 
 
-def column_unsetmasking(p_engine, rulesetname, envname, metaname, columnname):
+def column_unsetmasking(p_engine, p_username,  rulesetname, envname, metaname, columnname):
     """
     Set masking for column
     :param1 p_engine: masking engine
@@ -109,12 +111,12 @@ def column_unsetmasking(p_engine, rulesetname, envname, metaname, columnname):
     :param7 domainname: domain name
     """
 
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
+    return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, None, False, None,
                          'update_algorithm')
 
 
-def column_replace(p_engine, rulesetname, envname, metaname, columnname,
+def column_replace(p_engine, p_username,  rulesetname, envname, metaname, columnname,
                    algname, newalgname, newdomain):
     """
     Change masking algorithm from algname to newalgname for columns limited by
@@ -130,12 +132,12 @@ def column_replace(p_engine, rulesetname, envname, metaname, columnname,
 
     Return 0 if all updates happend without issue, non-zero return for errors
     """
-    return column_worker(p_engine, None, rulesetname, envname, metaname,
+    return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, algname, None, newalgname, True,
                          newdomain, 'update_algorithm')
 
 
-def column_check(p_engine, rulesetname, envname, column, columncount):
+def column_check(p_engine, p_username,  rulesetname, envname, column, columncount):
     """
     Check if column exists for condition set by parameters
     :param1 p_engine: masking engine
@@ -151,7 +153,7 @@ def column_check(p_engine, rulesetname, envname, column, columncount):
     metaname = column["Metadata name"]
     columnname = column["Column name"]
     colcount = []
-    ret = column_worker(p_engine, None, rulesetname, envname, metaname,
+    ret = column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, None, None,
                          None, 'do_compare', cmpcolumn=column,
                          colcount=colcount)
@@ -197,6 +199,11 @@ def do_compare(**kwargs):
     else:
         cmp_domain_name = None
 
+    if cmpcolumn["dateformat"] != '':
+        cmp_dateformat = cmpcolumn["dateformat"]
+    else:
+        cmp_dateformat = None
+
     ret = -1
 
     if cmp_is_masked != enginecolumn.is_masked:
@@ -221,7 +228,8 @@ def do_compare(**kwargs):
                     .format(cmpcolumn["Metadata name"],
                             cmpcolumn["Column name"]))
         ret = ret - 1
-    if cmpcolumn["dateformat"] != enginecolumn.date_format:
+
+    if cmp_dateformat != enginecolumn.date_format:
         print_error("Date format for table {} column {} is different"
                     .format(cmpcolumn["Metadata name"],
                             cmpcolumn["Column name"]))
@@ -230,7 +238,7 @@ def do_compare(**kwargs):
     return ret
 
 
-def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
+def column_list(p_engine, p_username,  format, sortby, rulesetname, envname, metaname,
                 columnname, algname, is_masked):
     """
     Print column list
@@ -262,7 +270,7 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
     data.create_header(data_header)
     data.format_type = format
     ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
         None, 'do_print', data=data)
 
@@ -274,7 +282,7 @@ def column_list(p_engine, format, sortby, rulesetname, envname, metaname,
 
 
 
-def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
+def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, columnname,
                 algname, is_masked, file, inventory):
     """
     Print column list
@@ -295,7 +303,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                     "at same time")
         return 1
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -331,6 +339,14 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                         ("Date Format", 32)
                       ]
         worker = "do_save_database"
+
+        if inventory is True:
+            data_header = data_header + [("Notes",30)]
+
+        if engine_obj.version_ge("6.0.8"):
+            data_header = data_header + [("Multi-Column Logical Field", 10),
+                                         ("Group Number", 10)]      
+
     else:
         data = DataFormatter()
         data_header = [
@@ -347,15 +363,24 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
                       ]
         worker = "do_save_file"
 
+        if inventory is True:
+            data_header = data_header + [("Notes",30)]
+
+        if engine_obj.version_ge("6.0.8"):
+            data_header = data_header + [("Multi-Column Logical Field", 10),
+                                         ("Group Number", 10)]  
+
     if inventory is True:
         data_header = [("Environment Name", 32),
                        ("Rule Set", 32)] + data_header
+
+
 
     data.create_header(data_header, inventory)
     data.format_type = "csv"
 
     ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
         None, worker, data=data, inventory=inventory)
 
@@ -375,7 +400,7 @@ def column_save(p_engine, sortby, rulesetname, envname, metaname, columnname,
         return ret
 
 
-def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
+def column_export(p_engine, p_username,  sortby, rulesetname, envname, metaname, columnname,
                   algname):
     """
     Print column list
@@ -405,7 +430,7 @@ def column_export(p_engine, sortby, rulesetname, envname, metaname, columnname,
     data.format_type = "json"
 
     ret = column_worker(
-        p_engine, sortby, rulesetname, envname, metaname, columnname,
+        p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, None, None, None,
         None, 'do_export', data=data)
 
@@ -441,7 +466,7 @@ def do_print(**kwargs):
         environment_name = 'N/A'
 
 
-    if colobj.date_format:
+    if hasattr(colobj, "date_format") and colobj.date_format:
         date_format = colobj.date_format
     else:
         date_format = "-"
@@ -487,7 +512,7 @@ def do_export(**kwargs):
         print_idmethod = 'N'
 
     if colobj.date_format is None:
-        print_dateformat = None
+        print_dateformat = ''
     else:
         print_dateformat = colobj.date_format
 
@@ -518,6 +543,8 @@ def do_save_database(**kwargs):
     inventory = kwargs.get('inventory')
     envobj = kwargs.get('envobj')
     ruleobj = kwargs.get('ruleobj')
+    engine_obj = kwargs.get('engine_obj')
+    alg_list = kwargs.get('alg_list')
 
     if inventory is True:
         mapping = algname_mapping_export()
@@ -529,7 +556,11 @@ def do_save_database(**kwargs):
         print_domain = colobj.domain_name
         print_ismasked = 'Y'
         if mapping is not None:
-            print_algname = mapping[colobj.algorithm_name]
+            # if algorithm is in mapping - change name if not - well leave a name 
+            if colobj.algorithm_name in mapping:
+                print_algname = mapping[colobj.algorithm_name]
+            else:
+                print_algname = colobj.algorithm_name
     else:
         print_algname = ''
         print_domain = ''
@@ -545,36 +576,89 @@ def do_save_database(**kwargs):
     else:
         print_dateformat = colobj.date_format
 
-    if inventory is True:
-        data.data_insert(
-                          envobj.environment_name,
-                          ruleobj.ruleset_name,
-                          metaobj.meta_name,
-                          colobj.cf_meta_column_role,
-                          "-",
-                          colobj.cf_meta_name,
-                          colobj.cf_meta_type,
-                          print_domain,
-                          print_algname,
-                          print_ismasked,
-                          print_idmethod,
-                          "All Row",
-                          print_dateformat
-                        )
+    if colobj.algorithm_group_no is not None:
+        algobj = alg_list.get_by_ref(colobj.algorithm_name)
+        group = colobj.algorithm_group_no
+        field = [ x.name for x in algobj.fields if x.field_id == colobj.algorithm_field_id ][0]
+
     else:
-        data.data_insert(
-                          metaobj.meta_name,
-                          colobj.cf_meta_column_role,
-                          "-",
-                          colobj.cf_meta_name,
-                          colobj.cf_meta_type,
-                          print_domain,
-                          print_algname,
-                          print_ismasked,
-                          print_idmethod,
-                          "All Row",
-                          print_dateformat
-                        )
+        field = ''
+        group = ''
+
+
+    if inventory is True:
+
+        if field == '':
+            field = '-'
+            group = '-'
+
+        if engine_obj.version_ge("6.0.8"):
+
+            data.data_insert(
+                            envobj.environment_name,
+                            ruleobj.ruleset_name,
+                            metaobj.meta_name,
+                            colobj.cf_meta_column_role,
+                            "-",
+                            colobj.cf_meta_name,
+                            colobj.cf_meta_type,
+                            print_domain,
+                            print_algname,
+                            print_ismasked,
+                            print_idmethod,
+                            "All Row",
+                            print_dateformat,
+                            colobj.notes,
+                            field,
+                            group
+                            )
+        else:
+            data.data_insert(
+                            envobj.environment_name,
+                            ruleobj.ruleset_name,
+                            metaobj.meta_name,
+                            colobj.cf_meta_column_role,
+                            "-",
+                            colobj.cf_meta_name,
+                            colobj.cf_meta_type,
+                            print_domain,
+                            print_algname,
+                            print_ismasked,
+                            print_idmethod,
+                            "All Row",
+                            print_dateformat
+                            )
+    else:
+        if engine_obj.version_ge("6.0.8"):
+            data.data_insert(
+                            metaobj.meta_name,
+                            colobj.cf_meta_column_role,
+                            "-",
+                            colobj.cf_meta_name,
+                            colobj.cf_meta_type,
+                            print_domain,
+                            print_algname,
+                            print_ismasked,
+                            print_idmethod,
+                            "All Row",
+                            print_dateformat,
+                            field,
+                            group
+                            )
+        else:
+            data.data_insert(
+                            metaobj.meta_name,
+                            colobj.cf_meta_column_role,
+                            "-",
+                            colobj.cf_meta_name,
+                            colobj.cf_meta_type,
+                            print_domain,
+                            print_algname,
+                            print_ismasked,
+                            print_idmethod,
+                            "All Row",
+                            print_dateformat
+                            )
 
     return 0
 
@@ -644,7 +728,7 @@ def do_save_file(**kwargs):
 
     return 0
 
-def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
+def column_worker(p_engine, p_username,  sortby, rulesetname, envname, metaname, columnname,
                   filter_algname, filter_is_masked, algname, is_masked,
                   domainname, function_to_call, data=None, inventory=None,
                   **kwargs):
@@ -672,7 +756,7 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -688,6 +772,8 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
         rulelist = DxRulesetList(envname)
         connlist = DxConnectorsList(envname)
         metalist = DxMetaList()
+
+        alg_list = DxAlgorithmList()
 
         rulesetref_list = []
 
@@ -764,6 +850,8 @@ def column_worker(p_engine, sortby, rulesetname, envname, metaname, columnname,
                                         algname=algname, is_masked=is_masked,
                                         domainname=domainname,
                                         inventory=inventory,
+                                        engine_obj=engine_obj,
+                                        alg_list=alg_list,
                                         **kwargs)
     return ret
 
@@ -815,7 +903,7 @@ def update_algorithm(**kwargs):
                          colobj.cf_meta_name))
         return 0
 
-def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
+def column_batch(p_engine, p_username,  rulesetname, envname, inputfile, inventory):
     """
     Update all columns defined in file
     param1: p_engine: engine name from configuration
@@ -829,7 +917,7 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -838,6 +926,18 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
         mapping = algname_mapping_import()
     else:
         mapping = None
+
+
+    database_list = "metaname column_role parent_column column_name \
+                     type domain_name algname is_masked_YN idmethod rowtype dateformat"
+
+    file_list = "metaname column_name domain_name algname \
+                 is_masked_YN priority recordtype position \
+                 length dateformat"
+
+    inventory_addition = "env ruleset"
+
+    multicolumn_addition = "fieldid groupid"
 
     for engine_tuple in enginelist:
         engine_obj = DxMaskingEngine(engine_tuple)
@@ -850,6 +950,8 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
         rulelist = DxRulesetList(envname)
         metalist = DxMetaList()
 
+        alg_list = DxAlgorithmList()
+
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
         if ruleref:
             ruleobj = rulelist.get_by_ref(ruleref)
@@ -860,31 +962,37 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
 
         metacolumn_list = {}
 
+
+        setversion = False
+
+
         for line in inputfile:
+            if not setversion:
+                setversion = True
+                
+                if ruleobj.type == "Database":  
+                    collist = database_list
+                else:
+                    collist = file_list
+
+                if inventory is True:
+                    collist = inventory_addition + " " + collist
+
+                if "Multi-Column" in line:
+                    # we have a 6.0.8 or higher inventory 
+                    if inventory is True:
+                        collist = collist + " notes " + multicolumn_addition
+                    else:
+                        collist = collist + " " + multicolumn_addition
+
+                linetype = namedtuple("linetype", collist)
+
             if line.startswith('#'):
                 continue
             try:
                 logger.debug("readling line %s" % line)
-                if inventory is False:
-                    if ruleobj.type == "Database":
-                        (metaname, column_role, parent_column, column_name,
-                         type, domain_name, algname,
-                         is_masked_YN, idmethod, rowtype, dateformat) \
-                         = line.strip().split(',')
-                    else:
-                        (metaname, column_name, domain_name, algname,
-                         is_masked_YN, priority, recordtype, position,
-                         length, dateformat) = line.strip().split(',')
-                else:
-                    if ruleobj.type == "Database":
-                        (env, ruleset, metaname, column_role, parent_column,
-                         column_name, type, domain_name, algname,
-                         is_masked_YN, idmethod, rowtype, dateformat) \
-                         = line.strip().split(',')
-                    else:
-                        (env, ruleset, metaname, column_name, domain_name,
-                         algname, is_masked_YN, priority, recordtype, position,
-                         length, dateformat) = line.strip().split(',')
+                lineobj = linetype(*line.strip().split(','))
+
             except ValueError as e:
                 if str(e) == "too many values to unpack":
                     logger.error("to few values in inputfile - maybe add "
@@ -905,7 +1013,7 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
                     ret = ret + 1
                     break
 
-            metaref = metalist.get_MetadataId_by_name(metaname)
+            metaref = metalist.get_MetadataId_by_name(lineobj.metaname)
             if metaref is None:
                 ret = ret + 1
                 continue
@@ -913,59 +1021,75 @@ def column_batch(p_engine, rulesetname, envname, inputfile, inventory):
             metaobj = metalist.get_by_ref(metaref)
 
             if metaref not in metacolumn_list:
-                logger.debug("reading columns from engine for %s " % metaname)
+                logger.debug("reading columns from engine for %s " % lineobj.metaname)
                 collist = DxColumnList()
                 collist.LoadColumns(metadata_id=metaref)
                 metacolumn_list[metaref] = collist
 
             colref = metacolumn_list[metaref].get_column_id_by_name(
-                column_name)
+                lineobj.column_name)
 
             if colref:
                 colobj = metacolumn_list[metaref].get_by_ref(colref)
-                if is_masked_YN == 'Y' or is_masked_YN == 'true':
+                if lineobj.is_masked_YN == 'Y' or lineobj.is_masked_YN == 'true':
                     is_masked = True
                 else:
                     is_masked = False
 
-                if algname == '' or algname == '-':
+                if lineobj.algname == '' or lineobj.algname == '-':
                     algname = 'None'
+                else:
+                    algname = lineobj.algname
 
-                if domain_name == '' or domain_name == '-':
+                if lineobj.domain_name == '' or lineobj.domain_name == '-':
                     domain_name = 'None'
+                else:
+                    domain_name = lineobj.domain_name 
+
+
+                if hasattr(lineobj, 'fieldid'):
+                    if lineobj.fieldid == '' or lineobj.fieldid == '-':
+                        fieldid = None
+                    else:
+                        fieldid = lineobj.fieldid 
+                else:
+                    fieldid = None
 
                 if ruleobj.type == "Database":
-                    if idmethod == 'Auto':
+                    if lineobj.idmethod == 'Auto':
                         colobj.is_profiler_writable = True
-                    elif idmethod == 'User':
+                    elif lineobj.idmethod == 'User':
                         colobj.is_profiler_writable = False
                     else:
                         print_error("Wrong id method")
                         return 1
 
-                if dateformat == '-':
+                if lineobj.dateformat == '-':
                     colobj.date_format = None
                 else:
-                    colobj.date_format = dateformat
+                    colobj.date_format = lineobj.dateformat
 
-                if mapping is not None and algname != 'None':
-                    try:
-                        algname = mapping[algname]
-                    except KeyError as e:
-                        logger.debug("Wrong algoritm name in input file"
-                                     ". Not an inventory file ?")
-                        logger.debug(str(e))
-                        print_error("Wrong algoritm name in input file"
-                                    ". Not an inventory file ?")
-                        return 1
+                if fieldid is not None:
+                    algobj = alg_list.get_by_ref(lineobj.algname)
+                    field_id = [ x.field_id for x in algobj.fields if x.name == fieldid ][0]
+                    group_id = lineobj.groupid
+                else:
+                    field_id = None
+                    group_id = None
 
+
+                if mapping is not None and algname != 'None' and algname in mapping:
+                    logger.debug("changing a name of algorithm for inventory import: from {} to {}".format(algname, mapping[algname]))
+                    algname = mapping[algname]
 
                 ret = ret + update_algorithm(colobj=colobj,
                                              algname=algname,
                                              domainname=domain_name,
                                              metaobj=metaobj,
                                              ruleobj=ruleobj,
-                                             is_masked=is_masked)
+                                             is_masked=is_masked,
+                                             algorithm_field_id=field_id,
+                                             algorithm_group_no=group_id)
             else:
                 ret = ret + 1
                 continue

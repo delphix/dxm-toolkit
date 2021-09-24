@@ -19,35 +19,72 @@
 
 
 import logging
+import pprint
 
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.database_connector_api import DatabaseConnectorApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxConnector(object):
+
+    swagger_types = {
+        'database_connector_id': 'int',
+        'connector_name': 'str',
+        'database_type': 'str',
+        'environment_id': 'int',
+        'custom_driver_name': 'str',
+        'database_name': 'str',
+        'host': 'str',
+        'instance_name': 'str',
+        'jdbc': 'str',
+        'password': 'str',
+        'port': 'int',
+        'schema_name': 'str',
+        'sid': 'str',
+        'username': 'str',
+        'kerberos_auth': 'bool',
+        'service_principal': 'str',
+        'jdbc_driver_id': 'int',
+        'enable_logger': 'bool',
+        'file_reference_id': 'str'
+    }
+
+    swagger_map = {
+        'database_connector_id': 'databaseConnectorId',
+        'connector_name': 'connectorName',
+        'database_type': 'databaseType',
+        'environment_id': 'environmentId',
+        'custom_driver_name': 'customDriverName',
+        'database_name': 'databaseName',
+        'host': 'host',
+        'instance_name': 'instanceName',
+        'jdbc': 'jdbc',
+        'password': 'password',
+        'port': 'port',
+        'schema_name': 'schemaName',
+        'sid': 'sid',
+        'username': 'username',
+        'kerberos_auth': 'kerberosAuth',
+        'service_principal': 'servicePrincipal',
+        'jdbc_driver_id': 'jdbcDriverId',
+        'enable_logger': 'enableLogger',
+        'file_reference_id': 'fileReferenceId'
+    }
+
 
     def __init__(self, engine):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        #DatabaseConnector.__init__(self)
         self.__is_database = None
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxConnector object")
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.database_connector import DatabaseConnector
-            from masking_api_60.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.database_connector import DatabaseConnector
-            from masking_api_53.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_53.rest import ApiException
-
         self.__api = DatabaseConnectorApi
-        self.__model = DatabaseConnector
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -59,18 +96,25 @@ class DxConnector(object):
             return None
 
     @property
-    def database_connector_id(self):
-        if self.__obj is not None:
-            return self.__obj.database_connector_id
-        else:
-            return None
-
-    @property
     def connectorId(self):
         if self.obj is not None:
             return self.obj.database_connector_id
         else:
             return None
+
+    @property
+    def is_database(self):
+        """
+        return not None if this is a database connectors
+        """
+        return self.__is_database
+
+    @is_database.setter
+    def is_database(self, is_database):
+        """
+        set value if this is a database connectors
+        """
+        self.__is_database = is_database
 
     @property
     def connector_type(self):
@@ -87,186 +131,209 @@ class DxConnector(object):
 
 
     @property
-    def connector_name(self):
+    def database_connector_id(self):
+        if self.obj is not None and hasattr(self.obj,'database_connector_id'):
+            return self.obj.database_connector_id
+        else:
+            return None
+
+    @database_connector_id.setter
+    def database_connector_id(self, database_connector_id):
         if self.obj is not None:
+            self.obj.database_connector_id = database_connector_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def connector_name(self):
+        if self.obj is not None and hasattr(self.obj,'connector_name'):
             return self.obj.connector_name
         else:
-            return None     
+            return None
+
+    @connector_name.setter
+    def connector_name(self, connector_name):
+        if self.obj is not None:
+            self.obj.connector_name = connector_name
+        else:
+            raise ValueError("Object needs to be initialized first")
 
 
     @property
     def database_type(self):
-        if self.__obj is not None:
-            return self.__obj.database_type
+        if self.obj is not None and hasattr(self.obj,'database_type'):
+            return self.obj.database_type
         else:
-            return None     
+            return None
+
+    @database_type.setter
+    def database_type(self, database_type):
+        if self.obj is not None:
+            self.obj.database_type = database_type
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     @property
     def environment_id(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'environment_id'):
             return self.obj.environment_id
         else:
-            return None     
+            return None
+
+    @environment_id.setter
+    def environment_id(self, environment_id):
+        if self.obj is not None:
+            self.obj.environment_id = environment_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
 
     @property
     def custom_driver_name(self):
-        if self.__obj is not None:
-            return self.__obj.custom_driver_name
+        if self.obj is not None and hasattr(self.obj,'custom_driver_name'):
+            return self.obj.custom_driver_name
         else:
-            return None    
+            return None
+
+    @custom_driver_name.setter
+    def custom_driver_name(self, custom_driver_name):
+        if self.obj is not None:
+            self.obj.custom_driver_name = custom_driver_name
+        else:
+            raise ValueError("Object needs to be initialized first")
 
 
     @property
     def database_name(self):
-        if self.__obj is not None:
-            return self.__obj.database_name
+        if self.obj is not None and hasattr(self.obj,'database_name'):
+            return self.obj.database_name
         else:
-            return None    
+            return None
 
     @database_name.setter
     def database_name(self, database_name):
-        """
-        database_name
-        :param schemaName: database_name Name
-        """
-
-        if self.__obj is not None:
-            self.__obj.database_name = database_name
+        if self.obj is not None:
+            self.obj.database_name = database_name
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
     def host(self):
-        if self.__obj is not None:
-            return self.__obj.host
+        if self.obj is not None and hasattr(self.obj,'host'):
+            return self.obj.host
         else:
-            return None  
+            return None
 
     @host.setter
     def host(self, host):
-        """
-        host
-        :param schemaName: host Name
-        """
-
         if self.obj is not None:
             self.obj.host = host
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
     def instance_name(self):
-        if self.__obj is not None:
-            return self.__obj.instance_name
+        if self.obj is not None and hasattr(self.obj,'instance_name'):
+            return self.obj.instance_name
         else:
-            return None  
+            return None
 
     @instance_name.setter
     def instance_name(self, instance_name):
-        """
-        instance_name
-        :param schemaName: instance_name Name
-        """
-
-        if self.__obj is not None:
-            self.__obj.instance_name = instance_name
+        if self.obj is not None:
+            self.obj.instance_name = instance_name
         else:
             raise ValueError("Object needs to be initialized first")
+
 
     @property
     def jdbc(self):
-        if self.__obj is not None:
-            return self.__obj.jdbc
+        if self.obj is not None and hasattr(self.obj,'jdbc'):
+            return self.obj.jdbc
         else:
-            return None       
+            return None
 
     @jdbc.setter
     def jdbc(self, jdbc):
-        """
-        jdbc
-        :param schemaName: jdbc Name
-        """
-
-        if self.__obj is not None:
-            self.__obj.jdbc = jdbc
+        if self.obj is not None:
+            self.obj.jdbc = jdbc
         else:
             raise ValueError("Object needs to be initialized first")
 
+
+    @property
+    def password(self):
+        if self.obj is not None and hasattr(self.obj,'password'):
+            return self.obj.password
+        else:
+            return None
+
+    @password.setter
+    def password(self, password):
+        if self.obj is not None:
+            self.obj.password = password
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
     @property
     def port(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'port'):
             return self.obj.port
         else:
-            return None  
+            return None
 
     @port.setter
     def port(self, port):
-        """
-        port
-        :param schemaName: port Name
-        """
-
         if self.obj is not None:
             self.obj.port = port
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
     def schema_name(self):
-        if self.__obj is not None:
-            return self.__obj.schema_name
+        if self.obj is not None and hasattr(self.obj,'schema_name'):
+            return self.obj.schema_name
         else:
-            return None  
-
+            return None
 
     @schema_name.setter
     def schema_name(self, schema_name):
-        """
-        schema_name
-        :param schemaName: schema_name Name
-        """
-
-        if self.__obj is not None:
-            self.__obj.schema_name = schema_name
+        if self.obj is not None:
+            self.obj.schema_name = schema_name
         else:
             raise ValueError("Object needs to be initialized first")
 
 
     @property
     def sid(self):
-        if self.__obj is not None:
-            return self.__obj.sid
+        if self.obj is not None and hasattr(self.obj,'sid'):
+            return self.obj.sid
         else:
-            return None  
-
+            return None
 
     @sid.setter
     def sid(self, sid):
-        """
-        sid
-        :param schemaName: sid Name
-        """
-
-        if self.__obj is not None:
-            self.__obj.sid = sid
+        if self.obj is not None:
+            self.obj.sid = sid
         else:
             raise ValueError("Object needs to be initialized first")
 
 
     @property
     def username(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'username'):
             return self.obj.username
         else:
-            return None  
+            return None
 
     @username.setter
     def username(self, username):
-        """
-        username
-        :param schemaName: username Name
-        """
-
         if self.obj is not None:
             self.obj.username = username
         else:
@@ -274,38 +341,78 @@ class DxConnector(object):
 
 
     @property
-    def password(self):
-        if self.obj is not None:
-            return 'xxxxxxxx'
+    def kerberos_auth(self):
+        if self.obj is not None and hasattr(self.obj,'kerberos_auth'):
+            return self.obj.kerberos_auth
         else:
-            return None  
+            return None
 
-    @password.setter
-    def password(self, password):
-        """
-        password
-        :param schemaName: password Name
-        """
-
+    @kerberos_auth.setter
+    def kerberos_auth(self, kerberos_auth):
         if self.obj is not None:
-            self.obj.password = password
+            self.obj.kerberos_auth = kerberos_auth
         else:
             raise ValueError("Object needs to be initialized first")
 
+
     @property
-    def is_database(self):
-        """
-        return not None if this is a database connectors
-        """
-        return self.__is_database
+    def service_principal(self):
+        if self.obj is not None and hasattr(self.obj,'service_principal'):
+            return self.obj.service_principal
+        else:
+            return None
 
-    @is_database.setter
-    def is_database(self, is_database):
-        """
-        set value if this is a database connectors
-        """
-        self.__is_database = is_database
+    @service_principal.setter
+    def service_principal(self, service_principal):
+        if self.obj is not None:
+            self.obj.service_principal = service_principal
+        else:
+            raise ValueError("Object needs to be initialized first")
 
+
+    @property
+    def jdbc_driver_id(self):
+        if self.obj is not None and hasattr(self.obj,'jdbc_driver_id'):
+            return self.obj.jdbc_driver_id
+        else:
+            return None
+
+    @jdbc_driver_id.setter
+    def jdbc_driver_id(self, jdbc_driver_id):
+        if self.obj is not None:
+            self.obj.jdbc_driver_id = jdbc_driver_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def enable_logger(self):
+        if self.obj is not None and hasattr(self.obj,'enable_logger'):
+            return self.obj.enable_logger
+        else:
+            return None
+
+    @enable_logger.setter
+    def enable_logger(self, enable_logger):
+        if self.obj is not None:
+            self.obj.enable_logger = enable_logger
+        else:
+            raise ValueError("Object needs to be initialized first")
+
+
+    @property
+    def file_reference_id(self):
+        if self.obj is not None and hasattr(self.obj,'file_reference_id'):
+            return self.obj.file_reference_id
+        else:
+            return None
+
+    @file_reference_id.setter
+    def file_reference_id(self, file_reference_id):
+        if self.obj is not None:
+            self.obj.file_reference_id = file_reference_id
+        else:
+            raise ValueError("Object needs to be initialized first")
 
 
     def from_connector(self, con):
@@ -313,7 +420,10 @@ class DxConnector(object):
         Set a obj property using a Database Connector 
         :param con: DatabaseConnector object
         """
+
         self.__obj = con
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     def create_connector(self, connector_name, database_type, environment_id):
         """
@@ -323,7 +433,11 @@ class DxConnector(object):
         :param environment_id
         """  
 
-        self.__obj = self.__model(connector_name=connector_name, database_type=database_type, environment_id=environment_id)
+        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.connector_name = connector_name
+        self.database_type = database_type
+        self.environment_id = environment_id
+
 
     def get_properties(self):
         """
@@ -360,10 +474,10 @@ class DxConnector(object):
             return 1
 
         try:
-            self.__logger.debug("create connector input %s" % str(self))
+            self.__logger.debug("create connector input %s" % str(self.obj))
             api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_database_connector(
-                self.__obj,
+                self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__obj = response
 
@@ -447,12 +561,12 @@ class DxConnector(object):
                 self.database_connector_id,
                 body=self.obj,
                 _request_timeout=self.__engine.get_timeout())
-            if response.response == "Connection Failed":
-                print_error("Connector test %s failed" % self.connector_name)
+
+            if "Connection Failed" in response.response:
+                print_error("Connector test {} failed. Error message is: {}".format(self.connector_name, response.response))
                 return 1
             else:
-                print_message("Connector test %s succeeded"
-                              % self.connector_name)
+                print_message("Connector test {} succeeded".format(self.connector_name))
                 return 0
         except self.__apiexc as e:
             print_error(e.body)
@@ -480,3 +594,12 @@ class DxConnector(object):
             print_error(e.body)
             self.__logger.error(e)
             return None
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()

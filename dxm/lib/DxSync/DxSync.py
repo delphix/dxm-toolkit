@@ -25,9 +25,37 @@ import re
 
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.sync_api import SyncApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxSync(object):
+
+    swagger_types = {
+        'object_identifier': 'dict',
+        'object_type': 'str',
+        'revision_hash': 'str'
+    }
+
+    swagger_map = {
+        'object_identifier': 'objectIdentifier',
+        'object_type': 'objectType',
+        'revision_hash': 'revisionHash'
+    }
+
+    import_swagger_types = {
+        'export_response_metadata': 'dict',
+        'blob': 'str',
+        'signature': 'str',
+        'public_key': 'str'
+    }
+
+    import_swagger_map = {
+        'export_response_metadata': 'exportResponseMetadata',
+        'blob': 'blob',
+        'signature': 'signature',
+        'public_key': 'publicKey'
+    }
+
 
     def __init__(self, engine):
         """
@@ -39,17 +67,8 @@ class DxSync(object):
         self.__logger = logging.getLogger()
         self.__synctype = None
         self.__logger.debug("creating DxSync object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.export_object_metadata import ExportObjectMetadata
-            from masking_api_60.api.sync_api import SyncApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.export_object_metadata import ExportObjectMetadata
-            from masking_api_53.api.sync_api import SyncApi
-            from masking_api_53.rest import ApiException
 
         self.__api = SyncApi
-        self.__model = ExportObjectMetadata
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -60,6 +79,17 @@ class DxSync(object):
         :param sync: Sync object
         """
         self.__obj = sync
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.object_identifier.swagger_map = {
+            'id' : 'id',
+            'algorithm_name' : 'algorithmName'
+        }
+        self.__obj.object_identifier.swagger_types = {
+            'id' : 'int',
+            'algorithm_name' : 'str'
+        }
+
 
     @property
     def obj(self):
@@ -77,7 +107,7 @@ class DxSync(object):
 
     @property
     def object_identifier(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'object_identifier'):
             return self.obj.object_identifier
         else:
             return None
@@ -107,15 +137,17 @@ class DxSync(object):
 
         export_list = []
         export_list.append(self.obj)
+
         api_response = api_sync.export(export_list)
         self.__logger.debug("Export response (without blob) %s"
                             % str(api_response.export_response_metadata))
         filename = os.path.join(path, '{}_{}.bin'.format(self.object_type.lower(), name))
         self.__logger.debug("saving to %s" % filename)
+
         dependencylist = [
-            b["objectType"]
+            b["object_type"]
             for b
-            in api_response.export_response_metadata["exportedObjectList"]]
+            in api_response.export_response_metadata.to_dict()["exported_object_list"]]
 
         try:
             binary_file = open(filename, mode='wb')
@@ -151,6 +183,10 @@ class DxSync(object):
             self.__logger.debug("There is an error with reading file %s"
                                 % path.name)
             return 1
+
+
+        syncobj.swagger_types = self.import_swagger_types
+        syncobj.swagger_map = self.import_swagger_map
 
         try:
             api_sync = self.__api(self.__engine.api_client)

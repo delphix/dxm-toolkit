@@ -26,7 +26,8 @@ from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.domain_api import DomainApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxDomainList(object):
 
@@ -52,14 +53,6 @@ class DxDomainList(object):
         """
 
         self.__domainList.clear()
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.domain_api import DomainApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.domain_api import DomainApi
-            from masking_api_53.rest import ApiException
-
         self.__api = DomainApi
         self.__apiexc = ApiException
 
@@ -116,15 +109,18 @@ class DxDomainList(object):
         return self.get_by_ref(name)
 
     @classmethod
-    def get_domain_by_algorithm(self, alg):
+    def get_domain_by_algorithm(self, alg, report_error=True):
         domains = get_objref_by_val_and_attribute(alg, self, 'default_algorithm_code')
+
         if len(domains) < 1:
-            print_error("Domain for algorithm %s not found" % alg)
+            if report_error:
+                print_error("Domain for algorithm %s not found" % alg)
             self.__logger.error("Domain for algorithm %s not found" % alg)
             return None
 
         if len(domains) > 1:
-            print_error("Domain for algorithm %s is not unique" % alg)
+            if report_error:
+                print_error("Domain for algorithm %s is not unique" % alg)
             self.__logger.error("Domain for algorithm %s is not unique" % alg)
             return None
 

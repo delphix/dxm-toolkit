@@ -22,13 +22,16 @@ from dxm.lib.DxConnector.OracleConnector import OracleConnector
 from dxm.lib.DxConnector.MSSQLConnector import MSSQLConnector
 from dxm.lib.DxConnector.SybaseConnector import SybaseConnector
 from dxm.lib.DxConnector.DxFileConnector import DxFileConnector
+from dxm.lib.DxConnector.ExtendedConnector import ExtendedConnector
 from dxm.lib.DxConnector.DxConnector import DxConnector
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
-
+from dxm.lib.masking_api.api.database_connector_api import DatabaseConnectorApi
+from dxm.lib.masking_api.api.file_connector_api import FileConnectorApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxConnectorsList(object):
 
@@ -73,15 +76,6 @@ class DxConnectorsList(object):
             self.__connectorsList.clear()
             self.__loaded_engine = self.__engine.get_name()
 
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_60.api.file_connector_api import FileConnectorApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.database_connector_api import DatabaseConnectorApi
-            from masking_api_53.api.file_connector_api import FileConnectorApi
-            from masking_api_53.rest import ApiException
-
         self.__api = DatabaseConnectorApi
         self.__fileapi = FileConnectorApi
         self.__loaded_env = environment_name
@@ -117,6 +111,8 @@ class DxConnectorsList(object):
                         connector = MSSQLConnector(self.__engine)
                     elif (c.database_type == 'SYBASE'):
                         connector = SybaseConnector(self.__engine)
+                    elif (c.database_type == 'EXTENDED'):
+                        connector = ExtendedConnector(self.__engine)
                     else:
                         connector = DxConnector(self.__engine)
 

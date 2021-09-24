@@ -23,9 +23,33 @@ import json
 
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
-
+from dxm.lib.masking_api.api.sync_api import SyncApi
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
 class DxAlgorithm(object):
+
+    swagger_types = {
+        'algorithm_name': 'str',
+        'algorithm_type': 'str',
+        'created_by': 'str',
+        'description': 'str',
+        'algorithm_extension': 'dict',
+        'framework_id': 'int',
+        'plugin_id': 'int',
+        'fields': 'dict'
+    }
+
+    swagger_map = {
+        'algorithm_name': 'algorithmName',
+        'algorithm_type': 'algorithmType',
+        'created_by': 'createdBy',
+        'description': 'description',
+        'algorithm_extension': 'algorithmExtension',
+        'framework_id': 'frameworkId',
+        'plugin_id': 'pluginId',
+        'fields' : 'fields'
+    }
 
     def __init__(self, engine):
         """
@@ -38,17 +62,8 @@ class DxAlgorithm(object):
         self.__domain_name = None
         self.__sync = None
         self.__logger.debug("creating DxAlgorithm object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.algorithm import Algorithm
-            from masking_api_60.api.sync_api import SyncApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.algorithm import Algorithm
-            from masking_api_53.api.sync_api import SyncApi
-            from masking_api_53.rest import ApiException
 
         self.__api = SyncApi
-        self.__model = Algorithm
         self.__apiexc = ApiException
         self.__obj = None
 
@@ -67,6 +82,8 @@ class DxAlgorithm(object):
         :param column: Algorithm object
         """
         self.__obj = alg
+        self.__obj.swagger_map = self.swagger_map
+        self.__obj.swagger_types = self.swagger_types
 
     @property
     def domain_name(self):
@@ -86,17 +103,61 @@ class DxAlgorithm(object):
 
     @property
     def algorithm_name(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'algorithm_name'):
             return self.obj.algorithm_name
         else:
             return None
 
     @property
     def algorithm_type(self):
-        if self.obj is not None:
+        if self.obj is not None and hasattr(self.obj,'algorithm_type'):
             return self.obj.algorithm_type
         else:
             return None
+
+    @property
+    def created_by(self):
+        if self.obj is not None and hasattr(self.obj,'created_by'):
+            return self.obj.created_by
+        else:
+            return None
+
+    @property
+    def description(self):
+        if self.obj is not None and hasattr(self.obj,'description'):
+            return self.obj.description
+        else:
+            return None
+
+    @property
+    def algorithm_extension(self):
+        if self.obj is not None and hasattr(self.obj,'algorithm_extension'):
+            return self.obj.algorithm_extension
+        else:
+            return None
+
+    @property
+    def framework_id(self):
+        if self.obj is not None and hasattr(self.obj,'framework_id'):
+            return self.obj.framework_id
+        else:
+            return None
+
+    @property
+    def plugin_id(self):
+        if self.obj is not None and hasattr(self.obj,'plugin_id'):
+            return self.obj.plugin_id
+        else:
+            return None
+
+    @property
+    def fields(self):
+        if self.obj is not None and hasattr(self.obj,'fields'):
+            return self.obj.fields
+        else:
+            return None            
+
+
 
     # def export(self, path=None):
     #     """

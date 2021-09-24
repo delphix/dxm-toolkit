@@ -30,7 +30,7 @@ from dxm.lib.DxDomain.DxDomainList import DxDomainList
 import sys
 
 
-def algorithm_list(p_engine, format, algname):
+def algorithm_list(p_engine, p_username,  format, algname):
     """
     Print list of algorithms
     param1: p_engine: engine name from configuration
@@ -51,7 +51,7 @@ def algorithm_list(p_engine, format, algname):
                   ]
     data.create_header(data_header)
     data.format_type = format
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -103,7 +103,7 @@ def algorithm_list(p_engine, format, algname):
     return ret
 
 
-def algorithm_worker(p_engine, algname, **kwargs):
+def algorithm_worker(p_engine, p_username,  algname, **kwargs):
     """
     Select an algorithm and run action on it
     param1: p_engine: engine name from configuration
@@ -116,7 +116,7 @@ def algorithm_worker(p_engine, algname, **kwargs):
 
     function_to_call = kwargs.get('function_to_call')
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -146,7 +146,7 @@ def algorithm_worker(p_engine, algname, **kwargs):
 
     return ret
 
-def algorithm_export(p_engine, algname, outputfile):
+def algorithm_export(p_engine, p_username,  algname, outputfile):
     """
     Save algorithm to file
     param1: p_engine: engine name from configuration
@@ -154,7 +154,7 @@ def algorithm_export(p_engine, algname, outputfile):
     param3: outputfile: output file
     return 0 if OK
     """
-    return algorithm_worker(p_engine, algname, outputfile=outputfile,
+    return algorithm_worker(p_engine, p_username,  algname, outputfile=outputfile,
                             function_to_call='do_export')
 
 
@@ -162,7 +162,7 @@ def do_export(**kwargs):
     algobj = kwargs.get('algobj')
     algobj.export()
 
-def algorithm_import(p_engine, inputfile):
+def algorithm_import(p_engine, p_username,  inputfile):
     """
     Load algorithm from file
     param1: p_engine: engine name from configuration
@@ -172,7 +172,7 @@ def algorithm_import(p_engine, inputfile):
     ret = 0
 
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

@@ -25,7 +25,9 @@ from dxm.lib.DxJobs.DxProfileJob import DxProfileJob
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
-
+from dxm.lib.masking_api.api.profile_job_api import ProfileJobApi
+from dxm.lib.masking_api.api.execution_api import ExecutionApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxProfileJobsList(object):
 
@@ -54,15 +56,6 @@ class DxProfileJobsList(object):
         Return None if OK
         """
 
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.profile_job_api import ProfileJobApi
-            from masking_api_60.api.execution_api import ExecutionApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.profile_job_api import ProfileJobApi
-            from masking_api_53.api.execution_api import ExecutionApi
-            from masking_api_53.rest import ApiException
-
         self.__api = ProfileJobApi
         self.__apiexec = ExecutionApi
         self.__apiexc = ApiException
@@ -75,9 +68,17 @@ class DxProfileJobsList(object):
                         execapi,
                         "get_all_executions")
 
+            # if execList.response_list:
+            #     for e in execList.response_list:
+            #         self.__executionList[e.job_id] = e
+
+
             if execList.response_list:
                 for e in execList.response_list:
-                    self.__executionList[e.job_id] = e
+                    if e.job_id in self.__executionList:
+                        self.__executionList[e.job_id].append(e)
+                    else:
+                        self.__executionList[e.job_id] = [e]
 
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
@@ -101,11 +102,11 @@ class DxProfileJobsList(object):
             if jobs.response_list:
                 for c in jobs.response_list:
                     if c.profile_job_id in self.__executionList:
-                        lastExec = self.__executionList[c.profile_job_id]
+                        execution_list = self.__executionList[c.profile_job_id]
                     else:
-                        lastExec = None
+                        execution_list = None
 
-                    job = DxProfileJob(self.__engine, lastExec)
+                    job = DxProfileJob(self.__engine, execution_list)
                     job.from_job(c)
                     self.__jobsList[c.profile_job_id] = job
             else:

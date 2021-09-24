@@ -30,8 +30,8 @@ jobs:
           exit 1
         fi
         FILENAME="dxmc-${SOURCE_TAG}-redhat7.tar.gz"
-        echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
-        echo "::set-env name=FILENAME::$FILENAME"
+        echo SOURCE_TAG=$SOURCE_TAG >> $GITHUB_ENV
+        echo FILENAME=$FILENAME >> $GITHUB_ENV
 
 
     - name: rename toolkit
@@ -72,8 +72,8 @@ jobs:
           exit 1
         }
         $FILENAME="dxmc-" + $SOURCE_TAG + "-win64.zip"
-        echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
-        echo "::set-env name=FILENAME::$FILENAME"
+        echo "SOURCE_TAG=$SOURCE_TAG" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+        echo "FILENAME=$FILENAME" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
       shell: powershell
 
     - name: Fix encryption key
@@ -89,8 +89,8 @@ jobs:
     - name: Install OpenSSL
       run: |
         choco install openssl --no-progress
-        echo "::set-env name=INCLUDE::C:\\Program Files\\OpenSSL-Win64\\include;%INCLUDE%"
-        echo "::set-env name=LIB::C:\\Program Files\\OpenSSL-Win64\\lib;%LIB%"        
+        echo "INCLUDE=C:\\Program Files\\OpenSSL-Win64\\include;%INCLUDE%" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+        echo "LIB=C:\\Program Files\\OpenSSL-Win64\\lib;%LIB%" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
         
 
     - name: Install dependencies
@@ -136,8 +136,20 @@ jobs:
           exit 1
         fi
         FILENAME="dxmc-${SOURCE_TAG}-osx.tar.gz"
-        echo "::set-env name=SOURCE_TAG::$SOURCE_TAG"
-        echo "::set-env name=FILENAME::$FILENAME"
+        echo SOURCE_TAG=$SOURCE_TAG >> $GITHUB_ENV
+        echo FILENAME=$FILENAME >> $GITHUB_ENV
+
+    - name: fix password
+      env:
+        ENCKEY: ${{ secrets.ENCKEY }}
+      run: |
+        cd dxm/lib/DxEngine
+        ls -l 
+        mv secret.py secret.py.orig
+        cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${ENCKEY}/" > secret.py
+        ls -l 
+        cd
+
 
     - name: run python
       run: |

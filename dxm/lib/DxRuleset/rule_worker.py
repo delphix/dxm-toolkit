@@ -20,6 +20,7 @@
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 import logging
 import json
+from copy import deepcopy
 from operator import xor
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -39,7 +40,7 @@ from dxm.lib.DxColumn.column_worker import column_check
 from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
 
 
-def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
+def ruleset_listmeta(p_engine, p_username,  format, rulesetname, envname, metaname):
     """
     List tables/file from ruleset
     param1: p_engine: engine name from configuration
@@ -63,7 +64,7 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
                   ]
     data.create_header(data_header)
     data.format_type = format
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -76,10 +77,10 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
-        connlist = DxConnectorsList()
-        connlist.LoadConnectors(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
+        connlist = DxConnectorsList(envname)
+        #connlist.LoadConnectors()
 
         if rulesetname:
             rulesetref_list = rulelist.get_all_rulesetId_by_name(rulesetname)
@@ -137,7 +138,7 @@ def ruleset_listmeta(p_engine, format, rulesetname, envname, metaname):
         return ret
 
 
-def ruleset_addmeta(p_engine, params, inputfile, fromconnector, bulk):
+def ruleset_addmeta(p_engine, p_username,  params, inputfile, fromconnector, bulk):
     """
     Add matadata to Masking engine
     param1: p_engine: engine name from configuration
@@ -151,7 +152,7 @@ def ruleset_addmeta(p_engine, params, inputfile, fromconnector, bulk):
     rulesetname = params["rulesetname"]
     envname = params["envname"]
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if (params["metaname"] is None) and (inputfile is None) and (fromconnector is None):
         print_error("Option metaname, inputfile or fromconnector is required")
@@ -174,8 +175,8 @@ def ruleset_addmeta(p_engine, params, inputfile, fromconnector, bulk):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
 
         if ruleref:
@@ -194,7 +195,7 @@ def ruleset_addmeta(p_engine, params, inputfile, fromconnector, bulk):
     return ret
 
 
-def ruleset_deletemeta(p_engine, rulesetname, metaname, envname):
+def ruleset_deletemeta(p_engine, p_username,  rulesetname, metaname, envname):
     """
     Delete meta (file, table) from ruleset to Masking engine
     param1: p_engine: engine name from configuration
@@ -206,7 +207,7 @@ def ruleset_deletemeta(p_engine, rulesetname, metaname, envname):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -219,8 +220,8 @@ def ruleset_deletemeta(p_engine, rulesetname, metaname, envname):
 
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
 
         metalist = DxMetaList()
@@ -237,7 +238,7 @@ def ruleset_deletemeta(p_engine, rulesetname, metaname, envname):
     return ret
 
 
-def ruleset_add(p_engine, rulesetname, connectorname, envname):
+def ruleset_add(p_engine, p_username,  rulesetname, connectorname, envname):
     """
     Add ruleset to Masking engine
     param1: p_engine: engine name from configuration
@@ -251,7 +252,7 @@ def ruleset_add(p_engine, rulesetname, connectorname, envname):
 
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -265,8 +266,8 @@ def ruleset_add(p_engine, rulesetname, connectorname, envname):
         envlist = DxEnvironmentList()
         envlist.LoadEnvironments()
         rulelist = DxRulesetList()
-        connlist = DxConnectorsList()
-        connlist.LoadConnectors(envname)
+        connlist = DxConnectorsList(envname)
+        #connlist.LoadConnectors()
         logger.debug("Connector is %s" % connectorname)
         connref = connlist.get_connectorId_by_name(connectorname)
         connobj = connlist.get_by_ref(connref)
@@ -291,18 +292,18 @@ def ruleset_add(p_engine, rulesetname, connectorname, envname):
     return ret
 
 
-def ruleset_delete(p_engine, rulesetname, envname):
+def ruleset_delete(p_engine, p_username,  rulesetname, envname):
     """
     Delete ruleset from Masking engine
     param1: p_engine: engine name from configuration
     param2: rulesetname: ruleset name
     return 0 if added, non 0 for error
     """
-    return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
+    return ruleset_worker(p_engine=p_engine, p_username=p_username, rulesetname=rulesetname,
                           envname=envname, function_to_call='do_delete')
 
 
-def ruleset_refresh(p_engine, rulesetname, envname):
+def ruleset_refresh(p_engine, p_username,  rulesetname, envname):
     """
     Refresh ruleset on the Masking engine
     param1: p_engine: engine name from configuration
@@ -310,10 +311,10 @@ def ruleset_refresh(p_engine, rulesetname, envname):
     param3: envname: environment name
     return 0 if added, non 0 for error
     """
-    return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
+    return ruleset_worker(p_engine=p_engine, p_username=p_username, rulesetname=rulesetname,
                           envname=envname, function_to_call='do_refresh')
 
-def ruleset_clone(p_engine, rulesetname, envname, newname):
+def ruleset_clone(p_engine, p_username,  rulesetname, envname, newname):
     """
     Delete ruleset from Masking engine
     param1: p_engine: engine name from configuration
@@ -322,7 +323,7 @@ def ruleset_clone(p_engine, rulesetname, envname, newname):
     param4: newname: new ruleset name
     return 0 if added, non 0 for error
     """
-    return ruleset_worker(p_engine=p_engine, rulesetname=rulesetname,
+    return ruleset_worker(p_engine=p_engine, p_username=p_username, rulesetname=rulesetname,
                           envname=envname, function_to_call='do_clone',
                           newname=newname)
 
@@ -340,10 +341,11 @@ def ruleset_worker(**kwargs):
     rulesetname = kwargs.get('rulesetname')
     envname = kwargs.get('envname')
     function_to_call = kwargs.get('function_to_call')
+    p_username = kwargs.get('p_username')
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -407,7 +409,10 @@ def do_meta_copy(engine_obj, ruleref, newref):
     metalist = DxMetaList()
     metalist.LoadMeta(ruleref)
 
-    for meta_id in metalist.get_allref():
+    allmeta = metalist.get_allref()
+    allmeta_copy = deepcopy(allmeta)
+
+    for meta_id in allmeta_copy:
         newmeta_id = metalist.copymeta(meta_id, newref)
         if newmeta_id:
             ret = ret + columns_copy(engine_obj, meta_id, newmeta_id)
@@ -417,7 +422,7 @@ def do_meta_copy(engine_obj, ruleref, newref):
     return ret
 
 
-def ruleset_list(p_engine, format, rulesetName, envname):
+def ruleset_list(p_engine, p_username,  format, rulesetName, envname):
     """
     Print list of ruleset by ruleset name or environment name
     param1: p_engine: engine name from configuration
@@ -440,6 +445,7 @@ def ruleset_list(p_engine, format, rulesetName, envname):
 
     ret = ruleset_list_worker(
             p_engine=p_engine,
+            p_username=p_username,
             format=format,
             rulesetName=rulesetName,
             envname=envname,
@@ -468,10 +474,11 @@ def ruleset_list_worker(**kwargs):
     envname = kwargs.get('envname')
     function_to_call = kwargs.get('function_to_call')
     data = kwargs.get('data')
+    p_username = kwargs.get('p_username')
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -482,8 +489,8 @@ def ruleset_list_worker(**kwargs):
             continue
 
         #envlist = DxEnvironmentList()
-        rulelist = DxRulesetList()
-        rulelist.LoadRulesets(envname)
+        rulelist = DxRulesetList(envname)
+        #rulelist.LoadRulesets()
 
         if rulesetName is None:
             rulesets = rulelist.get_allref()
@@ -543,7 +550,7 @@ def do_list(**kwargs):
 # export / import functionality
 
 
-def ruleset_export(p_engine, rulesetname, envname, outputfile,
+def ruleset_export(p_engine, p_username,  rulesetname, envname, outputfile,
                    exportmeta, metaname):
     """
     Delete ruleset from Masking engine
@@ -559,6 +566,7 @@ def ruleset_export(p_engine, rulesetname, envname, outputfile,
 
     ret = ruleset_worker(
             p_engine=p_engine,
+            p_username=p_username,
             rulesetname=rulesetname,
             envname=envname,
             function_to_call="do_export",
@@ -664,7 +672,7 @@ def do_export(**kwargs):
 
         ruleset["Metadata"] = metadatalist
         columndata = column_export(
-                        engine_obj.get_name(), None, ruleobj.ruleset_name,
+                        engine_obj.get_name(), engine_obj.get_username(), None, ruleobj.ruleset_name,
                         environment_name, metaname, None, None)
         ruleset["Columns"] = json.loads(columndata.data_output(False))
     else:
@@ -675,7 +683,7 @@ def do_export(**kwargs):
     return ret
 
 
-def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
+def ruleset_import(p_engine, p_username,  inputfile, rulesetname, connectorname, envname):
     rulesets = json.load(inputfile)
     # if it's one allow override of values
 
@@ -703,7 +711,7 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
             runenvname = ruleset["Environent name"]
 
         ruleret = ruleset_add(
-                    p_engine,
+                    p_engine, p_username,
                     runrulesetname, runconnectorname,
                     runenvname)
         ret = ret + ruleret
@@ -739,12 +747,13 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
                         "file_name_regex": meta["file_name_regex"]
                     }
 
-                ret = ret + ruleset_addmeta(p_engine, params, None)
+                ret = ret + ruleset_addmeta(p_engine, p_username,  params, None, False, False)
 
             for column in ruleset["Columns"]:
                 if column["is_masked"] == "Y":
                     colret = column_setmasking(
                                 p_engine,
+                                p_username,
                                 runrulesetname,
                                 runenvname,
                                 column["Metadata name"],
@@ -757,6 +766,7 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
                 else:
                     colret = column_unsetmasking(
                                 p_engine,
+                                p_username,
                                 runrulesetname,
                                 runenvname,
                                 column["Metadata name"],
@@ -766,12 +776,13 @@ def ruleset_import(p_engine, inputfile, rulesetname, connectorname, envname):
     return ret
 
 
-def ruleset_check(p_engine, inputfile):
+def ruleset_check(p_engine, p_username,  inputfile):
     rulesets = json.load(inputfile)
     ret = 0
     for ruleset in rulesets:
         ret = ret + ruleset_worker(
                         p_engine=p_engine,
+                        p_username=p_username,
                         rulesetname=ruleset["Ruleset name"],
                         envname=ruleset["Environent name"],
                         ruleset=ruleset,
@@ -791,6 +802,7 @@ def do_check(**kwargs):
     ruleset = kwargs.get('ruleset')
     rulesetname = kwargs.get('rulesetname')
     p_engine = kwargs.get('p_engine')
+    p_username = kwargs.get('p_username')
 
     connname = ruleset["Connector name"]
 
@@ -821,7 +833,7 @@ def do_check(**kwargs):
 
     for col in ruleset["Columns"]:
         count = [ x for x in ruleset["Columns"] if col["Metadata name"] == x["Metadata name"] ]
-        rc = column_check(p_engine, rulesetname, envname, col, len(count))
+        rc = column_check(p_engine, p_username,  rulesetname, envname, col, len(count))
         if rc != 0:
             retcol = retcol + 1
 

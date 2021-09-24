@@ -26,7 +26,9 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
-
+from dxm.lib.masking_api.api.database_ruleset_api import DatabaseRulesetApi
+from dxm.lib.masking_api.api.file_ruleset_api import FileRulesetApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxRulesetList(object):
 
@@ -69,28 +71,10 @@ class DxRulesetList(object):
         Return None if OK
         """
 
-        if self.__loaded_engine is None:
-            self.__loaded_engine = self.__engine.get_name()
 
-        
-        if self.__loaded_engine == self.__engine.get_name() and self.__rulesetList != {}:
-           return None
-        else:
-            # delete a list as we can have multi engines
-            self.__rulesetList.clear()
-            self.__loaded_engine = self.__engine.get_name()
 
+        self.__rulesetList.clear()
         DxConnectorsList(environment_name)
-
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.database_ruleset_api import DatabaseRulesetApi
-            from masking_api_60.api.file_ruleset_api import FileRulesetApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.database_ruleset_api import DatabaseRulesetApi
-            from masking_api_53.api.file_ruleset_api import FileRulesetApi
-            from masking_api_53.rest import ApiException
-
 
         self.__api = DatabaseRulesetApi
         self.__fileapi = FileRulesetApi
@@ -138,6 +122,7 @@ class DxRulesetList(object):
                                         % environment_name)
                 else:
                     self.__logger.error("No database ruleset found")
+
 
             api_instance = self.__fileapi(self.__engine.api_client)
 

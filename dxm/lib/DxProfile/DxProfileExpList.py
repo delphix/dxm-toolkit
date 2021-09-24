@@ -24,7 +24,8 @@ from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxProfile.DxProfileExt import DxProfileExt
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
-
+from dxm.lib.masking_api.api.profile_expression_api import ProfileExpressionApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxProfileExpList(object):
 
@@ -49,12 +50,6 @@ class DxProfileExpList(object):
         Return None if OK
         """
 
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.profile_expression_api import ProfileExpressionApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.profile_expression_api import ProfileExpressionApi
-            from masking_api_53.rest import ApiException
 
         self.__api = ProfileExpressionApi
         self.__apiexc = ApiException

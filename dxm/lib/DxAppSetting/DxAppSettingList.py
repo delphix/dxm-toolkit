@@ -24,6 +24,8 @@ from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxLogging import print_error
+from dxm.lib.masking_api.api.application_settings_api import ApplicationSettingsApi
+from dxm.lib.masking_api.rest import ApiException
 
 
 class DxAppSettingList(object):
@@ -52,12 +54,6 @@ class DxAppSettingList(object):
         return 1 if error
         """
 
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.api.application_settings_api import ApplicationSettingsApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.api.application_settings_api import ApplicationSettingsApi
-            from masking_api_53.rest import ApiException
 
         self.__api = ApplicationSettingsApi
         self.__apiexc = ApiException

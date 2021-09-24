@@ -33,7 +33,20 @@ from dxm.lib.DxSync.DxSyncList import DxSyncList
 from dxm.lib.DxSync.DxSync import DxSync
 
 
-def sync_export(p_engine, objecttype, objectname, envname, path):
+supported_sync_objects_type = [
+ 'algorithm',
+ 'global',
+ 'key',
+ 'domain',
+ 'masking_job',
+ 'database_ruleset', 
+ 'file_ruleset',
+ 'database_connector',
+ 'file_connector'
+]
+
+
+def sync_export(p_engine, p_username,  objecttype, objectname, envname, path):
     """
     Print list of syncable objects
     param1: p_engine: engine name from configuration
@@ -43,7 +56,7 @@ def sync_export(p_engine, objecttype, objectname, envname, path):
     return 0 if objecttype found
     """
 
-    return sync_worker(p_engine, objecttype, objectname, envname, "do_export",
+    return sync_worker(p_engine, p_username,  objecttype, objectname, envname, "do_export",
                        path=path)
 
 
@@ -65,7 +78,7 @@ def do_export(**kwargs):
     return syncobj.export(name, path)
 
 
-def sync_list(p_engine, objecttype, objectname, envname, format):
+def sync_list(p_engine, p_username,  objecttype, objectname, envname, format):
     """
     Print list of syncable objects
     param1: p_engine: engine name from configuration
@@ -85,7 +98,7 @@ def sync_list(p_engine, objecttype, objectname, envname, format):
     data.create_header(data_header)
     data.format_type = format
 
-    ret = sync_worker(p_engine, objecttype, objectname, envname, "do_list",
+    ret = sync_worker(p_engine, p_username,  objecttype, objectname, envname, "do_list",
                       data=data)
 
     print("")
@@ -120,7 +133,7 @@ def do_list(**kwargs):
                     )
     return 0
 
-def sync_worker(p_engine, objecttype, objectname, envname,
+def sync_worker(p_engine, p_username,  objecttype, objectname, envname,
                 function_to_call, **kwargs):
     """
     Run an action for list of syncable objects
@@ -133,7 +146,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     # objectname = "RandomValueLookup"
     # objectname = None
@@ -150,7 +163,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
 
         synclist = DxSyncList(objecttype)
 
-        if (objecttype is None or objecttype == "algorithm") \
+        if (objecttype is None or objecttype.lower() == "algorithm") \
            and envname is None:
             if objectname:
                 alglist = [objectname]
@@ -169,8 +182,8 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                         envname='global',
                         name=syncref, **kwargs)
 
-        if objecttype is None or objecttype == "database_connector" \
-           or objecttype == "file_connector":
+        if objecttype is None or objecttype.lower() == "database_connector" \
+           or objecttype.lower() == "file_connector":
 
             envlist = DxEnvironmentList()
             connlist = DxConnectorsList(envname)
@@ -220,7 +233,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                         name=connobj.connector_name,
                         **kwargs)
 
-        if objecttype is None or objecttype == "database_ruleset" \
+        if objecttype is None or objecttype.lower() == "database_ruleset" \
            or objecttype == "file_ruleset":
 
             envlist = DxEnvironmentList()
@@ -267,7 +280,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                         name=rulesetobj.ruleset_name,
                         **kwargs)
 
-        if (objecttype is None or objecttype == "global_object"
+        if (objecttype is None or objecttype.lower() == "global_object"
            or objecttype == "key" or objecttype == "domain") \
            and envname is None:
 
@@ -293,7 +306,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
                             envname='global',
                             name=syncref, **kwargs)
 
-        if objecttype is None or objecttype == "masking_job":
+        if objecttype is None or objecttype.lower() == "masking_job":
 
             envlist = DxEnvironmentList()
             joblist = DxJobsList()
@@ -331,7 +344,7 @@ def sync_worker(p_engine, objecttype, objectname, envname,
     return ret
 
 
-def sync_import(p_engine, envname, inputfile, inputpath, force):
+def sync_import(p_engine, p_username,  envname, inputfile, inputpath, force):
     """
     Load algorithm from file
     param1: p_engine: engine name from configuration
@@ -341,7 +354,7 @@ def sync_import(p_engine, envname, inputfile, inputpath, force):
     """
 
     ret = 0
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if inputfile is None and inputpath is None:
         print_error("Inputfile or inputpath parameter is required")

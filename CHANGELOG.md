@@ -1,3 +1,17 @@
+## Version 0.9.1
+
+Support for many engine versions added. Since version 0.9.1 dxm-toolkit should support all versions
+of 6.0.X engines plus 5.3.9
+
+
+### Added:
+- dxmc engine upload - upload file command -
+- dxmc jdbc - a group of command to add, delete and list extended jdbc connectors
+
+### Changed:
+ - fix for engine user support - now same engine can be added to configuration with different users
+ - move from Swagger based model to custom model
+
 ## Version 0.8.2
 
 ### Changed:

@@ -1,0 +1,17 @@
+---
+ - hosts: localhost
+   vars:
+      engine: "--engine myengine --engineuser admin"
+
+   tasks:
+    - name: test connector
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py connector test {{ engine }} --connectorname slon6
+
+    - name: fetch meta from connector
+      shell: |
+        . /Users/pioro/Documents/oss_delphix/dxm-toolkit/bin/activate
+        python dxmc.py connector fetch-meta {{ engine }} --connectorname slon6
+      register: fetch
+      failed_when: '"EMP" not in fetch.stdout'

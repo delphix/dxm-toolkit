@@ -25,13 +25,14 @@ from dxm.lib.Output.DataFormatter import DataFormatter
 from dxm.lib.DxTools.DxTools import get_list_of_engines
 
 from dxm.lib.DxUser.DxUser import DxUser
+from dxm.lib.DxUser.DxUser import DxUserNonAdmin
 from dxm.lib.DxUser.DxUserList import DxUserList
 from dxm.lib.DxRole.DxRoleList import DxRoleList
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxAppSetting.DxAppSettingList import DxAppSettingList
 
 
-def user_delete(p_engine, username, force):
+def user_delete(p_engine, p_username,  username, force):
     """
     Delete user from Engine
     param1: p_engine: engine name from configuration
@@ -42,7 +43,7 @@ def user_delete(p_engine, username, force):
 
     ret = 0
     logger = logging.getLogger()
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
     if enginelist is None:
         return 1
 
@@ -64,7 +65,7 @@ def user_delete(p_engine, username, force):
             print_error("User %s not found" % username)
             logger.debug("User %s not found" % username)
 
-def user_update(p_engine, username, firstname, lastname, email, password,
+def user_update(p_engine, p_username,  username, firstname, lastname, email, password,
              user_type, user_environments, user_role):
     """
     Update user in Engine
@@ -84,7 +85,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
     update = 0
     logger = logging.getLogger()
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
     if enginelist is None:
         return 1
 
@@ -93,10 +94,6 @@ def user_update(p_engine, username, firstname, lastname, email, password,
         if engine_obj.get_session():
             continue
 
-        if (engine_obj.version_ge('6.0.0')):
-            from masking_api_60.models.non_admin_properties import NonAdminProperties
-        else:
-            from masking_api_53.models.non_admin_properties import NonAdminProperties
 
         userlist = DxUserList()
         userref = userlist.get_userId_by_name(username)
@@ -137,7 +134,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
 
 
                 userobj.is_admin = False
-                nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
+                nap = DxUserNonAdmin(role_id=roleref, environment_ids=envreflist)
                 userobj.non_admin_properties = nap
             else:
                 userobj.is_admin = True
@@ -174,7 +171,7 @@ def user_update(p_engine, username, firstname, lastname, email, password,
     return ret
 
 
-def user_add(p_engine, username, firstname, lastname, email, password,
+def user_add(p_engine, p_username,  username, firstname, lastname, email, password,
              user_type, user_environments, user_role):
     """
     Add user to Engine
@@ -197,7 +194,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
             print_error("User role is required for non-admin user")
             return 1
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
     if enginelist is None:
         return 1
 
@@ -238,7 +235,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
                         envreflist.append(envref)
 
             is_admin = False
-            nap = NonAdminProperties(role_id=roleref, environment_ids=envreflist)
+            nap = DxUserNonAdmin(roleref, envreflist)
         else:
             is_admin = True
             nap = None
@@ -258,7 +255,7 @@ def user_add(p_engine, username, firstname, lastname, email, password,
 
     return ret
 
-def user_list(p_engine, format, username):
+def user_list(p_engine, p_username,  format, username):
     """
     Print list of users
     param1: p_engine: engine name from configuration
@@ -269,7 +266,7 @@ def user_list(p_engine, format, username):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1
@@ -342,10 +339,13 @@ def user_list(p_engine, format, username):
             else:
                 envs = ''
 
-            if userobj.is_locked:
-                locked = 'Locked'
+            if userobj.is_locked is not None:
+                if userobj.is_locked is True:
+                    locked = 'Locked'
+                else:
+                    locked = 'Open'
             else:
-                locked = 'Open'
+                locked = 'N/A'
 
             if msadobj is None:
                 authtype = 'NATIVE'

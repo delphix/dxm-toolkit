@@ -30,7 +30,7 @@ from dxm.lib.DxRole.DxRoleList import DxRoleList
 
 
 
-def role_list(p_engine, format, rolename):
+def role_list(p_engine, p_username,  format, rolename):
     """
     Print list of roles
     param1: p_engine: engine name from configuration
@@ -41,7 +41,7 @@ def role_list(p_engine, format, rolename):
 
     ret = 0
 
-    enginelist = get_list_of_engines(p_engine)
+    enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:
         return 1

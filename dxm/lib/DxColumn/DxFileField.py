@@ -22,8 +22,41 @@ import logging
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 
+from dxm.lib.masking_api.api.file_field_metadata_api import FileFieldMetadataApi
+from dxm.lib.masking_api.rest import ApiException
 
 class DxFileField(object):
+
+
+    swagger_types = {
+        'file_field_metadata_id': 'int',
+        'file_format_id': 'int',
+        'record_type_id': 'int',
+        'field_length': 'int',
+        'field_name': 'str',
+        'field_position_number': 'int',
+        'algorithm_name': 'str',
+        'domain_name': 'str',
+        'date_format': 'str',
+        'is_masked': 'bool',
+        'is_profiler_writable': 'bool',
+        'notes': 'str'
+    }
+
+    swagger_map = {
+        'file_field_metadata_id': 'fileFieldMetadataId',
+        'file_format_id': 'fileFormatId',
+        'record_type_id': 'recordTypeId',
+        'field_length': 'fieldLength',
+        'field_name': 'fieldName',
+        'field_position_number': 'fieldPositionNumber',
+        'algorithm_name': 'algorithmName',
+        'domain_name': 'domainName',
+        'date_format': 'dateFormat',
+        'is_masked': 'isMasked',
+        'is_profiler_writable': 'isProfilerWritable',
+        'notes': 'notes'
+    }
 
     def __init__(self, engine):
         """
@@ -34,17 +67,8 @@ class DxFileField(object):
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxFile object")
-        if (self.__engine.version_ge('6.0.0')):
-            from masking_api_60.models.file_field_metadata import FileFieldMetadata
-            from masking_api_60.api.file_field_metadata_api import FileFieldMetadataApi
-            from masking_api_60.rest import ApiException
-        else:
-            from masking_api_53.models.file_field_metadata import FileFieldMetadata
-            from masking_api_53.api.file_field_metadata_api import FileFieldMetadataApi
-            from masking_api_53.rest import ApiException
 
         self.__api = FileFieldMetadataApi
-        self.__model = FileFieldMetadata
         self.__obj = None
         self.__apiexc = ApiException
 
@@ -63,6 +87,8 @@ class DxFileField(object):
         :param column: FileMetadata object
         """
         self.__obj = file
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
     @property
     def cf_meta_name(self):
@@ -86,7 +112,10 @@ class DxFileField(object):
 
     @property
     def algorithm_name(self):
-        return self.obj.algorithm_name
+        if self.obj is not None and hasattr(self.obj,'algorithm_name'):
+            return self.__obj.algorithm_name
+        else:
+            return None
 
     @algorithm_name.setter
     def algorithm_name(self, algorithm_name):
