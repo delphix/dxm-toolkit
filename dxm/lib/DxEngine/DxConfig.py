@@ -47,7 +47,8 @@ class DxConfig(object):
         self.__logger.debug("Creating Config object")
 
         try:
-            self.__conn = lite.connect('dxmtoolkit.db')
+            configfile="{}/dxmtoolkit.db".format(os.path.abspath(os.path.dirname(sys.argv[0])))
+            self.__conn = lite.connect(configfile)
             self.__cursor = self.__conn.cursor()
         except lite.Error as e:
             msg = "Error %s:" % e.args[0]
