@@ -20,6 +20,7 @@
 import logging
 import time
 import pytz
+import pprint
 from tqdm import tqdm
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -55,7 +56,8 @@ class DxExecution(object):
         'rows_masked': 'rowsMasked',
         'rows_total': 'rowsTotal',
         'start_time': 'startTime',
-        'end_time': 'endTime'
+        'end_time': 'endTime',
+        'submit_time': 'submitTime'
     }
 
 
@@ -173,3 +175,35 @@ class DxExecution(object):
                 )
         else:
             return None
+
+    @property
+    def submit_time(self):
+        if self.obj is not None and hasattr(self.obj, 'submit_time'):
+
+            try:
+                if self.obj.submit_time is None:
+                    return None
+                return parse(self.obj.submit_time)
+
+            except ValueError:
+                raise ApiException(
+                    status=0,
+                    reason=(
+                        "Failed to parse `{0}` as datetime object"
+                        .format(self.obj.submit_time)
+                    )
+                )
+
+
+        else:
+            return None
+
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()

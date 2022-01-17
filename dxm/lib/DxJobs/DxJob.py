@@ -673,7 +673,18 @@ class DxJob(object):
             enddate_tz = enddate.replace(tzinfo=pytz.UTC)
 
         if self.execList:
-            execlist = [ x for x in self.execList if ((startdate is None) or (x.start_time >= startdate_tz)) and ((enddate is None) or ( (x.end_time is not None) and (x.end_time <= enddate_tz))) ]
+            execlist = []
+
+            for x in self.execList:
+                if hasattr(x, "start_time") and x.start_time is not None:
+                    l_start_time = x.start_time
+                else:
+                    # this is possible when queued job was cancel before start
+                    self.__logger.debug("Start_time doesn't exist or it's None - using submit_time instead: {}".format(str(x)))
+                    l_start_time = x.submit_time
+                if ( (startdate is None) or (l_start_time >= startdate_tz) ) and ( (enddate is None) or ( (x.end_time is not None) and (x.end_time <= enddate_tz))):
+                    execlist.append(x)
+
         else:
             execlist = self.execList
 
