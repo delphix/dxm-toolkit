@@ -107,10 +107,13 @@ from dxm.lib.DxJDBC.jdbc_worker import driver_list
 from dxm.lib.DxJDBC.jdbc_worker import driver_add
 from dxm.lib.DxJDBC.jdbc_worker import driver_delete
 
+
 # from lib.DxLogging import print_error
 from dxm.lib.DxLogging import logging_est
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
+
+from dxm.lib.DxEngine.DxConfig import DxConfig
 
 __version__ = "0.9.3"
 
@@ -122,6 +125,7 @@ class dxm_state(object):
         self.engine = None
         self.format = None
         self.username = None
+        self.configfile = None
 
 
 pass_state = click.make_pass_decorator(dxm_state, ensure=True)
@@ -187,6 +191,16 @@ def format_option(f):
                         callback=callback)(f)
 
 
+def configfile_option(f):
+    def callback(ctx, param, value):
+        state = ctx.ensure_object(dxm_state)
+        state.configfile = value
+        return value
+    return click.option('--configfile',
+                        expose_value=False,
+                        help='Config path and name',
+                        callback=callback)(f)
+
 
 def common_options(f):
     f = logfile_option(f)
@@ -194,6 +208,7 @@ def common_options(f):
     f = engine_option(f)
     f = format_option(f)
     f = user_option(f)
+    f = configfile_option(f)
     return f
 
 def debug_options(f):
@@ -391,6 +406,7 @@ def jdbc(dxm_state):
     'If you want to hide input put '' as value and you will be propted')
 @logfile_option
 @debug_options
+@configfile_option
 @pass_state
 def add(dxm_state, engine, ip, port, protocol, username, password, default,
         proxyurl, proxyuser, proxypassword):
@@ -400,6 +416,7 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
     if proxypassword == '':
         proxypassword = click.prompt('Please enter a password', hide_input=True,
                                      confirmation_prompt=True)
+    DxConfig(dxm_state.configfile)
     exit(engine_add(engine, ip, username, password,
          protocol, port, default, proxyurl, proxyuser, proxypassword))
 
@@ -443,6 +460,7 @@ def update(dxm_state, engine, ip, port, protocol, username, password, default,
     if proxypassword == '':
         proxypassword = click.prompt('Please enter a password', hide_input=True,
                                 confirmation_prompt=True)
+    DxConfig(dxm_state.configfile)
     exit(engine_update(engine, engineuser, ip, username, password,
          protocol, port, default, proxyurl, proxyuser, proxypassword))
 
@@ -454,6 +472,7 @@ def logout(dxm_state):
     """
     Logout user
     """
+    DxConfig(dxm_state.configfile)
     exit(engine_logout(dxm_state.engine, dxm_state.engineuser))
 
 
@@ -465,6 +484,7 @@ def list(dxm_state, username):
     """
     List entries from configuration database
     """
+    DxConfig(dxm_state.configfile)
     exit(engine_list(dxm_state.engine, username, dxm_state.format))
 
 
@@ -475,6 +495,7 @@ def delete(dxm_state):
     """
     Delete entry from configuration database
     """
+    DxConfig(dxm_state.configfile)
     exit(engine_delete(dxm_state.engine, dxm_state.engineuser))
 
 
@@ -495,6 +516,7 @@ def logs(dxm_state, enginelog,page_size,level):
     """
     Save Masking Engine log into file
     """
+    DxConfig(dxm_state.configfile)
     exit(engine_logs(dxm_state.engine, dxm_state.engineuser, enginelog, page_size,level))
 
 
@@ -508,6 +530,7 @@ def upload(dxm_state, filename):
     """
     Save Masking Engine log into file
     """
+    DxConfig(dxm_state.configfile)
     exit(engine_upload(dxm_state.engine, dxm_state.engineuser, filename))
 
 @application.command()
@@ -521,6 +544,7 @@ def list(dxm_state, appname):
     If --appname is set, output list will be limited by value of this option
     and return non-zero return code if application is not found.
     """
+    DxConfig(dxm_state.configfile)
     exit(application_list(dxm_state.engine, dxm_state.engineuser, dxm_state.format, appname))
 
 

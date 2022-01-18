@@ -99,7 +99,7 @@ class DxMaskingEngine(object):
 
         if engine_tuple[8]:
             #proxy settings
-            dxconfig = DxConfig()
+            dxconfig = DxConfig
             self.config.proxy = engine_tuple[8]
             if engine_tuple[9]:
                 self.config.proxyuser = engine_tuple[9]
@@ -159,7 +159,7 @@ class DxMaskingEngine(object):
 
         except ApiException as e:
             if e.status == 401:
-                password = DxConfig().decrypt_password(self.__password)
+                password = DxConfig.decrypt_password(self.__password)
                 if password is None:
                     print_error("Problem with password decryption. Can't connect to engine")
                     return 1
@@ -249,7 +249,7 @@ class DxMaskingEngine(object):
         # binary_file = open('engine.bin', mode='wb')
         # pickle.dump(apikey, binary_file)
         # binary_file.close()
-        config = DxConfig()
+        config = DxConfig
         config.set_key(self.__name, self.__username, apikey)
 
 
@@ -268,7 +268,7 @@ class DxMaskingEngine(object):
         #     print_error("Session file not found")
         #     self.__logger.error("Session file not found")
 
-        config = DxConfig()
+        config = DxConfig
         auth_key = config.get_key(self.__name, self.__username)
         return auth_key
 

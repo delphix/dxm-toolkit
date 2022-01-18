@@ -43,7 +43,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
 
     return None if OK or integer with error
     """
-    config = DxConfig()
+    config = DxConfig
     config.init_metadata()
     if config.insert_engine_info(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
                                  p_default, p_proxyurl, p_proxyuser, p_proxypassword):
@@ -68,7 +68,7 @@ def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protoc
     param7: p_default: is engine default - Y/N - default value N
     return None if OK or integer with error
     """
-    config = DxConfig()
+    config = DxConfig
     config.init_metadata()
     config.update_engine(p_engine, p_engineuser, p_ip, p_username, p_password,
                          p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword)
@@ -79,7 +79,7 @@ def engine_logout(p_engine, p_engineuser):
     param1: p_engine: name of Masking engine
     return None if OK or integer with error
     """
-    config = DxConfig()
+    config = DxConfig
     config.init_metadata()
     if config.check_uniqness(p_engine, p_engineuser) == -1:
         return -1
@@ -94,7 +94,7 @@ def engine_delete(p_engine, p_engineuser):
     param2: p_username: username
     return None if OK or integer with error, ex. no rows found
     """
-    config = DxConfig()
+    config = DxConfig
     config.init_metadata()
     if config.check_uniqness(p_engine, p_engineuser) == -1:
         return -1
@@ -130,7 +130,7 @@ def engine_list(p_engine, p_username, p_format):
     data.create_header(data_header)
     data.format_type = p_format
 
-    config = DxConfig()
+    config = DxConfig
     config.init_metadata()
     if p_engine is None:
         p_engine = 'all'

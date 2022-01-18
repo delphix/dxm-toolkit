@@ -39,22 +39,33 @@ class DxConfig(object):
     __cursor = None
     __logger = None
 
-    def __init__(self):
+    @classmethod
+    def __init__(self, config_file):
         """
         Constructor
         """
         self.__logger = logging.getLogger()
         self.__logger.debug("Creating Config object")
 
+        self.__logger.debug("config file provided: {}".format(config_file))
+
+        if config_file is None:
+            dbfileloc="{}/dxmtoolkit.db".format(os.path.abspath(os.path.dirname(sys.argv[0])))
+        else:
+            dbfileloc=config_file
+
+        self.__logger.debug("dbfileloc: {}".format(dbfileloc))
+
         try:
-            configfile="{}/dxmtoolkit.db".format(os.path.abspath(os.path.dirname(sys.argv[0])))
-            self.__conn = lite.connect(configfile)
+            
+            self.__conn = lite.connect(dbfileloc)
             self.__cursor = self.__conn.cursor()
         except lite.Error as e:
             msg = "Error %s:" % e.args[0]
             self.__logger.debug(msg)
 
 
+    @classmethod
     def close(self):
         if self.__conn:
             self.__conn.commit()
@@ -62,14 +73,17 @@ class DxConfig(object):
             self.__conn.close()
 
 
+    @classmethod
     def __enter__(self):
         return self
 
 
+    @classmethod
     def __exit__(self):
         self.close()
 
 
+    @classmethod
     def init_metadata(self):
         if self.__conn:
             self.__logger.debug("Creating table in config")
@@ -105,6 +119,7 @@ class DxConfig(object):
                 sys.exit(-1)
 
 
+    @classmethod
     def insert_engine_info(self, p_engine, p_ip, p_username, p_password, p_protocol, p_port,
                            p_default, p_proxyurl, p_proxyuser, p_proxypassword):
         """
@@ -158,7 +173,7 @@ class DxConfig(object):
             self.__logger.error("No connection open")
             return -1
 
-
+    @classmethod
     def get_engine_info(self, engine_name, user_name):
         """
         Get engine data from sqllist database for database name
@@ -201,7 +216,7 @@ class DxConfig(object):
             print_error("No connection to local sqllist database")
             sys.exit(-1)
 
-
+    @classmethod
     def delete_engine_info(self, engine_name, user_name):
         """
         Delete engine data from sqllist database for database name
@@ -251,7 +266,7 @@ class DxConfig(object):
             print_error("No connection to local sqllist database")
             sys.exit(-1)
 
-
+    @classmethod
     def check_uniqness(self, engine_name, engineuser):
         # check if engine_name can be identified without a username
 
@@ -269,6 +284,7 @@ class DxConfig(object):
         else:
             return rowscount[0]
 
+    @classmethod
     def check_default(self):
         # check there is already default engine - only one can be default
 
@@ -283,6 +299,7 @@ class DxConfig(object):
         else:
             return rowscount[0]
 
+    @classmethod
     def update_engine(self, engine_name, engineuser,
                       ip_address,
                       username,
@@ -415,7 +432,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
-
+    @classmethod
     def set_database_version(self, dbver):
         """
         set internal version of the sqllite
@@ -433,6 +450,7 @@ class DxConfig(object):
             sys.exit(-1)
 
 
+    @classmethod
     def get_database_version(self):
         """
         get internal version of the sqllite
@@ -452,7 +470,7 @@ class DxConfig(object):
 
         return row[0]
 
-
+    @classmethod
     def is_table(self):
         """
         Check if table exists
@@ -475,7 +493,7 @@ class DxConfig(object):
             sys.exit(-1)
 
 
-
+    @classmethod
     def set_key(self, engine_name, user_name, auth_key):
         """
         set auth key for engine and user
@@ -527,7 +545,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
-
+    @classmethod
     def get_key(self, engine_name, user_name):
         """
         Get engine auth key for engine name and user
@@ -571,6 +589,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
+    @classmethod
     def set_proxy_password(self, username, password):
         """
         set proxy user in keyring ( supported only on OSX, Windows and Linux with packages)
@@ -586,7 +605,7 @@ class DxConfig(object):
             self.__logger.debug("Keyring backend is not configured %s:" % e.args)
             sys.exit(-1)
 
-
+    @classmethod
     def delete_proxy_password(self, username):
         """
         delete proxy password
@@ -605,7 +624,7 @@ class DxConfig(object):
             pass
 
 
-
+    @classmethod
     def get_proxy_password(self, username):
         """
         get proxy password for an user
@@ -626,7 +645,7 @@ class DxConfig(object):
             self.__logger.debug("Keyring backend is not configured %s:" % e.args)
             sys.exit(-1)
 
-
+    @classmethod
     def get_proxy_user(self, engine_name):
         """
         Get proxy user
@@ -665,7 +684,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
-
+    @classmethod
     def encrypt_password(self, password):
         """
         Encrypt password and hash with SHA265
@@ -686,7 +705,7 @@ class DxConfig(object):
 
         return nonce.hex() + enchex + hashhex
 
-
+    @classmethod
     def decrypt_password(self, password):
         """
         Encrypt password and hash with SHA265
