@@ -57,7 +57,6 @@ class DxConfig(object):
         self.__logger.debug("dbfileloc: {}".format(dbfileloc))
 
         try:
-            
             self.__conn = lite.connect(dbfileloc)
             self.__cursor = self.__conn.cursor()
         except lite.Error as e:

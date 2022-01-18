@@ -53,7 +53,6 @@ def get_list_of_engines(p_engine, p_username):
     logger = logging.getLogger()
     # read engine from config or read all and put into list
     config = DxConfig
-
     enginelist = config.get_engine_info(p_engine, p_username)
     logger.debug("p_engine %s enginelist %s" % (p_engine, enginelist))
 
