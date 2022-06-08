@@ -269,7 +269,8 @@ def connector_test(p_engine, p_username,  connectorname, envname):
     param2: connectorname: connectorname name
     return 0 if added, non 0 for error
     """
-
+    logger = logging.getLogger()
+    logger.debug("starting connector_test")
     return connector_selector(p_engine, p_username,  connectorname, envname, 'do_test')
 
 def connector_fetch(p_engine, p_username,  connectorname, envname, format):

@@ -104,6 +104,7 @@ class DxEnvironmentList(object):
         """
         try:
             self.__logger.debug("reference %s" % reference)
+            self.__logger.debug(self.__environmentList[reference])
             return self.__environmentList[reference]
 
         except KeyError as e:
@@ -127,6 +128,7 @@ class DxEnvironmentList(object):
         return environmnent_id if found
         return None if not found or not unique
         """
+        self.__logger.debug("Search for environement: {}".format(name))
         environments = get_objref_by_val_and_attribute(name, self,
                                                        'environment_name')
         if len(environments) < 1:
@@ -139,6 +141,8 @@ class DxEnvironmentList(object):
             self.__logger.error("Environment %s is not unique" % name)
             return None
 
+
+        self.__logger.debug("Found: {}".format(environments[0]))
         return environments[0]
 
 
@@ -168,6 +172,7 @@ class DxEnvironmentList(object):
         environment = self.get_by_ref(environmentId)
         if environment is not None:
             if environment.delete() is None:
+                del self.__environmentList[environmentId]
                 return None
             else:
                 return 1

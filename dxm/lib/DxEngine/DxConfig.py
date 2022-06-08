@@ -57,7 +57,7 @@ class DxConfig(object):
         self.__logger.debug("dbfileloc: {}".format(dbfileloc))
 
         try:
-            self.__conn = lite.connect(dbfileloc)
+            self.__conn = lite.connect(dbfileloc, check_same_thread=False)
             self.__cursor = self.__conn.cursor()
         except lite.Error as e:
             msg = "Error %s:" % e.args[0]
@@ -422,7 +422,7 @@ class DxConfig(object):
                         print_message("Configuration for engine %s"
                                       " updated in database"
                                       % engine_name)
-                        return None
+                        return 0
             except lite.Error as e:
                 self.__logger.error("Error %s:" % e.args)
                 print(sql)

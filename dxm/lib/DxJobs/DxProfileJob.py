@@ -370,12 +370,11 @@ class DxProfileJob(object):
 
         try:
             execid = self.__lastExec.execution_id
-            exec_api = self.__apiexec(self.__engine.api_client)
             self.__logger.debug("Stopping execution %s" % str(self.__lastExec))
             execjob = exec_api.cancel_execution(self.__lastExec.execution_id)
             while execjob.status == 'RUNNING':
                 time.sleep(1)
-                execjob = exec_api.get_execution_by_id(execid)
+                execjob = self.get_execution(execid)
 
             print_message(execjob)
             return 0
@@ -443,8 +442,6 @@ class DxProfileJob(object):
 
         execid = execjob.execution_id
 
-        exec_api = self.__apiexec(self.__engine.api_client)
-
         self.__logger.debug('Waiting for profilejob %s to finish'
                             % self.job_name)
 
@@ -454,7 +451,7 @@ class DxProfileJob(object):
 
         while execjob.status == 'RUNNING':
             time.sleep(10)
-            execjob = exec_api.get_execution_by_id(execid)
+            execjob = self.get_execution(execid)
 
         if execjob.status == 'SUCCEEDED':
             if not self.monitor:
@@ -476,3 +473,13 @@ class DxProfileJob(object):
             self.__logger.error('return value %s'
                                 % dxm.lib.DxJobs.DxJobCounter.profileret)
             return 1
+
+    def get_execution(self, exec_id):
+        '''
+        Create a DxExecution object and read a execution using execution API
+        '''
+        exec_api = self.__apiexec(self.__engine.api_client)
+        exec_obj = exec_api.get_execution_by_id(exec_id)
+        exec = DxExecution(exec_obj.job_id)
+        exec.from_exec(exec_obj)
+        return exec

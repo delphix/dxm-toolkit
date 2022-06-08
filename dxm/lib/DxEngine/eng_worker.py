@@ -53,7 +53,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     else:
         print_message("Engine added to configuration")
         config.close()
-        return None
+        return 0
 
 def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protocol, p_port,
                   p_default, p_proxyurl, p_proxyuser, p_proxypassword):
@@ -70,7 +70,7 @@ def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protoc
     """
     config = DxConfig
     config.init_metadata()
-    config.update_engine(p_engine, p_engineuser, p_ip, p_username, p_password,
+    return config.update_engine(p_engine, p_engineuser, p_ip, p_username, p_password,
                          p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword)
 
 def engine_logout(p_engine, p_engineuser):
@@ -105,7 +105,7 @@ def engine_delete(p_engine, p_engineuser):
     else:
         print_message("Engine deleted from configuration")
         config.close()
-        return None
+        return 0
 
 
 def engine_list(p_engine, p_username, p_format):
@@ -153,7 +153,7 @@ def engine_list(p_engine, p_username, p_format):
     print("")
     print (data.data_output(False))
     print("")
-    return None
+    return 0
 
 
 def engine_logs(p_engine, p_engineuser, outputlog, page_size,level):
