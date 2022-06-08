@@ -103,6 +103,9 @@ def environment_list(p_engine, p_username,  format, envname):
 
     ret = 0
 
+    logger = logging.getLogger()
+    logger.debug("start list")
+
     enginelist = get_list_of_engines(p_engine, p_username)
 
     if enginelist is None:

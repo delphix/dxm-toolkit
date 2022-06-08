@@ -240,9 +240,16 @@ class DxConnectorsList(object):
         return None if OK
         """
 
+        self.__logger.debug("Adding a connector")
+
         if connector.add() == 0:
             self.__logger.debug("Adding connector %s to list" % connector)
-            self.__connectorsList[connector.database_connector_id] = connector
+
+            if connector.is_database:
+                self.__connectorsList['d' + str(connector.database_connector_id)] = connector
+            else:
+                self.__connectorsList['f' + str(connector.database_connector_id)] = connector
+
             return 0
         else:
             return 1

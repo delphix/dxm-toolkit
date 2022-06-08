@@ -16,7 +16,7 @@
 # Author  : Marcin Przepiorowski
 # Date    : March 2018
 
-
+import pprint
 import logging
 from dxm.lib.DxApplication.DxApplicationList import DxApplicationList
 from dxm.lib.DxLogging import print_error
@@ -148,6 +148,7 @@ class DxEnvironment(object):
             self.environment_name=environment_name
             self.purpose=purpose
             self.application_id = application_id[0]
+            self.application_name = application_name
         else:
             self.environment_name=environment_name
             self.purpose=purpose
@@ -215,3 +216,12 @@ class DxEnvironment(object):
             print_error(e.body)
             self.__logger.error(e)
             return 1
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()

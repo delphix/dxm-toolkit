@@ -20,6 +20,7 @@
 import logging
 import time
 import pytz
+import sys
 from tqdm import tqdm
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -509,7 +510,7 @@ class DxJob(object):
             self.__logger.debug("Stopping execution response %s" % str(execjob))
             while execjob.status == 'RUNNING':
                 time.sleep(1)
-                execjob = exec_api.get_execution_by_id(execid)
+                execjob = self.get_execution(execid)
 
             print_message(execjob)
             return 0
@@ -563,6 +564,7 @@ class DxJob(object):
                                 % str(response))
 
             if nowait:
+                print_message("Job {} started without monitoring".format(self.job_name))
                 return 0
             else:
                 return self.wait_for_job(response, posno, lock)
@@ -570,6 +572,18 @@ class DxJob(object):
         except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
+            lock.acquire()
+            dxm.lib.DxJobs.DxJobCounter.ret = \
+                dxm.lib.DxJobs.DxJobCounter.ret + 1
+            lock.release()
+            self.__logger.error('return value %s'
+                                % dxm.lib.DxJobs.DxJobCounter.ret)
+            return 1
+
+        except Exception:
+            print_error("Unhandled exception")
+            print_error(str(sys.exc_info()))
+            self.__logger.error(str(sys.exc_info()))
             lock.acquire()
             dxm.lib.DxJobs.DxJobCounter.ret = \
                 dxm.lib.DxJobs.DxJobCounter.ret + 1
@@ -590,7 +604,6 @@ class DxJob(object):
         first = True
         bar = None
 
-        exec_api = self.__apiexec(self.__engine.api_client)
         last = 0
 
         self.__logger.debug('Waiting for job %s to start processing rows'
@@ -602,7 +615,7 @@ class DxJob(object):
 
         while execjob.status == 'RUNNING' or execjob.status == 'QUEUED':
             time.sleep(10)
-            execjob = exec_api.get_execution_by_id(execid)
+            execjob = self.get_execution(exec_id=execid)
             if first and (execjob.rows_total is not None):
                 first = False
                 if self.monitor and (bar is None):
@@ -730,3 +743,15 @@ class DxJob(object):
             print_error(e.body)
             self.__logger.error(e)
             return None
+
+
+
+    def get_execution(self, exec_id):
+        '''
+        Create a DxExecution object and read a execution using execution API
+        '''
+        exec_api = self.__apiexec(self.__engine.api_client)
+        exec_obj = exec_api.get_execution_by_id(exec_id)
+        exec = DxExecution(exec_obj.job_id)
+        exec.from_exec(exec_obj)
+        return exec

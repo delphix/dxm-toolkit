@@ -422,8 +422,7 @@ class DxConnector(object):
         """
 
         self.__obj = con
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+
 
     def create_connector(self, connector_name, database_type, environment_id):
         """
@@ -437,6 +436,9 @@ class DxConnector(object):
         self.connector_name = connector_name
         self.database_type = database_type
         self.environment_id = environment_id
+        self.is_database = True
+        self.__obj.swagger_types = self.swagger_types
+        self.__obj.swagger_map = self.swagger_map
 
 
     def get_properties(self):
@@ -480,7 +482,8 @@ class DxConnector(object):
                 self.obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__obj = response
-
+            self.__obj.swagger_types = self.swagger_types
+            self.__obj.swagger_map = self.swagger_map
             self.__logger.debug("connector response %s"
                                 % str(response))
 
@@ -556,6 +559,7 @@ class DxConnector(object):
         try:
             self.__logger.debug("test connector id %s"
                                 % self.database_connector_id)
+            self.__logger.debug("body {}".format(str(self.obj)))
             # body added to workaround an issue with API 
             response = api_instance.test_database_connector(
                 self.database_connector_id,
