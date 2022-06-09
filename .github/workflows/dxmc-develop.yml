@@ -98,6 +98,8 @@ jobs:
         echo %INCLUDE%
         python -m pip install --upgrade pip
         python -m pip install cryptography
+        python -m pip install pyparsing==3.0.7
+        python -m pip install pyinstaller==4.10
         python setup.py install
         pip install pyinstaller
         pyinstaller --onefile --clean dxmc.py
@@ -160,8 +162,9 @@ jobs:
           echo $LIBS
           
           pip3 install --upgrade 'setuptools<45.0.0'
+          pip3 install pyparsing==3.0.7
+          pip3 install pyinstaller==4.10
           python3 setup.py install
-          pip3 install pyinstaller
           pyinstaller --onefile --clean --hidden-import pkg_resources dxmc.py
           
           cd ${CDIR}

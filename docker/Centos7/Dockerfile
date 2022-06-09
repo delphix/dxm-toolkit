@@ -9,7 +9,8 @@ RUN yum install -y python3 \
 ENV CFLAGS "-std=gnu99"
 
 RUN pip3 install wheel \
-    && pip3 install pyinstaller \
+    && pip3 install pyparsing==3.0.7 \
+    && pip3 install pyinstaller==4.10 \
     && pip3 install jeepney
 
 RUN mkdir -p /github/workspace
