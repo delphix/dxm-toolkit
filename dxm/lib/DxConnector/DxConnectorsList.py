@@ -148,7 +148,7 @@ class DxConnectorsList(object):
                 self.__logger.debug("No file connectors found")
 
             if len(self.__connectorsList) < 1:
-                print_error("No connectors found")
+                #print_error("No connectors found")
                 self.__logger.error("No connectors found")
                 return 1
 

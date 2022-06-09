@@ -79,12 +79,12 @@ def test_engine_add_2nd():
 
     assert rc == 0
 
-def test_engine_update(capsys):
+def test_engine_update(capsys, engine):
 
     rc = eng_worker.engine_update(
         p_engine="test_eng",
         p_engineuser="admin",
-        p_ip="marcindxmc.dlpxdc.co",
+        p_ip=engine,
         p_username="admin",
         p_password=None,
         p_port=None,
@@ -102,7 +102,7 @@ def test_engine_update(capsys):
     assert (rc, captured.out.replace('\r','')) == (0, output)
 
 
-def test_engine_list(capsys):
+def test_engine_list(capsys, engine):
 
     rc = eng_worker.engine_list(
         p_engine="test_eng",
@@ -112,7 +112,7 @@ def test_engine_list(capsys):
 
     output = "\n" + \
     "#Engine name,IP,username,protocol,port,default,proxy URL,proxy user\n" + \
-    "test_eng,marcindxmc.dlpxdc.co,admin,http,80,Y,N/A,N/A\n\n\n"
+    "test_eng,{},admin,http,80,Y,N/A,N/A\n\n\n".format(engine)
 
     captured = capsys.readouterr()
 

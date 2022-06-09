@@ -90,7 +90,7 @@ class DxEnvironmentList(object):
                     self.__environmentList[c.environment_id] = environment
             else:
                 self.__logger.error("No environments found")
-                print_error("No environments found")
+                #print_error("No environments found")
 
         except self.__apiexc as e:
             self.__logger.error("Can't load environment %s" % e.body)
