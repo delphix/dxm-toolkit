@@ -1,11 +1,15 @@
-FROM centos:7
+FROM opensuse/leap:latest
 
 USER root
-RUN yum install -y python3 \
-    && yum install -y python3-devel \
-    && yum install -y git \ 
-    && yum install -y gcc \
-    && yum install -y zlib-devel
+RUN zypper in -y python3 \
+    && zypper in -y python3-devel \
+    && zypper in -y python3-pip \
+    && zypper in -y git \ 
+    && zypper in -y gcc \
+    && zypper in -y zlib-devel \
+    && zypper in -y openssl-devel \
+    && zypper in -y libffi-devel \
+    && zypper in -y libbz2-1 libbz2-devel
 
 ENV CFLAGS "-std=gnu99"
 
