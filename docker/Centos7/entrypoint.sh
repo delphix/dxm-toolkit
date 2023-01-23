@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ~/.bashrc
+source /root/.bashrc
 
 cd /github/workspace/dxm/lib/DxEngine
 mv secret.py secret.py.orig
