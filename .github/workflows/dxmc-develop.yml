@@ -101,6 +101,7 @@ jobs:
         #python -m pip install pyparsing==3.0.7
         #python -m pip install pyinstaller==4.10
         python -m pip install pyinstaller
+        python -m pip install six
         python setup.py install
         pip install pyinstaller
         pyinstaller --onefile --clean dxmc.py

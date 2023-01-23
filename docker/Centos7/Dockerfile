@@ -4,7 +4,7 @@ RUN yum -y install openssl-devel bzip2-devel libffi-devel \
     && yum -y groupinstall "Development Tools" \
     && yum -y install ncurses-devel readline-devel sqlite-devel xz-devel
 RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
+RUN echo 'export PYENV_ROOT="/root/.pyenv"' >> ~/.bashrc \
     && echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc \
     && echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 
