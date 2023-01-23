@@ -13,7 +13,7 @@ ENVNAME="env1"
 params = {
     'envname': ENVNAME,
     'schemaName': 'HR',
-    'host': 'marcinorasrc.dlpxdc.co',
+    'host': 'marcindxmcdb.dlpxdc.co',
     'port': 1521,
     'password': 'hr',
     'username': 'HR',
