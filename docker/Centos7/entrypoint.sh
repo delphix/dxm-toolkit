@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source ~/.bashrc
+
 cd /github/workspace/dxm/lib/DxEngine
 mv secret.py secret.py.orig
 cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${INPUT_ENCKEY}/" > secret.py

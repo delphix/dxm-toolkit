@@ -56,10 +56,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9.16
 
     - name: Get the version
       id: get_version
@@ -97,9 +97,10 @@ jobs:
       run: |
         echo %INCLUDE%
         python -m pip install --upgrade pip
-        python -m pip install cryptography
-        python -m pip install pyparsing==3.0.7
-        python -m pip install pyinstaller==4.10
+        #python -m pip install cryptography
+        #python -m pip install pyparsing==3.0.7
+        #python -m pip install pyinstaller==4.10
+        python -m pip install pyinstaller
         python setup.py install
         pip install pyinstaller
         pyinstaller --onefile --clean dxmc.py

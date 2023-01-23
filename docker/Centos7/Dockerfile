@@ -1,17 +1,25 @@
 FROM centos:7
 
-RUN yum install -y python3 \
-    && yum install -y python3-devel \
-    && yum install -y git \ 
-    && yum install -y gcc \
-    && yum install -y zlib-devel
+RUN yum -y install openssl-devel bzip2-devel libffi-devel \
+    && yum -y groupinstall "Development Tools" \
+    && yum -y install ncurses-devel readline-devel sqlite-devel xz-devel
+RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+RUN echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc \
+    && echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc \
+    && echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 
-ENV CFLAGS "-std=gnu99"
+RUN exec "$SHELL"
+RUN $HOME/.pyenv/bin/pyenv install 3.9.16
+RUN $HOME/.pyenv/bin/pyenv global 3.9.16
 
-RUN pip3 install wheel \
-    && pip3 install pyparsing==3.0.7 \
-    && pip3 install pyinstaller==4.10 \
-    && pip3 install jeepney
+
+SHELL ["/bin/bash", "-c"]
+
+ENV PYENV_ROOT $HOME/.pyenv
+ENV PATH $PYENV_ROOT/bin:$PATH
+
+RUN source ~/.bashrc \
+    && pip3 install pyinstaller
 
 RUN mkdir -p /github/workspace
 RUN mkdir -p /github/home
@@ -19,5 +27,4 @@ RUN mkdir -p /github/workflow
 COPY entrypoint.sh /entrypoint.sh
 WORKDIR /github/workspace
 RUN chmod +x /entrypoint.sh
-
 ENTRYPOINT ["/entrypoint.sh"]
