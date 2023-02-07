@@ -6,7 +6,7 @@ setup(
     #version=dxm.dxm.__version__,
     packages=find_packages(),
     install_requires=[
-        'click == 7.1.2','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi == 2020.6.20", "python-dateutil == 2.8.1", "colorama == 0.4.3", "tqdm == 4.47.0", "packaging == 20.4", "keyring == 21.2.1", "cryptography == 2.9.2"
+        'click == 7.1.2','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi == 2020.6.20", "python-dateutil == 2.8.1", "colorama == 0.4.3", "tqdm == 4.47.0", "packaging == 20.4", "keyring == 21.2.1", "cryptography == 39.0.1"
     ],
     entry_points='''
         [console_scripts]
