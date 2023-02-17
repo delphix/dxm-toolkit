@@ -31,7 +31,7 @@ from dxm.lib.DxConnector.DatabaseConnector_mixin import DatabaseConnector_mixin
 
 class DxConnector(DatabaseConnector_mixin):
 
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -42,8 +42,10 @@ class DxConnector(DatabaseConnector_mixin):
         self.__logger.debug("creating DxConnector object")
         self.__api = DatabaseConnectorApi
         self.__apiexc = ApiException
-        self.obj = None
+        self._obj = None
 
+        if existing_object is not None:
+            self.load_object(existing_object)  
 
 
     @property
@@ -81,7 +83,7 @@ class DxConnector(DatabaseConnector_mixin):
             return None
 
 
-    def from_connector(self, con):
+    def load_object(self, con):
         """
         Set a obj property using a Database Connector 
         :param con: DatabaseConnector object

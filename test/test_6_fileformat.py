@@ -5,7 +5,6 @@ from dxm.lib.DxEngine.DxConfig import DxConfig
 from dxm.lib.DxLogging import logging_est
 
 CONFIGPATH='./test/testdb.db'
-FILEFORMAT="fileconn"
 FILEFORMAT_FILE='./test/test_file_format.txt'
 
 #logging_est('dxm.log', True)

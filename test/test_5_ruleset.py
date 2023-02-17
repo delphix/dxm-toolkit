@@ -77,6 +77,30 @@ def test_ruleset_list(capsys):
     assert (rc, captured.out.replace('\r','')) == (0, output)
 
 
+
+def test_ruleset_delete():
+    rc = rule_worker.ruleset_delete(
+        p_engine="test_eng",
+        p_username=None,
+        rulesetname=RULESETNAME,
+        envname=None
+    )
+
+    assert rc == 0
+
+def test_ruleset_add_for_next_steps(capsys):
+    rc = rule_worker.ruleset_add(
+        p_engine="test_eng",
+        p_username=None,
+        rulesetname=RULESETNAME,
+        connectorname=CONNNAME,
+        envname=ENVNAME
+    )
+
+    output = "Ruleset {} added\n".format(RULESETNAME)
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)
+
 @pytest.mark.dependency()
 def test_ruleset_list_file_ignore(capsys):
     rc = rule_worker.ruleset_list(
@@ -132,5 +156,28 @@ def test_ruleset_list_file(capsys):
     output = "\n" + \
     "#Engine name,Ruleset name,Connector name,Metadata type,Connector type,Environent name\n" + \
     "test_eng,{},{},File,DELIMITED,{}\n\n\n".format(RULESETNAME_FILE, CONNNAME_FILE, ENVNAME)
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)
+
+def test_ruleset_delete_file():
+    rc = rule_worker.ruleset_delete(
+        p_engine="test_eng",
+        p_username=None,
+        rulesetname=RULESETNAME_FILE,
+        envname=None
+    )
+
+    assert rc == 0
+
+def test_ruleset_add_file_for_next_steps(capsys):
+    rc = rule_worker.ruleset_add(
+        p_engine="test_eng",
+        p_username=None,
+        rulesetname=RULESETNAME_FILE,
+        connectorname=CONNNAME_FILE,
+        envname=ENVNAME
+    )
+
+    output = "Ruleset {} added\n".format(RULESETNAME_FILE)
     captured = capsys.readouterr()
     assert (rc, captured.out.replace('\r','')) == (0, output)

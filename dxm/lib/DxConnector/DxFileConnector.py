@@ -32,12 +32,12 @@ from dxm.lib.DxConnector.FileConnector_mixin import FileConnector_mixin
 class DxFileConnector(FileConnector_mixin, DxConnector):
 
 
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        DxConnector.__init__(self, engine)
+        DxConnector.__init__(self, engine, existing_object)
         #FileConnector.__init__(self)
         self.__engine = engine
         self.__logger = logging.getLogger()
@@ -45,7 +45,8 @@ class DxFileConnector(FileConnector_mixin, DxConnector):
         self.__api = FileConnectorApi
         self.__apiexc = ApiException
         self._obj = None
-
+        if existing_object is not None:
+            self.load_object(existing_object)  
 
     @property
     def connectorId(self):
@@ -65,7 +66,7 @@ class DxFileConnector(FileConnector_mixin, DxConnector):
 
 
 
-    def from_connector(self, con):
+    def load_object(self, con):
         """
         Set a obj property using a Database Connector 
         :param con: DatabaseConnector object

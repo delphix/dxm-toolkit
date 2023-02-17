@@ -299,3 +299,39 @@ def test_ruleset_meta_file_add_from_file(capsys):
     assert (rc, captured.out.replace('\r','')) == (0, output)
 
 
+def test_ruleset_meta_file_delete_before_add_fromfile_bulk(capsys):
+    rc = delete_meta([METANAME_FILE1])
+    assert rc == 0
+
+def test_ruleset_meta_file_add_from_file_bulk(capsys):
+
+    params = {
+        "rulesetname" : RULESETNAME_FILE,
+        "envname": None,
+        "metaname": None,
+        "file_format": FILEFORMAT_FILE,
+        "file_delimiter": ',',
+        "file_eor": 'linux',
+        "file_enclosure": None,
+        "file_name_regex": None,
+        "file_eor_custom": None,
+        "envname": None,
+        "fetchfilter": None
+    }
+
+    filefile = open(FILEFILE, "r")
+
+    rc = rule_worker.ruleset_addmeta(
+        p_engine="test_eng",
+        p_username=None,
+        params=params,
+        inputfile=filefile, 
+        fromconnector=False, 
+        bulk=True
+    )
+
+    output = "Task finished sucesfully" 
+
+    captured = list(capsys.readouterr().out.splitlines())
+    filtered = "\n".join([ x for x in captured if 'finished' in x])
+    assert (rc, filtered) == (0, output)

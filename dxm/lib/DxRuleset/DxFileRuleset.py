@@ -21,6 +21,7 @@ import logging
 import csv
 import re
 from dxm.lib.DxTable.DxFile import DxFile
+from dxm.lib.DxAsyncTask.DxAsyncTask import DxAsyncTask
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
 from dxm.lib.DxRuleset.DxDatabaseRuleset import DxDatabaseRuleset
@@ -29,22 +30,11 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.file_ruleset_api import FileRulesetApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxRuleset.FileRuleset_mixin import FileRuleset_mixin
+class DxFileRuleset(FileRuleset_mixin):
 
-class DxFileRuleset(object):
 
-    swagger_types = {
-        'file_ruleset_id': 'int',
-        'ruleset_name': 'str',
-        'file_connector_id': 'int'
-    }
-
-    swagger_map = {
-        'file_ruleset_id': 'fileRulesetId',
-        'ruleset_name': 'rulesetName',
-        'file_connector_id': 'fileConnectorId'
-    }
-
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -58,14 +48,9 @@ class DxFileRuleset(object):
 
         self.__api = FileRulesetApi
         self.__apiexc = ApiException
-        self.__obj = None
-
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
+        self._obj = None
+        if existing_object is not None:
+            self.load_object(existing_object)  
 
     @property
     def logger(self):
@@ -84,30 +69,20 @@ class DxFileRuleset(object):
     def ruleset_id(self):
         return self.obj.file_ruleset_id
 
-    @property
-    def ruleset_name(self):
-        return self.obj.ruleset_name
 
     @property
     def connectorId(self):
         return 'f' + str(self.obj.file_connector_id)
 
-    @property
-    def file_connector_id(self):
-        return self.obj.file_connector_id
 
-    @file_connector_id.setter
-    def file_connector_id(self, file_connector_id):
-        self.obj.file_connector_id = file_connector_id
-
-    def from_ruleset(self, ruleset):
+    def load_object(self, ruleset):
         """
         Set obj object with real ruleset object
         :param con: DatabaseConnector object
         """
-        self.__obj = ruleset
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self.obj = ruleset
+        self.obj.swagger_types = self.swagger_types
+        self.obj.swagger_map = self.swagger_map
 
     def create_file_ruleset(self, ruleset_name, file_connector_id):
         """
@@ -116,7 +91,7 @@ class DxFileRuleset(object):
         :param database_type
         :param environment_id
         """  
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.ruleset_name = ruleset_name
         self.obj.file_connector_id = file_connector_id
 
@@ -143,12 +118,13 @@ class DxFileRuleset(object):
 
             api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_file_ruleset(self.obj)
-            self.__obj = response
+            self.load_object(response)
 
             self.__logger.debug("ruleset response %s"
                                 % str(response))
 
             print_message("Ruleset %s added" % self.ruleset_name)
+            return 0
         except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -172,7 +148,7 @@ class DxFileRuleset(object):
             self.__logger.debug("delete ruleset response %s"
                                 % str(response))
             print_message("Ruleset %s deleted" % self.ruleset_name)
-            return None
+            return 0
         except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -244,11 +220,9 @@ class DxFileRuleset(object):
         return 1 in case of error
         """
 
-        if bulk:
-            print_error("Bulk option is not supported for files")
-            return 1
-
         ret = 0
+
+        file_list = []
         for columns in csv.reader(
                     self.skip_comment(inputfile),
                     quotechar='"',
@@ -268,9 +242,80 @@ class DxFileRuleset(object):
                 "file_enclosure": columns[5]
             }
 
-            ret = ret + self.addmeta(params)
+            if bulk:
+                file_list.append(params)
+            else:
+                ret = ret + self.addmeta(params)
+
+        if bulk:
+            ret = self.addmeta_bulk(file_list)
 
         return ret
+
+    def addmeta_bulk(self, file_list):
+        """
+
+        """
+        
+        file_obj_list = []
+
+        connlist = DxConnectorsList()
+        connobj = connlist.get_by_ref(self.connectorId)
+
+        for file_params in file_list:
+            file = DxFile(self.engine)
+            
+            file.create_file(
+                file_name = file_params["metaname"], 
+                ruleset_id = self.ruleset_id, 
+                file_format_id = file_params["file_format"], 
+                file_type = connobj.connector_type, 
+                delimiter = file_params["file_delimiter"], 
+                enclosure = file_params["file_enclosure"], 
+                end_of_record = file_params["file_eor"], 
+                name_is_regular_expression = file_params["file_name_regex"]
+            )
+
+            file_obj_list.append(file.obj)
+        
+        file_bulk = self.create_bulk_objects(file_obj_list)        
+        api_instance = self.__api(self.__engine.api_client)
+        
+        try:
+            self.logger.debug("create bulk %s"
+                                % self.ruleset_id)
+            self.logger.debug("create bulk tables %s"
+                                % str(file_bulk))
+            response = api_instance.bulk_file_update(
+                           self.ruleset_id,
+                           file_bulk,
+                           _request_timeout=self.__engine.get_timeout())
+            self.logger.debug("create bulk response %s"
+                                % str(response))
+            print_message("Ruleset %s update started" % self.ruleset_name)
+
+            task = DxAsyncTask()
+            task.from_asynctask(response)
+            return task.wait_for_task()
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.logger.error(e)
+            return 1
+
+
+    def create_bulk_objects(self, table_list):
+            swagger_types = {
+                'file_metadata': 'list[fileMetadata]'
+            }
+
+            swagger_map = {
+                'file_metadata': 'fileMetadata'
+            }
+
+            obj = GenericModel({ x:None for x in self.swagger_map.values()}, swagger_types, swagger_map)
+            obj.table_metadata = table_list
+            return obj
+
 
     def addmetafromfetch(self, fetchfilter, bulk):
         """

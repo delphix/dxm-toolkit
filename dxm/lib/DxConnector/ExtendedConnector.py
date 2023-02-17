@@ -26,12 +26,12 @@ from dxm.lib.DxJDBC.DxJDBCList import DxJDBCList
 
 class ExtendedConnector(DxConnector):
 
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
         """
-        DxConnector.__init__(self, engine)
+        DxConnector.__init__(self, engine, existing_object)
         self.__engine = engine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating ExtendedConnector object")
