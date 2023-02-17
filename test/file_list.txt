@@ -1,0 +1,2 @@
+#filename,file_name_regex,file_format,file_delimiter,file_eor,file_enclosure
+maskme.txt,,test_file_format.txt,",","linux",

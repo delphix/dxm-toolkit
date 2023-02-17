@@ -255,7 +255,6 @@ class DxDatabaseRuleset():
                 ret = ret + self.addmeta(params)
 
         if bulk:
-            print_message(table_list)
             ret = self.addmeta_bulk(table_list)
 
         return ret

@@ -654,7 +654,7 @@ def list(dxm_state, connectorname, envname, details):
     help='Username (login) of database (for database connectors)'
     'or host user (for file connectors)')
 @click.option(
-    '--schemaname', required=True,
+    '--schemaname', 
     help='Schema name used for ruleset for database connectors')
 @click.option(
     '--password', prompt=True, hide_input=True, confirmation_prompt=True,

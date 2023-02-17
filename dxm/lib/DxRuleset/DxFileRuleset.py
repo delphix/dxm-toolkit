@@ -19,7 +19,7 @@
 
 import logging
 import csv
-
+import re
 from dxm.lib.DxTable.DxFile import DxFile
 from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 from dxm.lib.DxFileFormat.DxFileFormatList import DxFileFormatList
@@ -236,13 +236,18 @@ class DxFileRuleset(object):
             if line:
                 yield line
 
-    def addmetafromfile(self, inputfile):
+    def addmetafromfile(self, inputfile, bulk):
         """
         Add file from file to ruleset
         :param inputfile: file with files definition
         return a 0 if non error
         return 1 in case of error
         """
+
+        if bulk:
+            print_error("Bulk option is not supported for files")
+            return 1
+
         ret = 0
         for columns in csv.reader(
                     self.skip_comment(inputfile),
@@ -250,6 +255,9 @@ class DxFileRuleset(object):
                     delimiter=',',
                     escapechar='\\',
                     skipinitialspace=True):
+
+
+            columns = list(map(lambda x: None if x == '' else x, columns))
 
             params = {
                 "metaname": columns[0],
@@ -272,6 +280,10 @@ class DxFileRuleset(object):
         return 1 in case of error
         """
         
+
+        print_error("This feature is not support for file rulesets")
+        return 1
+
         connobj = DxConnectorsList.get_by_ref(self.connectorId)
         table_list = []
         ret = 0
@@ -289,7 +301,7 @@ class DxFileRuleset(object):
             params = {
                 "metaname": table,
                 "file_name_regex": None,
-                "file_format": None,
+                "file_format": "",
                 "file_delimiter": None,
                 "file_eor": None,
                 "file_enclosure": None

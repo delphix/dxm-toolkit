@@ -64,11 +64,10 @@ class DxFileFormatList(object):
 
             if fileformats.response_list:
                 for c in fileformats.response_list:
-                    fileformat = DxFileFormat(self.__engine)
-                    fileformat.from_filetype(c)
+                    fileformat = DxFileFormat(self.__engine, existing_object=c)
                     self.__filetypeList[c.file_format_id] = fileformat
             else:
-                print_error("No file formats found")
+                #print_error("No file formats found")
                 self.__logger.error("No file formats found")
 
         except self.__apiexc as e:
@@ -187,8 +186,9 @@ class DxFileFormatList(object):
 
         fileformat = self.get_by_ref(filetype_ref)
         if fileformat is not None:
-            if fileformat.delete() is None:
-                return None
+            if fileformat.delete() == 0:
+                del self.__filetypeList[filetype_ref]
+                return 0
             else:
                 return 1
         else:

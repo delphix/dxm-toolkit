@@ -1,22 +1,43 @@
+import pprint
+
 class FileConnector_mixin:
+    swagger_types = { 
+     'file_connector_id' : 'integer',  
+     'connector_name' : 'string',  
+     'environment_id' : 'integer',  
+     'file_type' : 'string',  
+     'connection_info' : 'connection_info' 
+     }
 
-    swagger_types = {
-    'file_connector_id' : 'integer',
-    'connector_name' : 'string',
-    'environment_id' : 'integer',
-    'file_type' : 'string',
-    'connection_info' : 'connection_info'
-    }
+    swagger_map = { 
+     'file_connector_id' : 'fileConnectorId',  
+     'connector_name' : 'connectorName',  
+     'environment_id' : 'environmentId',  
+     'file_type' : 'fileType',  
+     'connection_info' : 'connectionInfo' 
+     }
 
-    swagger_map = {
-    'file_connector_id' : 'fileConnectorId',
-    'connector_name' : 'connectorName',
-    'environment_id' : 'environmentId',
-    'file_type' : 'fileType',
-    'connection_info' : 'connectionInfo'
-    }
+    @property
+    def obj(self):
+        if self._obj is not None:
+            return self._obj
+        else:
+            return None
 
+    @obj.setter
+    def obj(self, value):
+        self._obj = value
 
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()
+
+     
     @property
     def file_connector_id(self):
         if self.obj is not None and hasattr(self.obj,'file_connector_id'):
@@ -30,7 +51,7 @@ class FileConnector_mixin:
             self.obj.file_connector_id = file_connector_id
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def connector_name(self):
         if self.obj is not None and hasattr(self.obj,'connector_name'):
@@ -44,7 +65,7 @@ class FileConnector_mixin:
             self.obj.connector_name = connector_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def environment_id(self):
         if self.obj is not None and hasattr(self.obj,'environment_id'):
@@ -58,7 +79,7 @@ class FileConnector_mixin:
             self.obj.environment_id = environment_id
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def file_type(self):
         if self.obj is not None and hasattr(self.obj,'file_type'):
@@ -72,7 +93,7 @@ class FileConnector_mixin:
             self.obj.file_type = file_type
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def connection_info(self):
         if self.obj is not None and hasattr(self.obj,'connection_info'):
@@ -85,4 +106,5 @@ class FileConnector_mixin:
         if self.obj is not None:
             self.obj.connection_info = connection_info
         else:
-            raise ValueError("Object needs to be initialized first") 
+            raise ValueError("Object needs to be initialized first")
+          

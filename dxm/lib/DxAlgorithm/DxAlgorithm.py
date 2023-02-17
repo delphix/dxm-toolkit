@@ -18,40 +18,14 @@
 
 
 import logging
-import pickle
-import json
 
-from dxm.lib.DxLogging import print_error
-from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.sync_api import SyncApi
 from dxm.lib.masking_api.rest import ApiException
-from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxAlgorithm.Algorithm_mixin import Algorithm_mixin
 
-class DxAlgorithm(object):
+class DxAlgorithm(Algorithm_mixin):
 
-    swagger_types = {
-        'algorithm_name': 'str',
-        'algorithm_type': 'str',
-        'created_by': 'str',
-        'description': 'str',
-        'algorithm_extension': 'dict',
-        'framework_id': 'int',
-        'plugin_id': 'int',
-        'fields': 'dict'
-    }
-
-    swagger_map = {
-        'algorithm_name': 'algorithmName',
-        'algorithm_type': 'algorithmType',
-        'created_by': 'createdBy',
-        'description': 'description',
-        'algorithm_extension': 'algorithmExtension',
-        'framework_id': 'frameworkId',
-        'plugin_id': 'pluginId',
-        'fields' : 'fields'
-    }
-
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -62,28 +36,19 @@ class DxAlgorithm(object):
         self.__domain_name = None
         self.__sync = None
         self.__logger.debug("creating DxAlgorithm object")
+        self._obj = None
 
-        self.__api = SyncApi
-        self.__apiexc = ApiException
-        self.__obj = None
+        if existing_object is not None:
+            self.load_object(existing_object)            
 
-
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
-
-
-    def from_alg(self, alg):
+    def load_object(self, alg):
         """
         Set obj properties with a Algorithm object
         :param column: Algorithm object
         """
-        self.__obj = alg
-        self.__obj.swagger_map = self.swagger_map
-        self.__obj.swagger_types = self.swagger_types
+        self.obj = alg
+        self.obj.swagger_map = self.swagger_map
+        self.obj.swagger_types = self.swagger_types
 
     @property
     def domain_name(self):
@@ -101,101 +66,3 @@ class DxAlgorithm(object):
     def sync(self, sync):
         self.__sync = sync
 
-    @property
-    def algorithm_name(self):
-        if self.obj is not None and hasattr(self.obj,'algorithm_name'):
-            return self.obj.algorithm_name
-        else:
-            return None
-
-    @property
-    def algorithm_type(self):
-        if self.obj is not None and hasattr(self.obj,'algorithm_type'):
-            return self.obj.algorithm_type
-        else:
-            return None
-
-    @property
-    def created_by(self):
-        if self.obj is not None and hasattr(self.obj,'created_by'):
-            return self.obj.created_by
-        else:
-            return None
-
-    @property
-    def description(self):
-        if self.obj is not None and hasattr(self.obj,'description'):
-            return self.obj.description
-        else:
-            return None
-
-    @property
-    def algorithm_extension(self):
-        if self.obj is not None and hasattr(self.obj,'algorithm_extension'):
-            return self.obj.algorithm_extension
-        else:
-            return None
-
-    @property
-    def framework_id(self):
-        if self.obj is not None and hasattr(self.obj,'framework_id'):
-            return self.obj.framework_id
-        else:
-            return None
-
-    @property
-    def plugin_id(self):
-        if self.obj is not None and hasattr(self.obj,'plugin_id'):
-            return self.obj.plugin_id
-        else:
-            return None
-
-    @property
-    def fields(self):
-        if self.obj is not None and hasattr(self.obj,'fields'):
-            return self.obj.fields
-        else:
-            return None            
-
-
-
-    # def export(self, path=None):
-    #     """
-    #     Export algorithm into file
-    #     :param path: path to save algorithm
-    #     """
-    #     api_sync = SyncApi(self.__engine.api_client)
-    #     self.__logger.debug("Export input %s" % self.sync)
-    #     export_list = []
-    #     export_list.append(self.sync)
-    #     api_response = api_sync.export(export_list)
-    #     self.__logger.debug("Export response %s" % str(api_response))
-    #
-    #     # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
-    #     # json.dump(api_response.blob, binary_file)
-    #     # binary_file.close()
-    #
-    #     binary_file = open('{0}.alg_bin '.format(self.algorithm_name), mode='wb')
-    #     pickle.dump(api_response, binary_file)
-    #     binary_file.close()
-    #
-    #
-    # def importalg(self, path=None):
-    #     """
-    #     Import algorithm from file
-    #     :param path: path to save algorithm
-    #     """
-    #
-    #     binary_file = open('{0}.alg_bin'.format("EU_LAST_NAME"), mode='rb')
-    #     algobj = pickle.load(binary_file)
-    #     binary_file.close()
-    #
-    #
-    #     api_sync = SyncApi(self.__engine.api_client)
-    #     self.__logger.debug("Import input %s" % self.sync)
-    #     api_response = api_sync.import_object(algobj, force_overwrite=True)
-    #     self.__logger.debug("Import response %s" % str(api_response))
-    #
-    #     # binary_file = open('{0}.alg'.format(self.algorithm_name), mode='wb')
-    #     # json.dump(api_response.blob, binary_file)
-    #     # binary_file.close()

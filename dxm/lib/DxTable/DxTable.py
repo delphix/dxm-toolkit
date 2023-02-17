@@ -26,30 +26,11 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.table_metadata_api import TableMetadataApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxTable.TableMetadata_mixin import TableMetadata_mixin
 
-class DxTable(object):
+class DxTable(TableMetadata_mixin):
 
-    swagger_types = {
-        'table_metadata_id': 'int',
-        'table_name': 'str',
-        'ruleset_id': 'int',
-        'custom_sql': 'str',
-        'where_clause': 'str',
-        'having_clause': 'str',
-        'key_column': 'str'
-    }
-
-    swagger_map = {
-        'table_metadata_id': 'tableMetadataId',
-        'table_name': 'tableName',
-        'ruleset_id': 'rulesetId',
-        'custom_sql': 'customSql',
-        'where_clause': 'whereClause',
-        'having_clause': 'havingClause',
-        'key_column': 'keyColumn'
-    }
-
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -62,26 +43,23 @@ class DxTable(object):
 
         self.__api = TableMetadataApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
-    def from_table(self, table):
+        if existing_object is not None:
+            self.load_object(existing_object)      
+
+    def load_object(self, table):
         """
         Set obj object with real table object
         :param con: DatabaseConnector object
         """
 
-        self.__obj = table
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self.obj = table
+        self.obj.swagger_types = self.swagger_types
+        self.obj.swagger_map = self.swagger_map
 
 
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
 
 
     @property
@@ -92,107 +70,38 @@ class DxTable(object):
     def meta_id(self):
         return self.obj.table_metadata_id
 
-    @property
-    def table_metadata_id(self):
-        if self.obj is not None and hasattr(self.obj,'table_metadata_id'):
-            return self.obj.table_metadata_id
-        else:
-            return None
-
-    @table_metadata_id.setter
-    def table_metadata_id(self, table_metadata_id):
-        if self.obj is not None:
-            self.obj.table_metadata_id = table_metadata_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def table_name(self):
-        if self.obj is not None and hasattr(self.obj,'table_name'):
-            return self.obj.table_name
-        else:
-            return None
-
-    @table_name.setter
-    def table_name(self, table_name):
-        if self.obj is not None:
-            self.obj.table_name = table_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def ruleset_id(self):
-        if self.obj is not None and hasattr(self.obj,'ruleset_id'):
-            return self.obj.ruleset_id
-        else:
-            return None
-
-    @ruleset_id.setter
-    def ruleset_id(self, ruleset_id):
-        if self.obj is not None:
-            self.obj.ruleset_id = ruleset_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
 
     @property
     def custom_sql(self):
         if self.obj is not None and hasattr(self.obj,'custom_sql'):
             return self.obj.custom_sql
         else:
-            return None
+            return ""
 
     @custom_sql.setter
     def custom_sql(self, custom_sql):
         if self.obj is not None:
-            self.obj.custom_sql = custom_sql
+            if custom_sql == "":
+                self.obj.custom_sql = None
+            else:
+                self.obj.custom_sql = custom_sql
         else:
             raise ValueError("Object needs to be initialized first")
-
 
     @property
     def where_clause(self):
         if self.obj is not None and hasattr(self.obj,'where_clause'):
             return self.obj.where_clause
         else:
-            return None
+            return ""
 
     @where_clause.setter
     def where_clause(self, where_clause):
         if self.obj is not None:
-            self.obj.where_clause = where_clause
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def having_clause(self):
-        if self.obj is not None and hasattr(self.obj,'having_clause'):
-            return self.obj.having_clause
-        else:
-            return None
-
-    @having_clause.setter
-    def having_clause(self, having_clause):
-        if self.obj is not None:
-            self.obj.having_clause = having_clause
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def key_column(self):
-        if self.obj is not None and hasattr(self.obj,'key_column'):
-            return self.obj.key_column
-        else:
-            return None
-
-    @key_column.setter
-    def key_column(self, key_column):
-        if self.obj is not None:
-            self.obj.key_column = key_column
+            if where_clause == "":
+                self.obj.where_clause = None
+            else:
+                self.obj.where_clause = where_clause
         else:
             raise ValueError("Object needs to be initialized first")
 
@@ -205,7 +114,7 @@ class DxTable(object):
         :param environment_id
         """  
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.table_name = table_name
         self.obj.ruleset_id = ruleset_id
         self.obj.custom_sql = custom_sql

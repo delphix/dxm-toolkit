@@ -1,50 +1,71 @@
-class ConnectorMixin:
+import pprint
 
-    swagger_types = {
-    'database_connector_id' : 'integer',
-    'connector_name' : 'string',
-    'database_type' : 'string',
-    'environment_id' : 'integer',
-    'custom_driver_name' : 'string',
-    'database_name' : 'string',
-    'host' : 'string',
-    'instance_name' : 'string',
-    'jdbc' : 'string',
-    'password' : 'string',
-    'port' : 'integer',
-    'schema_name' : 'string',
-    'sid' : 'string',
-    'username' : 'string',
-    'kerberos_auth' : 'boolean',
-    'service_principal' : 'string',
-    'jdbc_driver_id' : 'integer',
-    'enable_logger' : 'boolean',
-    'file_reference_id' : 'string'
-    }
+class DatabaseConnector_mixin:
+    swagger_types = { 
+     'database_connector_id' : 'integer',  
+     'connector_name' : 'string',  
+     'database_type' : 'string',  
+     'environment_id' : 'integer',  
+     'custom_driver_name' : 'string',  
+     'database_name' : 'string',  
+     'host' : 'string',  
+     'instance_name' : 'string',  
+     'jdbc' : 'string',  
+     'password' : 'string',  
+     'port' : 'integer',  
+     'schema_name' : 'string',  
+     'sid' : 'string',  
+     'username' : 'string',  
+     'kerberos_auth' : 'boolean',  
+     'service_principal' : 'string',  
+     'jdbc_driver_id' : 'integer',  
+     'enable_logger' : 'boolean',  
+     'file_reference_id' : 'string' 
+     }
 
-    swagger_map = {
-    'database_connector_id' : 'databaseConnectorId',
-    'connector_name' : 'connectorName',
-    'database_type' : 'databaseType',
-    'environment_id' : 'environmentId',
-    'custom_driver_name' : 'customDriverName',
-    'database_name' : 'databaseName',
-    'host' : 'host',
-    'instance_name' : 'instanceName',
-    'jdbc' : 'jdbc',
-    'password' : 'password',
-    'port' : 'port',
-    'schema_name' : 'schemaName',
-    'sid' : 'sid',
-    'username' : 'username',
-    'kerberos_auth' : 'kerberosAuth',
-    'service_principal' : 'servicePrincipal',
-    'jdbc_driver_id' : 'jdbcDriverId',
-    'enable_logger' : 'enableLogger',
-    'file_reference_id' : 'fileReferenceId'
-    }
+    swagger_map = { 
+     'database_connector_id' : 'databaseConnectorId',  
+     'connector_name' : 'connectorName',  
+     'database_type' : 'databaseType',  
+     'environment_id' : 'environmentId',  
+     'custom_driver_name' : 'customDriverName',  
+     'database_name' : 'databaseName',  
+     'host' : 'host',  
+     'instance_name' : 'instanceName',  
+     'jdbc' : 'jdbc',  
+     'password' : 'password',  
+     'port' : 'port',  
+     'schema_name' : 'schemaName',  
+     'sid' : 'sid',  
+     'username' : 'username',  
+     'kerberos_auth' : 'kerberosAuth',  
+     'service_principal' : 'servicePrincipal',  
+     'jdbc_driver_id' : 'jdbcDriverId',  
+     'enable_logger' : 'enableLogger',  
+     'file_reference_id' : 'fileReferenceId' 
+     }
 
+    @property
+    def obj(self):
+        if self._obj is not None:
+            return self._obj
+        else:
+            return None
 
+    @obj.setter
+    def obj(self, value):
+        self._obj = value
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()
+
+     
     @property
     def database_connector_id(self):
         if self.obj is not None and hasattr(self.obj,'database_connector_id'):
@@ -58,7 +79,7 @@ class ConnectorMixin:
             self.obj.database_connector_id = database_connector_id
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def connector_name(self):
         if self.obj is not None and hasattr(self.obj,'connector_name'):
@@ -72,7 +93,7 @@ class ConnectorMixin:
             self.obj.connector_name = connector_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def database_type(self):
         if self.obj is not None and hasattr(self.obj,'database_type'):
@@ -86,7 +107,7 @@ class ConnectorMixin:
             self.obj.database_type = database_type
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def environment_id(self):
         if self.obj is not None and hasattr(self.obj,'environment_id'):
@@ -100,7 +121,7 @@ class ConnectorMixin:
             self.obj.environment_id = environment_id
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def custom_driver_name(self):
         if self.obj is not None and hasattr(self.obj,'custom_driver_name'):
@@ -114,7 +135,7 @@ class ConnectorMixin:
             self.obj.custom_driver_name = custom_driver_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def database_name(self):
         if self.obj is not None and hasattr(self.obj,'database_name'):
@@ -128,7 +149,7 @@ class ConnectorMixin:
             self.obj.database_name = database_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def host(self):
         if self.obj is not None and hasattr(self.obj,'host'):
@@ -142,7 +163,7 @@ class ConnectorMixin:
             self.obj.host = host
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def instance_name(self):
         if self.obj is not None and hasattr(self.obj,'instance_name'):
@@ -156,7 +177,7 @@ class ConnectorMixin:
             self.obj.instance_name = instance_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def jdbc(self):
         if self.obj is not None and hasattr(self.obj,'jdbc'):
@@ -170,7 +191,7 @@ class ConnectorMixin:
             self.obj.jdbc = jdbc
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def password(self):
         if self.obj is not None and hasattr(self.obj,'password'):
@@ -184,7 +205,7 @@ class ConnectorMixin:
             self.obj.password = password
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def port(self):
         if self.obj is not None and hasattr(self.obj,'port'):
@@ -198,7 +219,7 @@ class ConnectorMixin:
             self.obj.port = port
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def schema_name(self):
         if self.obj is not None and hasattr(self.obj,'schema_name'):
@@ -212,7 +233,7 @@ class ConnectorMixin:
             self.obj.schema_name = schema_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def sid(self):
         if self.obj is not None and hasattr(self.obj,'sid'):
@@ -226,7 +247,7 @@ class ConnectorMixin:
             self.obj.sid = sid
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def username(self):
         if self.obj is not None and hasattr(self.obj,'username'):
@@ -240,7 +261,7 @@ class ConnectorMixin:
             self.obj.username = username
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def kerberos_auth(self):
         if self.obj is not None and hasattr(self.obj,'kerberos_auth'):
@@ -254,7 +275,7 @@ class ConnectorMixin:
             self.obj.kerberos_auth = kerberos_auth
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def service_principal(self):
         if self.obj is not None and hasattr(self.obj,'service_principal'):
@@ -268,7 +289,7 @@ class ConnectorMixin:
             self.obj.service_principal = service_principal
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def jdbc_driver_id(self):
         if self.obj is not None and hasattr(self.obj,'jdbc_driver_id'):
@@ -282,7 +303,7 @@ class ConnectorMixin:
             self.obj.jdbc_driver_id = jdbc_driver_id
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def enable_logger(self):
         if self.obj is not None and hasattr(self.obj,'enable_logger'):
@@ -296,7 +317,7 @@ class ConnectorMixin:
             self.obj.enable_logger = enable_logger
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def file_reference_id(self):
         if self.obj is not None and hasattr(self.obj,'file_reference_id'):
@@ -310,3 +331,4 @@ class ConnectorMixin:
             self.obj.file_reference_id = file_reference_id
         else:
             raise ValueError("Object needs to be initialized first")
+          

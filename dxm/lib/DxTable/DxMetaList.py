@@ -78,8 +78,7 @@ class DxMetaList(object):
 
             if table_metadata.response_list:
                 for c in table_metadata.response_list:
-                    table = DxTable(self.__engine)
-                    table.from_table(c)
+                    table = DxTable(self.__engine, existing_object=c)
                     self.__tableList[c.table_metadata_id] = table
             else:
                 self.__logger.error("No table metadata found")
@@ -91,6 +90,7 @@ class DxMetaList(object):
                 print_error(e.body)
                 self.__logger.error(e.body)
                 return 1
+
 
         try:
             api_instance = self.__fileapi(self.__engine.api_client)

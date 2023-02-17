@@ -134,14 +134,14 @@ def connector_add(p_engine, p_username,  params):
             connobj.is_database = False
             connobj.create_connector(
                 connector_name = connname,
-                file_type = params['type'].upper(),
+                file_type = params['type'],
                 environment_id = envref,
                 host=host,
                 port=port,
                 login_name=username,
                 password=password,
                 path=path,
-                connection_mode=connmode.upper()
+                connection_mode=connmode
             )
 
         else:

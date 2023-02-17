@@ -44,8 +44,6 @@ def paginator(object, function_to_call, **kwargs):
      'responseList': []
     }
 
-
-
     while (more):
         try:
             ret = dynfunc(page_size=100, page_number=pagenumber, **kwargs)
@@ -58,9 +56,6 @@ def paginator(object, function_to_call, **kwargs):
             elif sofar >= ret.page_info.total:
                 more = False
         except ApiException as err:
-            print("a kuku")
-            print(err.status)
-            print(err.body)
             if "is outside of the acceptable range. The last page is" in err.body:
                 logger.debug("Page of out the scope: {}".format(err.body))
                 more = False

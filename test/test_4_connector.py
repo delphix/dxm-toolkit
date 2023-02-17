@@ -6,6 +6,7 @@ from dxm.lib.DxLogging import logging_est
 
 CONFIGPATH='./test/testdb.db'
 CONNNAME="oraconn"
+CONNNAME_FILE="fileconn"
 ENVNAME="env1"
 
 #logging_est('dxm.log', True)
@@ -24,6 +25,20 @@ params = {
     'instancename': None,
     'databasename': None,
     'jdbc_driver_name': None
+}
+
+
+params_file = {
+    'envname': ENVNAME,
+    'schemaName': 'oracle',
+    'host': 'marcindxmcdb.dlpxdc.co',
+    'port': 22,
+    'password': 'oracle',
+    'username': 'oracle',
+    'connname': CONNNAME_FILE,
+    'type': 'delimited',
+    'servertype': 'sftp',
+    'path': '/home/oracle'
 }
 
 @pytest.fixture(autouse=True)
@@ -166,3 +181,76 @@ def test_connector_list_next_steps(capsys):
     "test_eng,{},{},ORACLE\n\n\n".format(ENVNAME, CONNNAME)
     captured = capsys.readouterr()
     assert (rc, captured.out.replace('\r','')) == (0, output)
+
+
+@pytest.mark.dependency()
+def test_connector_file_list_ignore(capsys):
+    rc = conn_worker.connector_list(
+        p_engine="test_eng",
+        p_username=None,
+        format="csv",
+        envname=None,
+        connector_name=CONNNAME_FILE,
+        details=False
+    )
+
+    if rc == 1:
+        pytest.skip("Connector non-exist")
+    else:
+        assert True
+
+    
+
+
+@pytest.mark.dependency(depends=['test_connector_file_list_ignore'])
+def test_connector_file_delete_old_env():
+    rc = conn_worker.connector_delete(
+        p_engine="test_eng",
+        p_username=None,
+        connectorname=CONNNAME_FILE,
+        envname="env1"
+    )
+
+    assert rc == 0
+
+
+def test_connector_file_add(capsys):
+    rc = conn_worker.connector_add(
+        p_engine="test_eng",
+        p_username=None,
+        params=params_file
+    )
+
+    output = "Connector {} added\n".format(CONNNAME_FILE)
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)
+
+def test_connector_file_test(capsys):
+    rc = conn_worker.connector_test(
+        p_engine="test_eng",
+        p_username=None,
+        envname=None,
+        connectorname=CONNNAME_FILE
+    )
+
+    output = "Connector test {} succeeded\n".format(CONNNAME_FILE)
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)
+
+
+def test_connector_file_fetch(capsys):
+    rc = conn_worker.connector_fetch(
+        p_engine="test_eng",
+        p_username=None,
+        envname=None,
+        connectorname=CONNNAME_FILE,
+        format="csv"
+    )
+
+    output = "#Engine name,Connector name,File name\n" + \
+    "test_eng,{},formatfile.txt\n".format(CONNNAME_FILE) + \
+    "test_eng,{},maskme.txt".format(CONNNAME_FILE) 
+
+    captured = list(capsys.readouterr().out.splitlines())
+    filtered = "\n".join([ x for x in captured if x != "" and ',.' not in x])
+    assert (rc, filtered) == (0, output)

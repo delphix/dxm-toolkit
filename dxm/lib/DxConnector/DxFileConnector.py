@@ -19,6 +19,7 @@
 
 
 import logging
+import pprint
 from dxm.lib.DxConnector.DxConnector import DxConnector
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
@@ -26,24 +27,9 @@ from dxm.lib.masking_api.api.file_connector_api import FileConnectorApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
 from dxm.lib.DxConnector.DxConnectionInfo import DxConnectionInfo
+from dxm.lib.DxConnector.FileConnector_mixin import FileConnector_mixin
 
-class DxFileConnector(DxConnector):
-
-    swagger_types = {
-        'file_connector_id': 'int',
-        'connector_name': 'str',
-        'environment_id': 'int',
-        'file_type': 'str',
-        'connection_info': 'ConnectionInfo'
-    }
-
-    swagger_map = {
-        'file_connector_id': 'fileConnectorId',
-        'connector_name': 'connectorName',
-        'environment_id': 'environmentId',
-        'file_type': 'fileType',
-        'connection_info': 'connectionInfo'
-    }
+class DxFileConnector(FileConnector_mixin, DxConnector):
 
 
     def __init__(self, engine):
@@ -58,15 +44,8 @@ class DxFileConnector(DxConnector):
         self.__logger.debug("creating FileConnector object")
         self.__api = FileConnectorApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
-
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
 
     @property
     def connectorId(self):
@@ -84,92 +63,6 @@ class DxFileConnector(DxConnector):
     def schema_name(self):
         return 'N/A'
 
-    @property
-    def connector_type(self):
-        """
-        connector_type
-        """
-        if self.obj is not None:
-            if self.is_database:
-                return self.obj.database_type
-            else:
-                return self.obj.file_type
-        else:
-            return None
-
-    @property
-    def file_connector_id(self):
-        if self.obj is not None and hasattr(self.obj,'file_connector_id'):
-            return self.obj.file_connector_id
-        else:
-            return None
-
-    @file_connector_id.setter
-    def file_connector_id(self, file_connector_id):
-        if self.obj is not None:
-            self.obj.file_connector_id = file_connector_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def connector_name(self):
-        if self.obj is not None and hasattr(self.obj,'connector_name'):
-            return self.obj.connector_name
-        else:
-            return None
-
-    @connector_name.setter
-    def connector_name(self, connector_name):
-        if self.obj is not None:
-            self.obj.connector_name = connector_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def environment_id(self):
-        if self.obj is not None and hasattr(self.obj,'environment_id'):
-            return self.obj.environment_id
-        else:
-            return None
-
-    @environment_id.setter
-    def environment_id(self, environment_id):
-        if self.obj is not None:
-            self.obj.environment_id = environment_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def file_type(self):
-        if self.obj is not None and hasattr(self.obj,'file_type'):
-            return self.obj.file_type
-        else:
-            return None
-
-    @file_type.setter
-    def file_type(self, file_type):
-        if self.obj is not None:
-            self.obj.file_type = file_type
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def connection_info(self):
-        if self.obj is not None and hasattr(self.obj,'connection_info'):
-            return self.obj.connection_info
-        else:
-            return None
-
-    @connection_info.setter
-    def connection_info(self, connection_info):
-        if self.obj is not None:
-            self.obj.connection_info = connection_info
-        else:
-            raise ValueError("Object needs to be initialized first")
 
 
     def from_connector(self, con):
@@ -177,13 +70,13 @@ class DxFileConnector(DxConnector):
         Set a obj property using a Database Connector 
         :param con: DatabaseConnector object
         """
-        self.__obj = con
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self.obj = con
+        self.obj.swagger_types = self.swagger_types
+        self.obj.swagger_map = self.swagger_map
 
-        if hasattr(self.__obj,'connection_info') and self.__obj.connection_info is not None:
-            self.__obj.connection_info.swagger_map = DxConnectionInfo.swagger_map
-            self.__obj.connection_info.swagger_types = DxConnectionInfo.swagger_types
+        if hasattr(self.obj,'connection_info') and self.obj.connection_info is not None:
+            self.obj.connection_info.swagger_map = DxConnectionInfo.swagger_map
+            self.obj.connection_info.swagger_types = DxConnectionInfo.swagger_types
 
 
 
@@ -196,18 +89,23 @@ class DxFileConnector(DxConnector):
         """  
 
         ci = DxConnectionInfo()
-        ci.connection_mode = connection_mode
+        ci.connection_mode = connection_mode.upper()
         ci.path = path
         ci.host = host
         ci.login_name = login_name
         ci.password = password
         ci.port = port
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.connector_name = connector_name
-        self.file_type = file_type
+        self.file_type = file_type.upper()
         self.environment_id = environment_id
         self.connection_info = ci
+
+        payload_dict = self.get_properties()
+        if payload_dict is None:
+            print_error('Some required property not found')
+            return 1
 
 
     def get_type_properties(self):
@@ -233,6 +131,7 @@ class DxFileConnector(DxConnector):
             'password': self.obj.connection_info.password,
             'fileType': self.obj.file_type,
             'environmentId': self.obj.environment_id,
+            'servertype': self.obj.connection_info.connection_mode
         }
 
         empty = 0
@@ -251,10 +150,6 @@ class DxFileConnector(DxConnector):
         Add connector to engine
         Return None if OK
         """
-        payload_dict = self.get_properties()
-        if payload_dict is None:
-            print_error('Some required property not found')
-            return 1
 
         try:
             self.__logger.debug("create connector input %s" % str(self))
@@ -269,6 +164,7 @@ class DxFileConnector(DxConnector):
                                 % str(response))
 
             print_message("Connector %s added" % self.obj.connector_name)
+            return 0
         except ApiException as e:
             print_error(e.body)
             self.__logger.error(e)
@@ -292,6 +188,7 @@ class DxFileConnector(DxConnector):
             self.__logger.debug("delete connector response %s"
                                 % str(response))
             print_message("Connector %s deleted" % self.connector_name)
+            return 0
         except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)

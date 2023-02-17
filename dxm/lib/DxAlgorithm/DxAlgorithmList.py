@@ -59,7 +59,7 @@ class DxAlgorithmList(object):
         self.__api = AlgorithmApi
         self.__apiexc = ApiException
 
-        domainlist = DxDomainList()
+        DxDomainList()
 
         try:
             api_instance = self.__api(self.__engine.api_client)
@@ -70,8 +70,7 @@ class DxAlgorithmList(object):
 
             if api_response.response_list:
                 for c in api_response.response_list:
-                    alg = DxAlgorithm(self.__engine)
-                    alg.from_alg(c)
+                    alg = DxAlgorithm(self.__engine, existing_object=c)
 
                     dom = DxDomainList.get_domain_by_algorithm(c.algorithm_name, report_error=False)
 

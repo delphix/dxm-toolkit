@@ -1,29 +1,51 @@
+import pprint
+
 class ConnectionInfo_mixin:
-    swagger_types = {
-    'connection_mode' : 'string',
-    'path' : 'string',
-    'mount_id' : 'integer',
-    'host' : 'string',
-    'login_name' : 'string',
-    'password' : 'string',
-    'port' : 'integer',
-    'ssh_key' : 'string',
-    'user_dir_is_root' : 'boolean'
-    }
+    swagger_types = { 
+     'connection_mode' : 'string',  
+     'path' : 'string',  
+     'mount_id' : 'integer',  
+     'host' : 'string',  
+     'login_name' : 'string',  
+     'password' : 'string',  
+     'port' : 'integer',  
+     'ssh_key' : 'string',  
+     'user_dir_is_root' : 'boolean' 
+     }
 
-    swagger_map = {
-    'connection_mode' : 'connectionMode',
-    'path' : 'path',
-    'mount_id' : 'mountId',
-    'host' : 'host',
-    'login_name' : 'loginName',
-    'password' : 'password',
-    'port' : 'port',
-    'ssh_key' : 'sshKey',
-    'user_dir_is_root' : 'userDirIsRoot'
-    }
+    swagger_map = { 
+     'connection_mode' : 'connectionMode',  
+     'path' : 'path',  
+     'mount_id' : 'mountId',  
+     'host' : 'host',  
+     'login_name' : 'loginName',  
+     'password' : 'password',  
+     'port' : 'port',  
+     'ssh_key' : 'sshKey',  
+     'user_dir_is_root' : 'userDirIsRoot' 
+     }
 
+    @property
+    def obj(self):
+        if self._obj is not None:
+            return self._obj
+        else:
+            return None
 
+    @obj.setter
+    def obj(self, value):
+        self._obj = value
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()
+
+     
     @property
     def connection_mode(self):
         if self.obj is not None and hasattr(self.obj,'connection_mode'):
@@ -37,7 +59,7 @@ class ConnectionInfo_mixin:
             self.obj.connection_mode = connection_mode
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def path(self):
         if self.obj is not None and hasattr(self.obj,'path'):
@@ -51,7 +73,7 @@ class ConnectionInfo_mixin:
             self.obj.path = path
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def mount_id(self):
         if self.obj is not None and hasattr(self.obj,'mount_id'):
@@ -65,7 +87,7 @@ class ConnectionInfo_mixin:
             self.obj.mount_id = mount_id
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def host(self):
         if self.obj is not None and hasattr(self.obj,'host'):
@@ -79,7 +101,7 @@ class ConnectionInfo_mixin:
             self.obj.host = host
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def login_name(self):
         if self.obj is not None and hasattr(self.obj,'login_name'):
@@ -93,7 +115,7 @@ class ConnectionInfo_mixin:
             self.obj.login_name = login_name
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def password(self):
         if self.obj is not None and hasattr(self.obj,'password'):
@@ -107,7 +129,7 @@ class ConnectionInfo_mixin:
             self.obj.password = password
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def port(self):
         if self.obj is not None and hasattr(self.obj,'port'):
@@ -121,7 +143,7 @@ class ConnectionInfo_mixin:
             self.obj.port = port
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def ssh_key(self):
         if self.obj is not None and hasattr(self.obj,'ssh_key'):
@@ -135,7 +157,7 @@ class ConnectionInfo_mixin:
             self.obj.ssh_key = ssh_key
         else:
             raise ValueError("Object needs to be initialized first")
-
+     
     @property
     def user_dir_is_root(self):
         if self.obj is not None and hasattr(self.obj,'user_dir_is_root'):
@@ -149,3 +171,4 @@ class ConnectionInfo_mixin:
             self.obj.user_dir_is_root = user_dir_is_root
         else:
             raise ValueError("Object needs to be initialized first")
+          

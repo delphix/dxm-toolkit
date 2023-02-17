@@ -24,41 +24,13 @@ from dxm.lib.DxLogging import print_message
 
 from dxm.lib.masking_api.api.file_field_metadata_api import FileFieldMetadataApi
 from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.DxColumn.FileFieldMetadata_mixin import FileFieldMetadata_mixin
 
-class DxFileField(object):
+class DxFileField(FileFieldMetadata_mixin):
 
 
-    swagger_types = {
-        'file_field_metadata_id': 'int',
-        'file_format_id': 'int',
-        'record_type_id': 'int',
-        'field_length': 'int',
-        'field_name': 'str',
-        'field_position_number': 'int',
-        'algorithm_name': 'str',
-        'domain_name': 'str',
-        'date_format': 'str',
-        'is_masked': 'bool',
-        'is_profiler_writable': 'bool',
-        'notes': 'str'
-    }
 
-    swagger_map = {
-        'file_field_metadata_id': 'fileFieldMetadataId',
-        'file_format_id': 'fileFormatId',
-        'record_type_id': 'recordTypeId',
-        'field_length': 'fieldLength',
-        'field_name': 'fieldName',
-        'field_position_number': 'fieldPositionNumber',
-        'algorithm_name': 'algorithmName',
-        'domain_name': 'domainName',
-        'date_format': 'dateFormat',
-        'is_masked': 'isMasked',
-        'is_profiler_writable': 'isProfilerWritable',
-        'notes': 'notes'
-    }
-
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -69,26 +41,22 @@ class DxFileField(object):
         self.__logger.debug("creating DxFile object")
 
         self.__api = FileFieldMetadataApi
-        self.__obj = None
+        self._obj = None
         self.__apiexc = ApiException
 
+        if existing_object is not None:
+            self.load_object(existing_object)  
 
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
 
-    def from_file(self, file):
+    def load_object(self, file):
         """
         set obj property with FileMetadata object
         :param column: FileMetadata object
         """
-        self.__obj = file
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self.obj = file
+        self.obj.swagger_types = self.swagger_types
+        self.obj.swagger_map = self.swagger_map
 
     @property
     def cf_meta_name(self):
@@ -110,56 +78,6 @@ class DxFileField(object):
     def cf_meta_column_role(self):
         return ''
 
-    @property
-    def algorithm_name(self):
-        if self.obj is not None and hasattr(self.obj,'algorithm_name'):
-            return self.__obj.algorithm_name
-        else:
-            return None
-
-    @algorithm_name.setter
-    def algorithm_name(self, algorithm_name):
-        """
-        algorithm_name
-        :param algorithm_name: algorithm_name 
-        """
-
-        if self.obj is not None:
-            self.obj.algorithm_name = algorithm_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def domain_name(self):
-        return self.obj.domain_name
-
-    @domain_name.setter
-    def domain_name(self, domain_name):
-        """
-        domain_name
-        :param domain_name: domain_name 
-        """
-
-        if self.obj is not None:
-            self.obj.domain_name = domain_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def is_masked(self):
-        return self.obj.is_masked
-
-    @is_masked.setter
-    def is_masked(self, is_masked):
-        """
-        is_masked
-        :param is_masked: is_masked flag
-        """
-
-        if self.obj is not None:
-            self.obj.is_masked = is_masked
-        else:
-            raise ValueError("Object needs to be initialized first")
 
     def update(self):
         """

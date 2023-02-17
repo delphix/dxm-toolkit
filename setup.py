@@ -1,7 +1,18 @@
 from setuptools import setup, find_packages
-#import dxm.dxm
+import setuptools.command.build_py
+
+
+class BuildPyCommand(setuptools.command.build_py.build_py):
+  """Custom build command."""
+
+  def run(self):
+    # add here a build
+    setuptools.command.build_py.build_py.run(self)
 
 setup(
+    cmdclass={
+        'build_py': BuildPyCommand
+    },
     name='dxm',
     #version=dxm.dxm.__version__,
     packages=find_packages(),
