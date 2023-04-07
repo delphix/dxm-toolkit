@@ -68,7 +68,7 @@ type_file_mapping = {
     # ,'DatabaseMaskingOptions'
     ,'DatabaseRuleset' : 'DxRuleset/DatabaseRuleset_mixin.py'
     # ,'DatabaseRulesetList'
-    # ,'DatabaseRulesetCopy'
+    ,'DatabaseRulesetCopy' : 'DxRuleset/DatabaseRulesetCopy.py'
     # ,'DataCleansingExtension'
     # ,'Domain'
     # ,'DomainList'

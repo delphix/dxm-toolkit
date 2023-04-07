@@ -303,18 +303,18 @@ class DxFileRuleset(FileRuleset_mixin):
             return 1
 
 
-    def create_bulk_objects(self, table_list):
-            swagger_types = {
-                'file_metadata': 'list[fileMetadata]'
-            }
+    def create_bulk_objects(self, file_list):
+        swagger_types = {
+            'file_metadata': 'list[fileMetadata]'
+        }
 
-            swagger_map = {
-                'file_metadata': 'fileMetadata'
-            }
+        swagger_map = {
+            'file_metadata': 'fileMetadata'
+        }
 
-            obj = GenericModel({ x:None for x in self.swagger_map.values()}, swagger_types, swagger_map)
-            obj.table_metadata = table_list
-            return obj
+        obj = GenericModel({ x:None for x in self.swagger_map.values()}, swagger_types, swagger_map)
+        obj.file_metadata = file_list
+        return obj
 
 
     def addmetafromfetch(self, fetchfilter, bulk):
