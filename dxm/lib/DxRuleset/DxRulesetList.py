@@ -191,17 +191,17 @@ class DxRulesetList(object):
             return None
 
     @classmethod
-    def get_all_rulesetId_by_name(self, name):
+    def get_all_rulesetId_by_name(self, name, verbose=True):
         """
         Return ruleset id by name.
         :param1 name: name of ruleset
         return list of references if OK
         return None if ruleset not found
         """
-        return self.get_rulesetId_by_name_worker(name, None)
+        return self.get_rulesetId_by_name_worker(name, None, verbose=verbose)
 
     @classmethod
-    def get_rulesetId_by_name_worker(self, name, check_uniqueness=1):
+    def get_rulesetId_by_name_worker(self, name, check_uniqueness=1, verbose=True):
         """
         :param1 name: name of ruleset
         :param2 check_uniqueness: check uniqueness put None if skip this check
@@ -210,13 +210,15 @@ class DxRulesetList(object):
         reflist = get_objref_by_val_and_attribute(name, self, 'ruleset_name')
         if len(reflist) == 0:
             self.__logger.error('Ruleset %s not found' % name)
-            print_error('Ruleset %s not found' % name)
+            if verbose:
+                print_error('Ruleset %s not found' % name)
             return None
 
         if check_uniqueness:
             if len(reflist) > 1:
                 self.__logger.error('Ruleset name %s is not unique' % name)
-                print_error('Ruleset name %s is not unique' % name)
+                if verbose:
+                    print_error('Ruleset name %s is not unique' % name)
                 return None
 
         return reflist

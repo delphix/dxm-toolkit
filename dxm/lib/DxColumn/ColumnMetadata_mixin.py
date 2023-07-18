@@ -15,9 +15,13 @@ class ColumnMetadata_mixin:
      'is_masked' : 'boolean',  
      'is_profiler_writable' : 'boolean',  
      'is_primary_key' : 'boolean',  
+     'is_identity' : 'boolean',  
      'is_index' : 'boolean',  
      'is_foreign_key' : 'boolean',  
-     'notes' : 'string' 
+     'document_store_type' : 'string',  
+     'file_format_id' : 'integer',  
+     'notes' : 'string',  
+     'domain_assigned_by' : 'string' 
      }
 
     swagger_map = { 
@@ -34,9 +38,13 @@ class ColumnMetadata_mixin:
      'is_masked' : 'isMasked',  
      'is_profiler_writable' : 'isProfilerWritable',  
      'is_primary_key' : 'isPrimaryKey',  
+     'is_identity' : 'isIdentity',  
      'is_index' : 'isIndex',  
      'is_foreign_key' : 'isForeignKey',  
-     'notes' : 'notes' 
+     'document_store_type' : 'documentStoreType',  
+     'file_format_id' : 'fileFormatId',  
+     'notes' : 'notes',  
+     'domain_assigned_by' : 'domainAssignedBy' 
      }
 
     @property
@@ -243,6 +251,20 @@ class ColumnMetadata_mixin:
             raise ValueError("Object needs to be initialized first")
      
     @property
+    def is_identity(self):
+        if self.obj is not None and hasattr(self.obj,'is_identity'):
+            return self.obj.is_identity
+        else:
+            return None
+
+    @is_identity.setter
+    def is_identity(self, is_identity):
+        if self.obj is not None:
+            self.obj.is_identity = is_identity
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
     def is_index(self):
         if self.obj is not None and hasattr(self.obj,'is_index'):
             return self.obj.is_index
@@ -271,6 +293,34 @@ class ColumnMetadata_mixin:
             raise ValueError("Object needs to be initialized first")
      
     @property
+    def document_store_type(self):
+        if self.obj is not None and hasattr(self.obj,'document_store_type'):
+            return self.obj.document_store_type
+        else:
+            return None
+
+    @document_store_type.setter
+    def document_store_type(self, document_store_type):
+        if self.obj is not None:
+            self.obj.document_store_type = document_store_type
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
+    def file_format_id(self):
+        if self.obj is not None and hasattr(self.obj,'file_format_id'):
+            return self.obj.file_format_id
+        else:
+            return None
+
+    @file_format_id.setter
+    def file_format_id(self, file_format_id):
+        if self.obj is not None:
+            self.obj.file_format_id = file_format_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
     def notes(self):
         if self.obj is not None and hasattr(self.obj,'notes'):
             return self.obj.notes
@@ -281,6 +331,20 @@ class ColumnMetadata_mixin:
     def notes(self, notes):
         if self.obj is not None:
             self.obj.notes = notes
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
+    def domain_assigned_by(self):
+        if self.obj is not None and hasattr(self.obj,'domain_assigned_by'):
+            return self.obj.domain_assigned_by
+        else:
+            return None
+
+    @domain_assigned_by.setter
+    def domain_assigned_by(self, domain_assigned_by):
+        if self.obj is not None:
+            self.obj.domain_assigned_by = domain_assigned_by
         else:
             raise ValueError("Object needs to be initialized first")
           

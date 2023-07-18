@@ -20,7 +20,9 @@ class DatabaseConnector_mixin:
      'service_principal' : 'string',  
      'jdbc_driver_id' : 'integer',  
      'enable_logger' : 'boolean',  
-     'file_reference_id' : 'string' 
+     'file_reference_id' : 'string',  
+     'password_vault_auth' : 'boolean',  
+     'credential_path_id' : 'integer' 
      }
 
     swagger_map = { 
@@ -42,7 +44,9 @@ class DatabaseConnector_mixin:
      'service_principal' : 'servicePrincipal',  
      'jdbc_driver_id' : 'jdbcDriverId',  
      'enable_logger' : 'enableLogger',  
-     'file_reference_id' : 'fileReferenceId' 
+     'file_reference_id' : 'fileReferenceId',  
+     'password_vault_auth' : 'passwordVaultAuth',  
+     'credential_path_id' : 'credentialPathId' 
      }
 
     @property
@@ -329,6 +333,34 @@ class DatabaseConnector_mixin:
     def file_reference_id(self, file_reference_id):
         if self.obj is not None:
             self.obj.file_reference_id = file_reference_id
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
+    def password_vault_auth(self):
+        if self.obj is not None and hasattr(self.obj,'password_vault_auth'):
+            return self.obj.password_vault_auth
+        else:
+            return None
+
+    @password_vault_auth.setter
+    def password_vault_auth(self, password_vault_auth):
+        if self.obj is not None:
+            self.obj.password_vault_auth = password_vault_auth
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
+    def credential_path_id(self):
+        if self.obj is not None and hasattr(self.obj,'credential_path_id'):
+            return self.obj.credential_path_id
+        else:
+            return None
+
+    @credential_path_id.setter
+    def credential_path_id(self, credential_path_id):
+        if self.obj is not None:
+            self.obj.credential_path_id = credential_path_id
         else:
             raise ValueError("Object needs to be initialized first")
           

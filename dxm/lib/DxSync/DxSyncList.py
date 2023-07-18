@@ -111,7 +111,7 @@ class DxSyncList(object):
             if api_sync_response.response_list:
                 for c in api_sync_response.response_list:
                     syncobj = DxSync(self.__engine)
-                    syncobj.from_sync(c)
+                    syncobj.load_object(c)
                     stype = syncobj.object_type
 
                     if stype in alglist:

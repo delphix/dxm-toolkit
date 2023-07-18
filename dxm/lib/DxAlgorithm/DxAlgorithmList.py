@@ -38,13 +38,14 @@ class DxAlgorithmList(object):
     __logger = None
 
     @classmethod
-    def __init__(self):
+    def __init__(self, sync=True):
         """
         Constructor
         """
         self.__engine = DxMaskingEngine
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxAlgorithmList object")
+        self.__sync = sync
         if not self.__algorithmList:
             self.LoadAlgorithms()
 
@@ -65,8 +66,9 @@ class DxAlgorithmList(object):
             api_instance = self.__api(self.__engine.api_client)
             api_response = api_instance.get_all_algorithms()
 
-            synclist = DxSyncList()
-            sync = synclist.get_all_algorithms()
+            if self.__sync:
+                synclist = DxSyncList()
+                sync = synclist.get_all_algorithms()
 
             if api_response.response_list:
                 for c in api_response.response_list:
@@ -79,8 +81,11 @@ class DxAlgorithmList(object):
                     else:
                         alg.domain_name = ''
 
-                    if c.algorithm_name in sync:
-                        alg.sync = 1
+                    if self.__sync:
+                        if c.algorithm_name in sync:
+                            alg.sync = 1
+                    else:
+                        alg.sync='N/A'
                     self.__algorithmList[c.algorithm_name] = alg
             else:
                 print_error("No algorithm found")

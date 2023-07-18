@@ -24,27 +24,11 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.environment_api import EnvironmentApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxEnvironment.Environment_mixin import Environment_mixin
 
-class DxEnvironment(object):
+class DxEnvironment(Environment_mixin):
 
-    swagger_types = {
-        'environment_id': 'int',
-        'environment_name': 'str',
-        'application_id': 'int',
-        'application': 'str',
-        'purpose': 'str',
-        'is_workflow_enabled': 'bool'
-    }
-
-    swagger_map = {
-        'environment_id': 'environmentId',
-        'environment_name': 'environmentName',
-        'application_id': 'applicationId',
-        'purpose': 'purpose',
-        'is_workflow_enabled': 'isWorkflowEnabled',
-        'application': 'application'
-    }
-
+    
 
     def __init__(self, engine):
         """
@@ -57,81 +41,36 @@ class DxEnvironment(object):
 
         self.__api = EnvironmentApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
         self.__application_name = None
+        self.swagger_types['application'] = 'str'
+        self.swagger_map['application'] = 'application'
 
-    @property
-    def environment_id(self):
-        if self.__obj is not None:
-            return self.__obj.environment_id
-        else:
-            return None
+
 
     @property
     def application_name(self):
         if self.__engine.version_ge("6.0.0.0"):
             return self.__application_name
         else:
-            return self.__obj.application
+            return self._obj.application
 
     @application_name.setter
     def application_name(self, application_name):
         self.__application_name = application_name
         if self.__engine.version_le("5.3.9.9"):
-            self.__obj.application = application_name
-
-    @property
-    def application_id(self):
-        if self.__obj is not None:
-            return self.__obj.application_id
-        else:
-            return None
-
-    @application_id.setter
-    def application_id(self, application_id):
-        if self.__obj is not None:
-            self.__obj.application_id = application_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def purpose(self):
-        if self.__obj is not None:
-            return self.__obj.purpose
-        else:
-            return None
-
-    @purpose.setter
-    def purpose(self, purpose):
-        if self.__obj is not None:
-            self.__obj.purpose = purpose
-        else:
-            raise ValueError("Object needs to be initialized first")
+            self._obj.application = application_name
 
 
-    @property
-    def environment_name(self):
-        if self.__obj is not None:
-            return self.__obj.environment_name
-        else:
-            return None
 
-    @environment_name.setter
-    def environment_name(self, environment_name):
-        if self.__obj is not None:
-            self.__obj.environment_name = environment_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    def from_environment(self, env):
+    def load_object(self, env):
         """
         Copy properties from environemnt object into DxEnvironment
         :param env: Environment object
         """
-        self.__obj = env
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self._obj = env
+        self._obj.swagger_types = self.swagger_types
+        self._obj.swagger_map = self.swagger_map
 
     def create_environment(self, environment_name, application_name, purpose):
         """
@@ -139,7 +78,7 @@ class DxEnvironment(object):
         :param app: Application object
         """  
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
 
         if self.__engine.version_ge("6.0.0.0"):
             appList = DxApplicationList()
@@ -161,33 +100,17 @@ class DxEnvironment(object):
         return 1 in case of error
         """
 
-        # if (self.environment_name is None):
-        #     print_error("Environment name is required")
-        #     self.__logger.error("Environment name is required")
-        #     return 1
-
-        # if (self.application is None):
-        #     print_error("Application name is required")
-        #     self.__logger.error("Application name is required")
-        #     return 1
-
-        # if (self.purpose is None):
-        #     print_error("Purpose is required")
-        #     self.__logger.error("Purpose is required")
-        #     return 1
-
-
         api_instance = self.__api(self.__engine.api_client)
 
         try:
-            self.__logger.debug("create environment input %s" % str(self.__obj))
+            self.__logger.debug("create environment input %s" % str(self._obj))
             response = api_instance.create_environment(
-                self.__obj,
+                self._obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("create environment response %s"
                                 % str(response))
 
-            self.__obj = response
+            self._obj = response
             print_message("Environment %s added" % self.environment_name)
         except self.__apiexc as e:
             print_error(e.body)

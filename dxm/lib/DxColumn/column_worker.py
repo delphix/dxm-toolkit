@@ -773,7 +773,7 @@ def column_worker(p_engine, p_username,  sortby, rulesetname, envname, metaname,
         connlist = DxConnectorsList(envname)
         metalist = DxMetaList()
 
-        alg_list = DxAlgorithmList()
+        alg_list = DxAlgorithmList(sync=False)
 
         rulesetref_list = []
 
@@ -950,7 +950,7 @@ def column_batch(p_engine, p_username,  rulesetname, envname, inputfile, invento
         rulelist = DxRulesetList(envname)
         metalist = DxMetaList()
 
-        alg_list = DxAlgorithmList()
+        alg_list = DxAlgorithmList(sync=False)
 
         ruleref = rulelist.get_rulesetId_by_name(rulesetname)
         if ruleref:

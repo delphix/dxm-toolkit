@@ -35,7 +35,7 @@ from dxm.lib.DxSync.DxSync import DxSync
 
 supported_sync_objects_type = [
  'algorithm',
- 'global',
+ 'global_object',
  'key',
  'domain',
  'masking_job',
@@ -197,7 +197,7 @@ def sync_worker(p_engine, p_username,  objecttype, objectname, envname,
 
                 if objectname:
                     connbynameref = connlist.get_connectorId_by_name(
-                                        objectname, True)
+                                        objectname, False)
                     if connbynameref:
                         syncconnref = int(connbynameref[1:])
                         if synclist.get_object_by_type_name(
@@ -250,7 +250,7 @@ def sync_worker(p_engine, p_username,  objecttype, objectname, envname,
                 if objectname:
                     rulesetrefs = []
                     rulesetref = rulesetList.get_all_rulesetId_by_name(
-                                                objectname)
+                                                objectname, verbose=False)
                     if rulesetref:
                         for rsref in rulesetref:
                             if synclist.get_object_by_type_name(
@@ -315,7 +315,7 @@ def sync_worker(p_engine, p_username,  objecttype, objectname, envname,
             rulesetlist = DxRulesetList(envname)
 
             if objectname:
-                jobref = joblist.get_jobId_by_name(objectname)
+                jobref = joblist.get_jobId_by_name(objectname, verbose=False)
                 if synclist.get_object_by_type_name("masking_job", jobref):
                     jobrefs = [jobref]
                 else:
