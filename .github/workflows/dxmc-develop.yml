@@ -163,7 +163,7 @@ jobs:
           export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
           echo $LIBS
           
-          pip3 install --upgrade 'setuptools<45.0.0'
+          pip3 install --upgrade 'setuptools==65.5.0'
           pip3 install pyparsing==3.0.7
           pip3 install pyinstaller==5.13.0
           python3 setup.py install
