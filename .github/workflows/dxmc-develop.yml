@@ -165,7 +165,7 @@ jobs:
           
           pip3 install --upgrade 'setuptools<45.0.0'
           pip3 install pyparsing==3.0.7
-          pip3 install pyinstaller==4.10
+          pip3 install pyinstaller==5.13.0
           python3 setup.py install
           pyinstaller --onefile --clean --hidden-import pkg_resources dxmc.py
           
