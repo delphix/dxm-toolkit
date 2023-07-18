@@ -106,7 +106,7 @@ class DxJobsList(object):
                     self.__jobsList[c.masking_job_id] = job
             else:
                 if environment_name is None:
-                    print_error("No jobs found")
+                    #print_error("No jobs found")
                     self.__logger.error("No jobs found")
 
             self.__logger.debug("All jobs loaded")
@@ -138,14 +138,14 @@ class DxJobsList(object):
         return self.__jobsList.keys()
 
     @classmethod
-    def get_jobId_by_name(self, name):
+    def get_jobId_by_name(self, name, verbose=True):
         """
         Return job id by name.
         :param1 name: name of job
         return ref if OK
         return None if ruleset not found or not unique
         """
-        reflist = self.get_jobId_by_name_worker(name)
+        reflist = self.get_jobId_by_name_worker(name, verbose=verbose)
         # convert list to single value
         # as there will be only one element in list
         if reflist:
@@ -164,7 +164,7 @@ class DxJobsList(object):
         return self.get_jobId_by_name_worker(name, None)
 
     @classmethod
-    def get_jobId_by_name_worker(self, name, check_uniqueness=1):
+    def get_jobId_by_name_worker(self, name, check_uniqueness=1, verbose=True):
         """
         :param1 name: name of job
         :param2 check_uniqueness: check uniqueness put None if skip this check
@@ -173,13 +173,15 @@ class DxJobsList(object):
         reflist = get_objref_by_val_and_attribute(name, self, 'job_name')
         if len(reflist) == 0:
             self.__logger.error('Job %s not found' % name)
-            print_error('Job %s not found' % name)
+            if verbose:
+                print_error('Job %s not found' % name)
             return None
 
         if check_uniqueness:
             if len(reflist) > 1:
                 self.__logger.error('Job name %s is not unique' % name)
-                print_error('Job name %s is not unique' % name)
+                if verbose:
+                    print_error('Job name %s is not unique' % name)
                 return None
 
         return reflist

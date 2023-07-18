@@ -72,7 +72,7 @@ type_file_mapping = {
     # ,'DataCleansingExtension'
     # ,'Domain'
     # ,'DomainList'
-    # ,'Environment'
+    ,'Environment' : 'DxEnvironment/Environment_mixin.py'
     # ,'EnvironmentList'
     # ,'ErrorMessage'
     # ,'Execution'
@@ -85,8 +85,8 @@ type_file_mapping = {
     # ,'ExecutionEventList'
     # ,'ExecutionLogsList'
     # ,'ExecutionLogById'
-    # ,'ExportObject'
-    # ,'ExportObjectMetadata'
+    #,'ExportObject' : 'DxSync/ExportObject_mixin.py'
+    ,'ExportObjectMetadata' : 'DxSync/ExportObjectMetadata_mixin.py'
     # ,'ExportObjectMetadataList'
     # ,'ExportResponseMetadata'
     ,'FileConnector' : 'DxConnector/FileConnector_mixin.py'
@@ -214,8 +214,8 @@ for classname, filename in type_file_mapping.items():
     if "properties" in api_dict["definitions"][classname]:
         for k,v in api_dict["definitions"][classname]["properties"].items():
             snake_case_name = to_snake_case(k)
-            print(snake_case_name)
-            print(v)
+            #print(snake_case_name)
+            #print(v)
             if 'type' in v:
                 paramtype = v['type']
             else:

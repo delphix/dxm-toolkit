@@ -27,20 +27,9 @@ from dxm.lib.DxLogging import print_error
 from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.sync_api import SyncApi
 from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.DxSync.ExportObjectMetadata_mixin import ExportObjectMetadata_mixin
 
-class DxSync(object):
-
-    swagger_types = {
-        'object_identifier': 'dict',
-        'object_type': 'str',
-        'revision_hash': 'str'
-    }
-
-    swagger_map = {
-        'object_identifier': 'objectIdentifier',
-        'object_type': 'objectType',
-        'revision_hash': 'revisionHash'
-    }
+class DxSync(ExportObjectMetadata_mixin):
 
     import_swagger_types = {
         'export_response_metadata': 'dict',
@@ -70,54 +59,26 @@ class DxSync(object):
 
         self.__api = SyncApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
 
-    def from_sync(self, sync):
+    def load_object(self, sync):
         """
         Set obj properties with Sync object
         :param sync: Sync object
         """
-        self.__obj = sync
-        self.__obj.swagger_map = self.swagger_map
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.object_identifier.swagger_map = {
+        self._obj = sync
+        self._obj.swagger_map = self.swagger_map
+        self._obj.swagger_types = self.swagger_types
+        self._obj.object_identifier.swagger_map = {
             'id' : 'id',
             'algorithm_name' : 'algorithmName'
         }
-        self.__obj.object_identifier.swagger_types = {
+        self._obj.object_identifier.swagger_types = {
             'id' : 'int',
             'algorithm_name' : 'str'
         }
 
-
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
-
-    @property
-    def object_type(self):
-        if self.obj is not None:
-            return self.obj.object_type
-        else:
-            return None
-
-    @property
-    def object_identifier(self):
-        if self.obj is not None and hasattr(self.obj,'object_identifier'):
-            return self.obj.object_identifier
-        else:
-            return None
-            
-    @property
-    def revision_hash(self):
-        if self.obj is not None:
-            return self.obj.revision_hash
-        else:
-            return None
 
 
     def export(self, name, path=None):

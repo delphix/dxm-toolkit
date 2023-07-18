@@ -3,9 +3,11 @@ import pprint
 class Algorithm_mixin:
     swagger_types = { 
      'algorithm_name' : 'string',  
+     'legacy_name' : 'string',  
      'algorithm_type' : 'string',  
      'created_by' : 'string',  
      'description' : 'string',  
+     'mask_type' : 'string',  
      'is_tokenization_supported' : 'boolean',  
      'framework_id' : 'integer',  
      'plugin_id' : 'integer',  
@@ -15,9 +17,11 @@ class Algorithm_mixin:
 
     swagger_map = { 
      'algorithm_name' : 'algorithmName',  
+     'legacy_name' : 'legacyName',  
      'algorithm_type' : 'algorithmType',  
      'created_by' : 'createdBy',  
      'description' : 'description',  
+     'mask_type' : 'maskType',  
      'is_tokenization_supported' : 'isTokenizationSupported',  
      'framework_id' : 'frameworkId',  
      'plugin_id' : 'pluginId',  
@@ -61,6 +65,20 @@ class Algorithm_mixin:
             raise ValueError("Object needs to be initialized first")
      
     @property
+    def legacy_name(self):
+        if self.obj is not None and hasattr(self.obj,'legacy_name'):
+            return self.obj.legacy_name
+        else:
+            return None
+
+    @legacy_name.setter
+    def legacy_name(self, legacy_name):
+        if self.obj is not None:
+            self.obj.legacy_name = legacy_name
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
     def algorithm_type(self):
         if self.obj is not None and hasattr(self.obj,'algorithm_type'):
             return self.obj.algorithm_type
@@ -99,6 +117,20 @@ class Algorithm_mixin:
     def description(self, description):
         if self.obj is not None:
             self.obj.description = description
+        else:
+            raise ValueError("Object needs to be initialized first")
+     
+    @property
+    def mask_type(self):
+        if self.obj is not None and hasattr(self.obj,'mask_type'):
+            return self.obj.mask_type
+        else:
+            return None
+
+    @mask_type.setter
+    def mask_type(self, mask_type):
+        if self.obj is not None:
+            self.obj.mask_type = mask_type
         else:
             raise ValueError("Object needs to be initialized first")
      

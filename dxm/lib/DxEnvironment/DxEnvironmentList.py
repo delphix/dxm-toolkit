@@ -83,7 +83,7 @@ class DxEnvironmentList(object):
             if envlist.response_list:
                 for c in envlist.response_list:
                     environment = DxEnvironment(self.__engine)
-                    environment.from_environment(c)
+                    environment.load_object(c)
                     if hasattr(c, "application_id"):
                         app = appList.get_by_ref(c.application_id)
                         environment.application_name = app.application_name
