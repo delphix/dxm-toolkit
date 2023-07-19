@@ -195,10 +195,10 @@ class DxJobsList(object):
         return None if OK
         """
 
-        if (job.add() is None):
+        if (job.add() == 0):
             self.__logger.debug("Adding job %s to list" % job)
             self.__jobsList[job.masking_job_id] = job
-            return None
+            return 0
         else:
             return 1
 
@@ -212,8 +212,8 @@ class DxJobsList(object):
 
         job = self.get_by_ref(masking_job_id)
         if job is not None:
-            if job.delete() is None:
-                return None
+            if job.delete() == 0:
+                return 0
             else:
                 return 1
         else:

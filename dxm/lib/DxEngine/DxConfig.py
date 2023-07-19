@@ -58,10 +58,13 @@ class DxConfig(object):
 
         try:
             self.__conn = lite.connect(dbfileloc, check_same_thread=False)
+            self.__conn.row_factory = lite.Row
             self.__cursor = self.__conn.cursor()
         except lite.Error as e:
             msg = "Error %s:" % e.args[0]
             self.__logger.debug(msg)
+
+        self.init_metadata()
 
 
     @classmethod
@@ -99,6 +102,8 @@ class DxConfig(object):
                 defengine char(1),
                 proxy_url varchar(60),
                 proxy_user varchar(60),
+                connection_timeout integer,
+                api_timeout integer,
                 unique(engine_name, username)
                 )"""
             try:
@@ -109,9 +114,15 @@ class DxConfig(object):
                         self.__cursor.execute('alter table dxm_engine_info add proxy_url varchar(60)')
                         self.__cursor.execute('alter table dxm_engine_info add proxy_user varchar(60)')
                         self.set_database_version(1)
+                    if self.get_database_version()==1:
+                        # we need to timeout info
+                        self.__logger.debug("Adding timeout columns to the table")
+                        self.__cursor.execute('alter table dxm_engine_info add connection_timeout integer')
+                        self.__cursor.execute('alter table dxm_engine_info add api_timeout integer')
+                        self.set_database_version(2)
                 else:
                     self.__cursor.execute(sql_dxm_engine_info)
-                    self.set_database_version(1)
+                    self.set_database_version(2)
             except lite.Error as e:
                 self.__logger.debug("Error %s" % e.args[0])
                 print_error("Error %s" % e.args[0])
@@ -120,7 +131,7 @@ class DxConfig(object):
 
     @classmethod
     def insert_engine_info(self, p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-                           p_default, p_proxyurl, p_proxyuser, p_proxypassword):
+                           p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout):
         """
         insert engine data into sqllite database
                      engine_name
@@ -143,7 +154,7 @@ class DxConfig(object):
             self.__logger.error("Some arguments are empty {}".format(mandatory_data))
             return -1
 
-        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser]
+        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_connection_timeout, p_api_timeout]
 
         if self.__conn:
             try:
@@ -153,7 +164,8 @@ class DxConfig(object):
 
                 sql = "INSERT INTO dxm_engine_info(engine_name," \
                       "ip_address, username, password, protocol," \
-                      "port, defengine, proxy_url, proxy_user) VALUES (?,?,?,?,?,?,?,?,?)"
+                      "port, defengine, proxy_url, proxy_user, " \
+                      "connection_timeout, api_timeout) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
                 self.__cursor.execute(sql, insert_data)
                 if p_proxyuser:
                     self.set_proxy_password(p_proxyuser, p_proxypassword)
@@ -185,7 +197,8 @@ class DxConfig(object):
             try:
                 sql = "SELECT engine_name," \
                       "ip_address, username, password, protocol," \
-                      "port, defengine, auth_id, proxy_url, proxy_user from dxm_engine_info " \
+                      "port, defengine, auth_id, proxy_url, proxy_user," \
+                      "connection_timeout, api_timeout from dxm_engine_info " \
                       "where 1=1 "
 
                 data = []
@@ -305,7 +318,11 @@ class DxConfig(object):
                       password,
                       protocol,
                       port,
-                      default, proxyurl, proxyuser, proxypassword):
+                      default, 
+                      proxyurl, 
+                      proxyuser, 
+                      proxypassword,
+                      connection_timeout, api_timeout):
         """
         update an engine entry
         :param1 engine_name: engine name
@@ -381,6 +398,11 @@ class DxConfig(object):
                     data.append(proxyuser)
                     update = 1
 
+                if proxyuser:
+                    sql = sql + ' proxy_user = ?, '
+                    data.append(proxyuser)
+                    update = 1
+
                 if proxyuser == '':
                     sql = sql + ' proxy_user = NULL, '
                     update = 1
@@ -393,6 +415,16 @@ class DxConfig(object):
                         print_error("To change proxy password, you need to specify a user")
                         sys.exit(-1)
                     self.set_proxy_password(proxyuser, proxypassword)
+
+                if connection_timeout:
+                    sql = sql + ' connection_timeout = ?, '
+                    data.append(connection_timeout)
+                    update = 1
+
+                if api_timeout:
+                    sql = sql + ' api_timeout = ?, '
+                    data.append(api_timeout)
+                    update = 1
 
                 if update:
                     data.append(engine_name)
