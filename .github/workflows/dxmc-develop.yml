@@ -15,7 +15,7 @@ jobs:
 
     - name: Set up a Python container
       #uses: pioro/dxtoolkit@develop
-      uses: docker://pioro/dxpythoncentos7:latest
+      uses: docker://pioro/dxpythoncentos7:3.11.1
       with:
         ENCKEY: ${{ secrets.ENCKEY }}
 
