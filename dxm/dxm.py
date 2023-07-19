@@ -115,7 +115,7 @@ from dxm.lib.DxLogging import print_message
 
 from dxm.lib.DxEngine.DxConfig import DxConfig
 
-__version__ = "0.9.4.1"
+__version__ = "0.9.5.0"
 
 class dxm_state(object):
 
@@ -404,12 +404,14 @@ def jdbc(dxm_state):
 @click.option(
     '--proxypassword', help='Password for proxy'
     'If you want to hide input put '' as value and you will be propted')
+@click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
+@click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
 @logfile_option
 @debug_options
 @configfile_option
 @pass_state
 def add(dxm_state, engine, ip, port, protocol, username, password, default,
-        proxyurl, proxyuser, proxypassword):
+        proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout):
     """
     Add engine entry to configuration database
     """
@@ -418,13 +420,16 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
                                      confirmation_prompt=True)
     DxConfig(dxm_state.configfile)
     exit(engine_add(engine, ip, username, password,
-         protocol, port, default, proxyurl, proxyuser, proxypassword))
+         protocol, port, default, proxyurl, proxyuser, proxypassword,
+         connection_timeout, api_timeout))
 
 
 @engine.command()
 @click.option('--engine', help='Engine name (or alias)', required=True)
 @click.option('--ip', help='IP or FQDN of engine')
-@click.option('--port', help='Port used by engine (default 8282)')
+@click.option('--port', help='Port used by engine (default 80)')
+@click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
+@click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
 @click.option(
     '--protocol', help='Communication protocol',
     type=click.Choice(['http', 'https']))
@@ -447,10 +452,13 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
 @click.option(
     '--proxypassword', help='Password for proxy'
     'If you want to hide input put '' as value and you will be propted')
+@click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
+@click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
 @debug_options
+@configfile_option
 @pass_state
 def update(dxm_state, engine, ip, port, protocol, username, password, default,
-           proxyurl, proxyuser, proxypassword, engineuser):
+           proxyurl, proxyuser, proxypassword, engineuser, connection_timeout, api_timeout):
     """
     Update engine entry in configuration database
     """
@@ -462,7 +470,7 @@ def update(dxm_state, engine, ip, port, protocol, username, password, default,
                                 confirmation_prompt=True)
     DxConfig(dxm_state.configfile)
     exit(engine_update(engine, engineuser, ip, username, password,
-         protocol, port, default, proxyurl, proxyuser, proxypassword))
+         protocol, port, default, proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout))
 
 
 @engine.command()

@@ -918,10 +918,11 @@ def jobs_list_worker(p_engine, p_username,  jobname, envname, p_format, joblist_
                               status,
                               runtime
                             )
-        print("")
-        print (data.data_output(False))
-        print("")
-        return ret
+            
+    print("")
+    print (data.data_output(False))
+    print("")
+    return ret
 
 def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details, jobtype='masking'):
     """

@@ -26,7 +26,9 @@ def test_engine_add():
         p_default='Y',
         p_proxyurl=None,
         p_proxypassword=None,
-        p_proxyuser=None
+        p_proxyuser=None,
+        p_api_timeout=60,
+        p_connection_timeout=15
     )
 
     assert rc == 0
@@ -74,7 +76,9 @@ def test_engine_add_2nd():
         p_default='Y',
         p_proxyurl=None,
         p_proxypassword=None,
-        p_proxyuser=None
+        p_proxyuser=None,
+        p_api_timeout=60,
+        p_connection_timeout=15
     )
 
     assert rc == 0
@@ -92,7 +96,9 @@ def test_engine_update(capsys, engine):
         p_default=None,
         p_proxyurl=None,
         p_proxypassword=None,
-        p_proxyuser=None
+        p_proxyuser=None,
+        p_api_timeout=None,
+        p_connection_timeout=None
     )
 
     captured = capsys.readouterr()

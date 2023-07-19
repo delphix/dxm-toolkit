@@ -27,7 +27,8 @@ from dxm.lib.DxEngine.DxEngineFiles import DxEngineFiles
 
 
 def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-               p_default, p_proxyurl, p_proxyuser, p_proxypassword):
+               p_default, p_proxyurl, p_proxyuser, p_proxypassword, 
+               p_connection_timeout, p_api_timeout):
     """
     Add engine to a configuration
     param1: p_engine: name of Masking engine
@@ -46,7 +47,8 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     config = DxConfig
     config.init_metadata()
     if config.insert_engine_info(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-                                 p_default, p_proxyurl, p_proxyuser, p_proxypassword):
+                                 p_default, p_proxyurl, p_proxyuser, p_proxypassword,
+                                 p_connection_timeout, p_api_timeout):
         print_error("Problem with adding engine to database")
         config.close()
         return -1
@@ -56,7 +58,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
         return 0
 
 def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protocol, p_port,
-                  p_default, p_proxyurl, p_proxyuser, p_proxypassword):
+                  p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout):
     """
     Update engine in configuration
     param1: p_engine: name of Masking engine
@@ -71,7 +73,8 @@ def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protoc
     config = DxConfig
     config.init_metadata()
     return config.update_engine(p_engine, p_engineuser, p_ip, p_username, p_password,
-                         p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword)
+                         p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword,
+                         p_connection_timeout, p_api_timeout)
 
 def engine_logout(p_engine, p_engineuser):
     """

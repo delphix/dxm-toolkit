@@ -42,7 +42,8 @@ supported_sync_objects_type = [
  'database_ruleset', 
  'file_ruleset',
  'database_connector',
- 'file_connector'
+ 'file_connector',
+ 'user_algorithm'
 ]
 
 
@@ -163,7 +164,7 @@ def sync_worker(p_engine, p_username,  objecttype, objectname, envname,
 
         synclist = DxSyncList(objecttype)
 
-        if (objecttype is None or objecttype.lower() == "algorithm") \
+        if (objecttype is None or objecttype.lower() == "algorithm" or objecttype.lower() == "user_algorithm") \
            and envname is None:
             if objectname:
                 alglist = [objectname]
