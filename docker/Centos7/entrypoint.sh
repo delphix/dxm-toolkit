@@ -9,6 +9,8 @@ cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${INPUT_ENCKEY}/
 
 cd /github/workspace/
 ls -l 
+pip install six
+pip install pyinstaller
 python3 setup.py install
 pyinstaller --onefile --clean dxmc.py
 cd /github/workspace/dist

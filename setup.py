@@ -23,7 +23,7 @@ setup(
         'pytz', 
         "urllib3 <= 2.0.0a", 
         "six >= 1.10", 
-        "certifi == 2020.6.20", 
+        "certifi", 
         "python-dateutil == 2.8.1", 
         "colorama == 0.4.3", 
         "tqdm == 4.47.0", 
