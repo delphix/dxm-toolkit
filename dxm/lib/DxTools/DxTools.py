@@ -24,7 +24,10 @@ import sys
 from datetime import datetime, timedelta
 from dxm.lib.DxEngine.DxConfig import DxConfig
 from dxm.lib.DxLogging import print_error
+from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.masking_api.genericmodel import GenericModel
 
+logger = logging.getLogger()
 
 def paginator(object, function_to_call, **kwargs):
     dynfunc = getattr(object, function_to_call)
@@ -33,27 +36,43 @@ def paginator(object, function_to_call, **kwargs):
     more = True
     sofar = 0
     pagenumber = 1
+    total = 0
+
+    retmodel = {'pageInfo': 
+              {'numberOnPage': 0,
+               'total': 0},
+     'responseList': []
+    }
 
     while (more):
-        ret = dynfunc(page_size=100, page_number=pagenumber, **kwargs)
-        sofar = sofar + ret.page_info.number_on_page
-        allentries.extend(ret.response_list)
-        pagenumber = pagenumber + 1
-        if ret.page_info.total == 0:
-            more = False
-        elif sofar >= ret.page_info.total:
-            more = False
+        try:
+            ret = dynfunc(page_size=100, page_number=pagenumber, **kwargs)
+            sofar = sofar + ret.page_info.number_on_page
+            allentries.extend(ret.response_list)
+            pagenumber = pagenumber + 1
+            total = ret.page_info.total
+            if ret.page_info.total == 0:
+                more = False
+            elif sofar >= ret.page_info.total:
+                more = False
+        except ApiException as err:
+            if "is outside of the acceptable range. The last page is" in err.body:
+                logger.debug("Page of out the scope: {}".format(err.body))
+                more = False
+            else:
+                raise
 
-    ret.response_list = allentries
-    ret.page_info.number_on_page = sofar
 
-    return ret
+    finalret = GenericModel(retmodel)
+    finalret.response_list = allentries
+    finalret.page_info.number_on_page = sofar
+    finalret.page_info.total = total
+    return finalret
 
 def get_list_of_engines(p_engine, p_username):
     logger = logging.getLogger()
     # read engine from config or read all and put into list
-    config = DxConfig()
-
+    config = DxConfig
     enginelist = config.get_engine_info(p_engine, p_username)
     logger.debug("p_engine %s enginelist %s" % (p_engine, enginelist))
 

@@ -1,0 +1,4 @@
+#tablename,custom_sql,where_clause,having_clause,key_column
+COUNTRIES,,,,
+DEPARTMENTS,select * from DEPARTMENTS,,,ROWID
+EMPLOYEES,,EMPLOYEE_ID<=200,,ROWID

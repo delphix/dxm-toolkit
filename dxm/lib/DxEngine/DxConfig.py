@@ -39,21 +39,35 @@ class DxConfig(object):
     __cursor = None
     __logger = None
 
-    def __init__(self):
+    @classmethod
+    def __init__(self, config_file):
         """
         Constructor
         """
         self.__logger = logging.getLogger()
         self.__logger.debug("Creating Config object")
 
+        self.__logger.debug("config file provided: {}".format(config_file))
+
+        if config_file is None:
+            dbfileloc="{}/dxmtoolkit.db".format(os.path.abspath(os.path.dirname(sys.argv[0])))
+        else:
+            dbfileloc=config_file
+
+        self.__logger.debug("dbfileloc: {}".format(dbfileloc))
+
         try:
-            self.__conn = lite.connect('dxmtoolkit.db')
+            self.__conn = lite.connect(dbfileloc, check_same_thread=False)
+            self.__conn.row_factory = lite.Row
             self.__cursor = self.__conn.cursor()
         except lite.Error as e:
             msg = "Error %s:" % e.args[0]
             self.__logger.debug(msg)
 
+        self.init_metadata()
 
+
+    @classmethod
     def close(self):
         if self.__conn:
             self.__conn.commit()
@@ -61,14 +75,17 @@ class DxConfig(object):
             self.__conn.close()
 
 
+    @classmethod
     def __enter__(self):
         return self
 
 
+    @classmethod
     def __exit__(self):
         self.close()
 
 
+    @classmethod
     def init_metadata(self):
         if self.__conn:
             self.__logger.debug("Creating table in config")
@@ -85,6 +102,8 @@ class DxConfig(object):
                 defengine char(1),
                 proxy_url varchar(60),
                 proxy_user varchar(60),
+                connection_timeout integer,
+                api_timeout integer,
                 unique(engine_name, username)
                 )"""
             try:
@@ -95,17 +114,24 @@ class DxConfig(object):
                         self.__cursor.execute('alter table dxm_engine_info add proxy_url varchar(60)')
                         self.__cursor.execute('alter table dxm_engine_info add proxy_user varchar(60)')
                         self.set_database_version(1)
+                    if self.get_database_version()==1:
+                        # we need to timeout info
+                        self.__logger.debug("Adding timeout columns to the table")
+                        self.__cursor.execute('alter table dxm_engine_info add connection_timeout integer')
+                        self.__cursor.execute('alter table dxm_engine_info add api_timeout integer')
+                        self.set_database_version(2)
                 else:
                     self.__cursor.execute(sql_dxm_engine_info)
-                    self.set_database_version(1)
+                    self.set_database_version(2)
             except lite.Error as e:
                 self.__logger.debug("Error %s" % e.args[0])
                 print_error("Error %s" % e.args[0])
                 sys.exit(-1)
 
 
+    @classmethod
     def insert_engine_info(self, p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-                           p_default, p_proxyurl, p_proxyuser, p_proxypassword):
+                           p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout):
         """
         insert engine data into sqllite database
                      engine_name
@@ -128,7 +154,7 @@ class DxConfig(object):
             self.__logger.error("Some arguments are empty {}".format(mandatory_data))
             return -1
 
-        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser]
+        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_connection_timeout, p_api_timeout]
 
         if self.__conn:
             try:
@@ -138,7 +164,8 @@ class DxConfig(object):
 
                 sql = "INSERT INTO dxm_engine_info(engine_name," \
                       "ip_address, username, password, protocol," \
-                      "port, defengine, proxy_url, proxy_user) VALUES (?,?,?,?,?,?,?,?,?)"
+                      "port, defengine, proxy_url, proxy_user, " \
+                      "connection_timeout, api_timeout) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
                 self.__cursor.execute(sql, insert_data)
                 if p_proxyuser:
                     self.set_proxy_password(p_proxyuser, p_proxypassword)
@@ -157,7 +184,7 @@ class DxConfig(object):
             self.__logger.error("No connection open")
             return -1
 
-
+    @classmethod
     def get_engine_info(self, engine_name, user_name):
         """
         Get engine data from sqllist database for database name
@@ -170,7 +197,8 @@ class DxConfig(object):
             try:
                 sql = "SELECT engine_name," \
                       "ip_address, username, password, protocol," \
-                      "port, defengine, auth_id, proxy_url, proxy_user from dxm_engine_info " \
+                      "port, defengine, auth_id, proxy_url, proxy_user," \
+                      "connection_timeout, api_timeout from dxm_engine_info " \
                       "where 1=1 "
 
                 data = []
@@ -200,7 +228,7 @@ class DxConfig(object):
             print_error("No connection to local sqllist database")
             sys.exit(-1)
 
-
+    @classmethod
     def delete_engine_info(self, engine_name, user_name):
         """
         Delete engine data from sqllist database for database name
@@ -250,7 +278,7 @@ class DxConfig(object):
             print_error("No connection to local sqllist database")
             sys.exit(-1)
 
-
+    @classmethod
     def check_uniqness(self, engine_name, engineuser):
         # check if engine_name can be identified without a username
 
@@ -268,6 +296,7 @@ class DxConfig(object):
         else:
             return rowscount[0]
 
+    @classmethod
     def check_default(self):
         # check there is already default engine - only one can be default
 
@@ -282,13 +311,18 @@ class DxConfig(object):
         else:
             return rowscount[0]
 
+    @classmethod
     def update_engine(self, engine_name, engineuser,
                       ip_address,
                       username,
                       password,
                       protocol,
                       port,
-                      default, proxyurl, proxyuser, proxypassword):
+                      default, 
+                      proxyurl, 
+                      proxyuser, 
+                      proxypassword,
+                      connection_timeout, api_timeout):
         """
         update an engine entry
         :param1 engine_name: engine name
@@ -364,6 +398,11 @@ class DxConfig(object):
                     data.append(proxyuser)
                     update = 1
 
+                if proxyuser:
+                    sql = sql + ' proxy_user = ?, '
+                    data.append(proxyuser)
+                    update = 1
+
                 if proxyuser == '':
                     sql = sql + ' proxy_user = NULL, '
                     update = 1
@@ -376,6 +415,16 @@ class DxConfig(object):
                         print_error("To change proxy password, you need to specify a user")
                         sys.exit(-1)
                     self.set_proxy_password(proxyuser, proxypassword)
+
+                if connection_timeout:
+                    sql = sql + ' connection_timeout = ?, '
+                    data.append(connection_timeout)
+                    update = 1
+
+                if api_timeout:
+                    sql = sql + ' api_timeout = ?, '
+                    data.append(api_timeout)
+                    update = 1
 
                 if update:
                     data.append(engine_name)
@@ -405,7 +454,7 @@ class DxConfig(object):
                         print_message("Configuration for engine %s"
                                       " updated in database"
                                       % engine_name)
-                        return None
+                        return 0
             except lite.Error as e:
                 self.__logger.error("Error %s:" % e.args)
                 print(sql)
@@ -414,7 +463,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
-
+    @classmethod
     def set_database_version(self, dbver):
         """
         set internal version of the sqllite
@@ -432,6 +481,7 @@ class DxConfig(object):
             sys.exit(-1)
 
 
+    @classmethod
     def get_database_version(self):
         """
         get internal version of the sqllite
@@ -451,7 +501,7 @@ class DxConfig(object):
 
         return row[0]
 
-
+    @classmethod
     def is_table(self):
         """
         Check if table exists
@@ -474,7 +524,7 @@ class DxConfig(object):
             sys.exit(-1)
 
 
-
+    @classmethod
     def set_key(self, engine_name, user_name, auth_key):
         """
         set auth key for engine and user
@@ -526,7 +576,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
-
+    @classmethod
     def get_key(self, engine_name, user_name):
         """
         Get engine auth key for engine name and user
@@ -570,6 +620,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
+    @classmethod
     def set_proxy_password(self, username, password):
         """
         set proxy user in keyring ( supported only on OSX, Windows and Linux with packages)
@@ -585,7 +636,7 @@ class DxConfig(object):
             self.__logger.debug("Keyring backend is not configured %s:" % e.args)
             sys.exit(-1)
 
-
+    @classmethod
     def delete_proxy_password(self, username):
         """
         delete proxy password
@@ -604,7 +655,7 @@ class DxConfig(object):
             pass
 
 
-
+    @classmethod
     def get_proxy_password(self, username):
         """
         get proxy password for an user
@@ -625,7 +676,7 @@ class DxConfig(object):
             self.__logger.debug("Keyring backend is not configured %s:" % e.args)
             sys.exit(-1)
 
-
+    @classmethod
     def get_proxy_user(self, engine_name):
         """
         Get proxy user
@@ -664,7 +715,7 @@ class DxConfig(object):
             print_error("No connection")
             sys.exit(-1)
 
-
+    @classmethod
     def encrypt_password(self, password):
         """
         Encrypt password and hash with SHA265
@@ -685,7 +736,7 @@ class DxConfig(object):
 
         return nonce.hex() + enchex + hashhex
 
-
+    @classmethod
     def decrypt_password(self, password):
         """
         Encrypt password and hash with SHA265

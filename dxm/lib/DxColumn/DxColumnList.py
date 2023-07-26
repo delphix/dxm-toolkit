@@ -91,8 +91,7 @@ class DxColumnList(object):
 
                 if columns.response_list:
                     for c in columns.response_list:
-                        column = DxDBColumn(self.__engine)
-                        column.from_column(c)
+                        column = DxDBColumn(self.__engine, existing_object=c)
                         self.__columnList[column.cf_metadata_id] = column
                 else:
                     # print_error("No column metadata found")
@@ -139,8 +138,7 @@ class DxColumnList(object):
 
                 if fields.response_list:
                     for c in fields.response_list:
-                        column = DxFileField(self.__engine)
-                        column.from_file(c)
+                        column = DxFileField(self.__engine, existing_object=c)
                         self.__columnList[column.cf_metadata_id] = column
                 else:
                     print_error("No field metadata found")

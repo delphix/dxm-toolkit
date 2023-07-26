@@ -76,12 +76,16 @@ class DxMaskingEngine(object):
         engine_name,ip_address,username,password, protocol,port, defengine, auth_id
         """
 
-        self.__address = engine_tuple[1]
-        self.__name = engine_tuple[0]
-        self.__username = engine_tuple[2]
-        self.__password = engine_tuple[3]
-        self.__port = engine_tuple[5]
-        self.__protocol = engine_tuple[4]
+
+
+
+
+        self.__address = engine_tuple["ip_address"]
+        self.__name = engine_tuple["engine_name"]
+        self.__username = engine_tuple["username"]
+        self.__password = engine_tuple["password"]
+        self.__port = engine_tuple["port"]
+        self.__protocol = engine_tuple["protocol"]
         self.__version = None
 
         self.__logger = logging.getLogger()
@@ -97,13 +101,13 @@ class DxMaskingEngine(object):
         self.config.debug = False
         self.config.client_side_validation = False
 
-        if engine_tuple[8]:
+        if engine_tuple["proxy_url"]:
             #proxy settings
-            dxconfig = DxConfig()
-            self.config.proxy = engine_tuple[8]
-            if engine_tuple[9]:
-                self.config.proxyuser = engine_tuple[9]
-                self.config.proxypass = dxconfig.get_proxy_password(engine_tuple[9])
+            dxconfig = DxConfig
+            self.config.proxy = engine_tuple["proxy_url"]
+            if engine_tuple["proxy_user"]:
+                self.config.proxyuser = engine_tuple[""]
+                self.config.proxypass = dxconfig.get_proxy_password(engine_tuple["proxy_user"])
             else:
                 self.config.proxyuser = None
                 self.config.proxypass = None
@@ -118,6 +122,16 @@ class DxMaskingEngine(object):
                 logger.setLevel(logging.DEBUG)
                 logger.removeHandler(self.config.logger_stream_handler)
 
+
+        if engine_tuple["connection_timeout"]:
+            self.__connection_timeout = engine_tuple["connection_timeout"]
+        else:
+            self.__connection_timeout = 15
+
+        if engine_tuple["api_timeout"]:
+            self.__api_timeout = engine_tuple["api_timeout"]
+        else:
+            self.__api_timeout = 60
 
 
     @classmethod
@@ -159,7 +173,7 @@ class DxMaskingEngine(object):
 
         except ApiException as e:
             if e.status == 401:
-                password = DxConfig().decrypt_password(self.__password)
+                password = DxConfig.decrypt_password(self.__password)
                 if password is None:
                     print_error("Problem with password decryption. Can't connect to engine")
                     return 1
@@ -249,7 +263,7 @@ class DxMaskingEngine(object):
         # binary_file = open('engine.bin', mode='wb')
         # pickle.dump(apikey, binary_file)
         # binary_file.close()
-        config = DxConfig()
+        config = DxConfig
         config.set_key(self.__name, self.__username, apikey)
 
 
@@ -268,7 +282,7 @@ class DxMaskingEngine(object):
         #     print_error("Session file not found")
         #     self.__logger.error("Session file not found")
 
-        config = DxConfig()
+        config = DxConfig
         auth_key = config.get_key(self.__name, self.__username)
         return auth_key
 
@@ -278,7 +292,7 @@ class DxMaskingEngine(object):
         Return timeout for query
         Tuple (connect_timeout, read_timeout)
         """
-        return (5, 15)
+        return (self.__connection_timeout, self.__api_timeout)
 
     @classmethod
     def getlogs(self, outputlog,page_size,level):

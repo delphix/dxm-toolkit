@@ -1,12 +1,35 @@
 from setuptools import setup, find_packages
-#import dxm.dxm
+import setuptools.command.build_py
+
+
+class BuildPyCommand(setuptools.command.build_py.build_py):
+  """Custom build command."""
+
+  def run(self):
+    # add here a build
+    setuptools.command.build_py.build_py.run(self)
 
 setup(
+    cmdclass={
+        'build_py': BuildPyCommand
+    },
     name='dxm',
     #version=dxm.dxm.__version__,
     packages=find_packages(),
     install_requires=[
-        'click == 7.1.2','requests','pytz', "urllib3 >= 1.15", "six >= 1.10", "certifi == 2020.6.20", "python-dateutil == 2.8.1", "colorama == 0.4.3", "tqdm == 4.47.0", "packaging == 20.4", "keyring == 21.2.1", "cryptography == 2.9.2"
+        'pyparsing==3.0.7',
+        'click == 7.1.2',
+        'requests',
+        'pytz', 
+        "urllib3 <= 2.0.0a", 
+        "six >= 1.10", 
+        "certifi", 
+        "python-dateutil == 2.8.1", 
+        "colorama == 0.4.3", 
+        "tqdm == 4.47.0", 
+        "packaging == 20.4", 
+        "keyring == 21.2.1", 
+        "cryptography == 41.0.2"
     ],
     entry_points='''
         [console_scripts]

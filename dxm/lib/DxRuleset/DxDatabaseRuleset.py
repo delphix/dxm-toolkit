@@ -30,24 +30,11 @@ from dxm.lib.DxAsyncTask.DxAsyncTask import DxAsyncTask
 from dxm.lib.masking_api.api.database_ruleset_api import DatabaseRulesetApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxRuleset.DatabaseRuleset_mixin import DatabaseRuleset_mixin
 
-class DxDatabaseRuleset():
+class DxDatabaseRuleset(DatabaseRuleset_mixin):
 
-    swagger_types = {
-        'database_ruleset_id': 'int',
-        'ruleset_name': 'str',
-        'database_connector_id': 'int',
-        'refresh_drops_tables': 'bool'
-    }
-
-    swagger_map = {
-        'database_ruleset_id': 'databaseRulesetId',
-        'ruleset_name': 'rulesetName',
-        'database_connector_id': 'databaseConnectorId',
-        'refresh_drops_tables': 'refreshDropsTables'
-    }
-
-    def __init__(self, engine):
+    def __init__(self, engine, existing_object=None):
         """
         Constructor
         :param engine: DxMaskingEngine object
@@ -62,14 +49,11 @@ class DxDatabaseRuleset():
 
         self.__api = DatabaseRulesetApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
+        if existing_object is not None:
+            self.load_object(existing_object)   
+
 
     @property
     def type(self):
@@ -79,43 +63,19 @@ class DxDatabaseRuleset():
     def ruleset_id(self):
         return self.obj.database_ruleset_id
 
-    @property
-    def ruleset_name(self):
-        return self.obj.ruleset_name
-
-    @ruleset_name.setter
-    def ruleset_name(self, ruleset_name):
-        self.obj.ruleset_name = ruleset_name
-
-    @property
-    def refresh_drops_tables(self):
-        return self.obj.refresh_drops_tables
-
-    @refresh_drops_tables.setter
-    def refresh_drops_tables(self, refresh_drops_tables):
-        self.obj.refresh_drops_tables = refresh_drops_tables
-
-
-    @property
-    def database_connector_id(self):
-        return self.obj.database_connector_id
-
-    @database_connector_id.setter
-    def database_connector_id(self, database_connector_id):
-        self.obj.database_connector_id = database_connector_id
 
     @property
     def connectorId(self):
         return 'd' + str(self.obj.database_connector_id)
 
-    def from_ruleset(self, ruleset):
+    def load_object(self, ruleset):
         """
         Set obj object with real ruleset object
         :param con: DatabaseConnector object
         """
-        self.__obj = ruleset
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self.obj = ruleset
+        self.obj.swagger_types = self.swagger_types
+        self.obj.swagger_map = self.swagger_map
 
     @property
     def logger(self):
@@ -133,7 +93,7 @@ class DxDatabaseRuleset():
         :param environment_id
         """  
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.ruleset_name = ruleset_name
         self.obj.database_connector_id = database_connector_id
         self.obj.refresh_drops_tables = refresh_drops_tables
@@ -164,13 +124,13 @@ class DxDatabaseRuleset():
             response = api_instance.create_database_ruleset(
                 self.obj,
                 _request_timeout=self.__engine.get_timeout())
-            self.__obj = response
+            self.obj = response
 
             self.logger.debug("ruleset response %s"
                                 % str(response))
 
             print_message("Ruleset %s added" % self.ruleset_name)
-            return None
+            return 0
         except self.__apiexc as e:
             print_error(e.body)
             self.logger.error(e)
@@ -194,7 +154,7 @@ class DxDatabaseRuleset():
             self.logger.debug("delete ruleset response %s"
                                 % str(response))
             print_message("Ruleset %s deleted" % self.ruleset_name)
-            return None
+            return 0
         except self.__apiexc as e:
             print_error(e.body)
             self.logger.error(e)
@@ -255,7 +215,6 @@ class DxDatabaseRuleset():
                 ret = ret + self.addmeta(params)
 
         if bulk:
-            print_message(table_list)
             ret = self.addmeta_bulk(table_list)
 
         return ret
@@ -381,6 +340,35 @@ class DxDatabaseRuleset():
 
         try:
             self.__logger.debug("refresh ruleset id %s"
+                                % self.ruleset_id)
+            response = api_instance.refresh_database_ruleset(
+                           self.ruleset_id,
+                           _request_timeout=self.__engine.get_timeout())
+            self.__logger.debug("refresh ruleset response %s"
+                                % str(response))
+            print_message("Ruleset %s refresh started" % self.ruleset_name)
+
+            task = DxAsyncTask()
+            task.from_asynctask(response)
+            return task.wait_for_task()
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return 1
+
+
+    def copy(self, newname):
+        """
+        Copy ruleset on the Masking engine 
+        newname - name of the new ruleset
+        return a new ruleset if non error
+        return None if error
+        """
+
+        api_instance = self.__api(self.__engine.api_client)
+
+        try:
+            self.__logger.debug("copy ruleset id %s"
                                 % self.ruleset_id)
             response = api_instance.refresh_database_ruleset(
                            self.ruleset_id,

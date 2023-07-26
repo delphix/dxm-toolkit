@@ -112,8 +112,7 @@ class DxRulesetList(object):
 
             if database_rulesets.response_list:
                 for c in database_rulesets.response_list:
-                    ruleset = DxDatabaseRuleset(self.__engine)
-                    ruleset.from_ruleset(c)
+                    ruleset = DxDatabaseRuleset(self.__engine, existing_object=c)
                     self.__rulesetList[c.database_ruleset_id] = ruleset
             else:
                 if environment_id:
@@ -138,8 +137,7 @@ class DxRulesetList(object):
 
             if file_rulesets.response_list:
                 for c in file_rulesets.response_list:
-                    ruleset = DxFileRuleset(self.__engine)
-                    ruleset.from_ruleset(c)
+                    ruleset = DxFileRuleset(self.__engine, existing_object=c)
                     self.__rulesetList[c.file_ruleset_id] = ruleset
             else:
                 if environment_id:
@@ -193,17 +191,17 @@ class DxRulesetList(object):
             return None
 
     @classmethod
-    def get_all_rulesetId_by_name(self, name):
+    def get_all_rulesetId_by_name(self, name, verbose=True):
         """
         Return ruleset id by name.
         :param1 name: name of ruleset
         return list of references if OK
         return None if ruleset not found
         """
-        return self.get_rulesetId_by_name_worker(name, None)
+        return self.get_rulesetId_by_name_worker(name, None, verbose=verbose)
 
     @classmethod
-    def get_rulesetId_by_name_worker(self, name, check_uniqueness=1):
+    def get_rulesetId_by_name_worker(self, name, check_uniqueness=1, verbose=True):
         """
         :param1 name: name of ruleset
         :param2 check_uniqueness: check uniqueness put None if skip this check
@@ -212,13 +210,15 @@ class DxRulesetList(object):
         reflist = get_objref_by_val_and_attribute(name, self, 'ruleset_name')
         if len(reflist) == 0:
             self.__logger.error('Ruleset %s not found' % name)
-            print_error('Ruleset %s not found' % name)
+            if verbose:
+                print_error('Ruleset %s not found' % name)
             return None
 
         if check_uniqueness:
             if len(reflist) > 1:
                 self.__logger.error('Ruleset name %s is not unique' % name)
-                print_error('Ruleset name %s is not unique' % name)
+                if verbose:
+                    print_error('Ruleset name %s is not unique' % name)
                 return None
 
         return reflist
@@ -249,10 +249,10 @@ class DxRulesetList(object):
         return None if OK
         """
 
-        if (ruleset.add() is None):
+        if (ruleset.add() == 0):
             self.__logger.debug("Adding ruleset %s to list" % ruleset)
             self.__rulesetList[ruleset.ruleset_id] = ruleset
-            return None
+            return 0
         else:
             return 1
 
@@ -266,8 +266,8 @@ class DxRulesetList(object):
 
         ruleset = self.get_by_ref(RulesetId)
         if ruleset is not None:
-            if ruleset.delete() is None:
-                return None
+            if ruleset.delete() == 0:
+                return 0
             else:
                 return 1
         else:
@@ -285,21 +285,22 @@ class DxRulesetList(object):
 
         ruleset = self.get_by_ref(ruleset_id)
 
-        if ruleset.type == 'Database':
-            newruleset = DxDatabaseRuleset(self.__engine)
-            newruleset.from_ruleset(ruleset)
-            newruleset.ruleset_name = newname
-        elif ruleset.type == 'File':
-            newruleset = DxFileRuleset(self.__engine)
-            newruleset.from_ruleset(ruleset)
-            newruleset.ruleset_name = newname
-
-        if (newruleset.add() is None):
-            self.__logger.debug("Adding ruleset %s to list" % newruleset)
-            self.__rulesetList[newruleset.ruleset_id] = newruleset
-            return newruleset.ruleset_id
+        if self.__engine.version_ge("6.0.0"):
+            ruleset.copy(ruleset_id, newname)
         else:
-            return None
+            if ruleset.type == 'Database':
+                newruleset = DxDatabaseRuleset(self.__engine, existing_object=ruleset)
+                newruleset.ruleset_name = newname
+            elif ruleset.type == 'File':
+                newruleset = DxFileRuleset(self.__engine, existing_object=ruleset)
+                newruleset.ruleset_name = newname
+
+            if (newruleset.add() == 0):
+                self.__logger.debug("Adding ruleset %s to list" % newruleset)
+                self.__rulesetList[newruleset.ruleset_id] = newruleset
+                return newruleset.ruleset_id
+            else:
+                return None
 
     @classmethod
     def refresh(self, RulesetId):

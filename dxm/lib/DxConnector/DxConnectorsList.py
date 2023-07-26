@@ -106,17 +106,16 @@ class DxConnectorsList(object):
             if dbconnectors.response_list:
                 for c in dbconnectors.response_list:
                     if (c.database_type == 'ORACLE'):
-                        connector = OracleConnector(self.__engine)
+                        connector = OracleConnector(self.__engine, existing_object=c)
                     elif (c.database_type == 'MSSQL'):
-                        connector = MSSQLConnector(self.__engine)
+                        connector = MSSQLConnector(self.__engine, existing_object=c)
                     elif (c.database_type == 'SYBASE'):
-                        connector = SybaseConnector(self.__engine)
+                        connector = SybaseConnector(self.__engine, existing_object=c)
                     elif (c.database_type == 'EXTENDED'):
-                        connector = ExtendedConnector(self.__engine)
+                        connector = ExtendedConnector(self.__engine, existing_object=c)
                     else:
-                        connector = DxConnector(self.__engine)
+                        connector = DxConnector(self.__engine, existing_object=c)
 
-                    connector.from_connector(c)
                     connector.is_database = True
                     self.__connectorsList['d' + str(c.database_connector_id)] \
                         = connector
@@ -139,8 +138,7 @@ class DxConnectorsList(object):
 
             if file_connectors.response_list:
                 for f in file_connectors.response_list:
-                    connector = DxFileConnector(self.__engine)
-                    connector.from_connector(f)
+                    connector = DxFileConnector(self.__engine, existing_object=f)
                     connector.is_database = False
                     self.__connectorsList['f' + str(f.file_connector_id)] \
                         = connector
@@ -148,7 +146,7 @@ class DxConnectorsList(object):
                 self.__logger.debug("No file connectors found")
 
             if len(self.__connectorsList) < 1:
-                print_error("No connectors found")
+                #print_error("No connectors found")
                 self.__logger.error("No connectors found")
                 return 1
 
@@ -240,9 +238,16 @@ class DxConnectorsList(object):
         return None if OK
         """
 
+        self.__logger.debug("Adding a connector")
+
         if connector.add() == 0:
             self.__logger.debug("Adding connector %s to list" % connector)
-            self.__connectorsList[connector.database_connector_id] = connector
+
+            if connector.is_database:
+                self.__connectorsList['d' + str(connector.database_connector_id)] = connector
+            else:
+                self.__connectorsList['f' + str(connector.database_connector_id)] = connector
+
             return 0
         else:
             return 1

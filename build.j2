@@ -1,0 +1,46 @@
+import pprint
+
+class {{ classname }}:
+    swagger_types = { 
+    {% for types in list_swagger_types %} {{ types }}{{ ", " if not loop.last else "" }} 
+    {% endfor %} }
+
+    swagger_map = { 
+    {% for map in list_swagger_map %} {{ map }}{{ ", " if not loop.last else "" }} 
+    {% endfor %} }
+
+    @property
+    def obj(self):
+        if self._obj is not None:
+            return self._obj
+        else:
+            return None
+
+    @obj.setter
+    def obj(self, value):
+        self._obj = value
+
+    def to_dict_all(self):
+        return { k:getattr(self, k) for k,v in self.swagger_map.items() if hasattr(self, k) }
+
+    def to_str(self):
+        return pprint.pformat(self.to_dict_all())
+
+    def __repr__(self):
+        return self.to_str()
+
+    {% for prop in list_properties %} 
+    @property
+    def {{ prop }}(self):
+        if self.obj is not None and hasattr(self.obj,'{{ prop }}'):
+            return self.obj.{{ prop }}
+        else:
+            return None
+
+    @{{ prop }}.setter
+    def {{ prop }}(self, {{ prop }}):
+        if self.obj is not None:
+            self.obj.{{ prop }} = {{ prop }}
+        else:
+            raise ValueError("Object needs to be initialized first")
+    {% endfor %}      

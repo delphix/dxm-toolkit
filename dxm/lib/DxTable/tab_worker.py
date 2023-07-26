@@ -186,8 +186,8 @@ def tab_list_details(p_engine, p_username,  p_format, rulesetname, envname, meta
                                       ruleobj.ruleset_name,
                                       metaobj.meta_name,
                                       metaobj.key_column,
-                                      repr(metaobj.where_clause),
-                                      repr(metaobj.custom_sql)
+                                      metaobj.where_clause,
+                                      metaobj.custom_sql
                                     )
                 else:
                     if metaobj.file_format_id is not None:
