@@ -255,7 +255,7 @@ def test_ruleset_meta_file_add(capsys):
     captured = capsys.readouterr()
     assert (rc, captured.out.replace('\r','')) == (0, output)
 
-def test_ruleset_meta_delete_singletable():
+def test_ruleset_meta_delete_singletable_after_file_add():
     rc = rule_worker.ruleset_deletemeta(
         p_engine="test_eng",
         p_username=None,
