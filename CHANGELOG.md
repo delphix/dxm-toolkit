@@ -1,3 +1,12 @@
+## Version 0.9.5
+Tested with engines 6.0.12 and above
+
+### Added:
+- timeout is now configurable in the engine menu
+
+### Changed:
+ - Various bugs
+
 ## Version 0.9.1
 
 Support for many engine versions added. Since version 0.9.1 dxm-toolkit should support all versions
