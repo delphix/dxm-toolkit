@@ -29,7 +29,7 @@ setup(
         "tqdm == 4.47.0", 
         "packaging == 20.4", 
         "keyring == 21.2.1", 
-        "cryptography == 41.0.2"
+        "cryptography == 41.0.3"
     ],
     entry_points='''
         [console_scripts]
