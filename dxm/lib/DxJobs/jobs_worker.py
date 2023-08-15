@@ -769,7 +769,7 @@ def jobs_list(p_engine, p_username,  jobname, envname, p_format):
     """
     return jobs_list_worker(p_engine, p_username,  jobname, envname, p_format, "DxJobsList")
 
-def jobs_report(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details):
+def jobs_report(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details, error_details):
     """
     Print report of masking jobs
     param1: p_engine: engine name from configuration
@@ -778,7 +778,20 @@ def jobs_report(p_engine, p_username,  jobname, envname, p_format, last, startda
     param4: p_format: output format
     return 0 if environment found
     """
-    return jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details)
+
+    if details and error_details:
+        print_error("--details and --error_details flags are mutally excluded")
+        return 1
+    
+    worker_details = None
+
+    if details:
+        worker_details = 'jobdetails'
+
+    if error_details:
+        worker_details = 'errordetails'
+
+    return jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, worker_details)
 
 
 def profilejobs_report(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details):
@@ -953,18 +966,38 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
     if jobtype == 'masking':
     
         if details:
-            data_header = [
-                    ("Engine name", 30),
-                    ("Environment name", 30),
-                    ("Job name", 30),  
-                    ("ExecId", 6),               
-                    ("Meta name", 12),
-                    ("Masked Rows", 10),   
-                    ("Started", 20),                                                              
-                    ("Completed", 20),
-                    ("Status", 20),
-                    ("Runtime", 20)                  
-                    ]
+            if details == 'jobdetails':
+                data_header = [
+                        ("Engine name", 30),
+                        ("Environment name", 30),
+                        ("Job name", 30),  
+                        ("ExecId", 6),               
+                        ("Meta name", 12),
+                        ("Masked Rows", 10),   
+                        ("Started", 20),                                                              
+                        ("Completed", 20),
+                        ("Status", 20),
+                        ("Runtime", 20)                  
+                        ]
+            if details == 'errordetails':
+                data_header = [
+                        ("Engine name", 30),
+                        ("Environment name", 30),
+                        ("Job name", 30),  
+                        ("ExecId", 6),               
+                        ("Meta name", 12),
+                        ("Masked Rows", 11),   
+                        ("Started", 20),                                                              
+                        ("Status", 20),
+                        ("Algorithm name", 20),
+                        ("Column name", 20),
+                        ("Event type", 20),
+                        ("Severity", 20),
+                        ("Cause", 20),
+                        ("Count", 20),
+                        ("Exception type", 20),
+                        ("Exception details", 20),
+                        ] 
         else:
             data_header = [
                             ("Engine name", 30),
@@ -997,6 +1030,7 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                 ("Status", 20),
                 ("Runtime", 20)                  
                 ]
+
 
 
     data.create_header(data_header)
@@ -1077,7 +1111,7 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
 
 
 
-                    if details == False:
+                    if details is None:
 
                         if jobtype == 'masking':
 
@@ -1167,13 +1201,13 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                                             )
 
                     else:
-                        # details here      
+                        # details here  
                         if jobexec is not None:         
                             execid = jobexec.execution_id
                             complist = jobobj.list_execution_component(execid)
 
                             if complist is not None:
-                                for comp in complist:    
+                                for comp, event_list in complist:    
                                     status = comp.status
                                     rowsmasked = comp.rows_masked
                                     metaname = comp.component_name
@@ -1192,23 +1226,84 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                                         endtime = 'N/A'
                                         runtime = 'N/A'
 
-                                    data.data_insert(
-                                                    engine_tuple[0],
-                                                    envobjname,
-                                                    jobobj.job_name,
-                                                    execid,
-                                                    metaname,
-                                                    rowsmasked,
-                                                    starttime,
-                                                    endtime,
-                                                    status,
-                                                    runtime
-                                                    )
+                                    if details == 'jobdetails': 
+                                        data.data_insert(
+                                                        engine_tuple[0],
+                                                        envobjname,
+                                                        jobobj.job_name,
+                                                        execid,
+                                                        metaname,
+                                                        rowsmasked,
+                                                        starttime,
+                                                        endtime,
+                                                        status,
+                                                        runtime
+                                                        )
+                                    elif details == 'errordetails':
+                                        if len(event_list) > 0:
+
+                                            for event in event_list:
+                                                alg_name = event.algorithm_name
+                                                column_name = event.masked_object_name
+                                                event_type = event.event_type
+                                                severity = event.severity
+                                                cause = event.cause
+                                                count = event.count
+                                                exp_type = event.exception_type
+                                                exp_details = event.exception_detail
+                                                data.data_insert(
+                                                                engine_tuple[0],
+                                                                envobjname,
+                                                                jobobj.job_name,
+                                                                execid,
+                                                                metaname,
+                                                                rowsmasked,
+                                                                starttime,
+                                                                status,
+                                                                alg_name,
+                                                                column_name,
+                                                                event_type,
+                                                                severity,
+                                                                cause,
+                                                                count,
+                                                                exp_type,
+                                                                exp_details
+                                                                )
+
+
+                                        else:
+                                            alg_name = 'N/A'
+                                            column_name = 'N/A'
+                                            event_type = 'N/A'
+                                            severity = 'N/A'
+                                            cause = 'N/A'
+                                            count = 0
+                                            exp_type = 'N/A'
+                                            exp_details = 'N/A' 
+
+                                        
+
+                                            data.data_insert(
+                                                            engine_tuple[0],
+                                                            envobjname,
+                                                            jobobj.job_name,
+                                                            execid,
+                                                            metaname,
+                                                            rowsmasked,
+                                                            starttime,
+                                                            status,
+                                                            alg_name,
+                                                            column_name,
+                                                            event_type,
+                                                            severity,
+                                                            cause,
+                                                            count,
+                                                            exp_type,
+                                                            exp_details
+                                                            )
                         else:
                             print("setting 1")
                             ret = 1
-
-
                     
                 else:
                     # no executions

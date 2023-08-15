@@ -22,11 +22,13 @@ import sys
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxJobs.DxJob import DxJob
+from dxm.lib.DxJobs.DxExecutionEvent import DxExecutionEvent
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.masking_api.api.masking_job_api import MaskingJobApi
 from dxm.lib.masking_api.api.execution_api import ExecutionApi
+from dxm.lib.masking_api.api.execution_event_api import ExecutionEventApi
 from dxm.lib.masking_api.rest import ApiException
 
 class DxJobsList(object):
@@ -45,8 +47,32 @@ class DxJobsList(object):
         self.__engine = DxMaskingEngine
         self.__jobsList = {}
         self.__executionList = {}
+        self.__eventList = {}
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJobsList object")
+
+
+    @classmethod
+    def LoadEvents(self):
+
+        eventApi = ExecutionEventApi(self.__engine.api_client)
+        eventList = paginator(
+                    eventApi,
+                    "get_all_execution_events")
+
+        if eventList.response_list:
+            for e in eventList.response_list:
+                event = DxExecutionEvent()
+                event.load_object(e)
+                if event.execution_id not in self.__eventList:
+                    self.__eventList[event.execution_id] = list()
+                self.__eventList[event.execution_id].append(event)
+
+
+    @classmethod
+    def get_events_per_job(self, jobExecList):
+        exec_list = [ x.execution_id for x in jobExecList]
+        return { k:v for k,v in self.__eventList.items() if k in exec_list }
 
     @classmethod
     def LoadJobs(self, environment_name=None):
@@ -75,6 +101,9 @@ class DxJobsList(object):
                     else:
                         self.__executionList[e.job_id] = [e]
 
+
+            self.LoadEvents()
+
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
                                  environment_name)
@@ -101,8 +130,8 @@ class DxJobsList(object):
                     else:
                         jobExecList = None
 
-                    job = DxJob(self.__engine, jobExecList)
-                    job.from_job(c)
+                    job = DxJob(self.__engine, jobExecList, self.get_events_per_job(jobExecList))
+                    job.load_obj(c)
                     self.__jobsList[c.masking_job_id] = job
             else:
                 if environment_name is None:
