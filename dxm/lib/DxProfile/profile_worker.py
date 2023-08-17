@@ -334,7 +334,6 @@ def profile_deleteexpression(p_engine, p_username,  profilename, expname):
             expname=expname,
             function_to_call='do_deleteexpression')
 
-
 def profile_list(p_engine, p_username,  profilename, expname, p_format, mapping):
     """
     Print list of Profile sets
@@ -371,7 +370,7 @@ def profile_list(p_engine, p_username,  profilename, expname, p_format, mapping)
     ret = profile_worker(p_engine=p_engine, profilename=profilename,
                          expname=expname, function_to_call='do_profilelist',
                          p_format=p_format, mapping=mapping, data=data)
-
+    
     print("")
     print (data.data_output(False))
     print("")
@@ -567,6 +566,7 @@ def do_profilelist(**kwargs):
     proexpobj = kwargs.get('proexpobj')
     engine_obj = kwargs.get('engine_obj')
 
+
     if not mapping:
         data.data_insert(
                           engine_obj.get_name(),
@@ -637,7 +637,6 @@ def profile_worker(**kwargs):
 
         for profileref in profiles:
             profobj = profilesetlist.get_by_ref(profileref)
-
             if not mapping:
                 dynfunc = globals()[function_to_call]
                 dynfunc(profobj=profobj,

@@ -1933,7 +1933,7 @@ def list(dxm_state, profilename):
     """
     DxConfig(dxm_state.configfile)
     exit(profile_list(
-            dxm_state.engine, profilename, None, dxm_state.format, None))
+            dxm_state.engine, dxm_state.engineuser, profilename, None, dxm_state.format, None))
 
 
 @profileset.command()

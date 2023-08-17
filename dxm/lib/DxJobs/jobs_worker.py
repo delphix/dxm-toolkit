@@ -171,7 +171,7 @@ def job_add(p_engine, p_username,  params):
 
         rulesetref = rulesetlist.get_rulesetId_by_name(rulesetname)
 
-        job = DxJob(engine_obj, None)
+        job = DxJob(engine_obj, None, None)
         job.create_job(job_name=jobname, ruleset_id=rulesetref)
 
         for p in optional_params_list:
@@ -808,7 +808,7 @@ def profilejobs_report(p_engine, p_username,  jobname, envname, p_format, last, 
         print_error("Details option not supported for profile jobs")
         return -1
 
-    return jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, details, 'profile')
+    return jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, startdate, enddate, None, 'profile')
 
 def profilejobs_list(p_engine, p_username,  jobname, envname, p_format):
     """
@@ -931,7 +931,7 @@ def jobs_list_worker(p_engine, p_username,  jobname, envname, p_format, joblist_
                               status,
                               runtime
                             )
-            
+    
     print("")
     print (data.data_output(False))
     print("")
@@ -984,7 +984,8 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                         ("Engine name", 30),
                         ("Environment name", 30),
                         ("Job name", 30),  
-                        ("ExecId", 6),               
+                        ("ExecId", 6), 
+                        ("Ruleset name",20),              
                         ("Meta name", 12),
                         ("Masked Rows", 11),   
                         ("Started", 20),                                                              
@@ -1105,14 +1106,11 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                 else:
                     execlist = jobobj.execList
 
-            if execlist:
 
+            if execlist:
                 for jobexec in execlist:
 
-
-
                     if details is None:
-
                         if jobtype == 'masking':
 
                             if jobexec is not None:
@@ -1256,6 +1254,7 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                                                                 envobjname,
                                                                 jobobj.job_name,
                                                                 execid,
+                                                                rulename,
                                                                 metaname,
                                                                 rowsmasked,
                                                                 starttime,
@@ -1288,6 +1287,7 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                                                             envobjname,
                                                             jobobj.job_name,
                                                             execid,
+                                                            rulename,
                                                             metaname,
                                                             rowsmasked,
                                                             starttime,
@@ -1305,14 +1305,10 @@ def jobs_report_worker(p_engine, p_username,  jobname, envname, p_format, last, 
                             print("setting 1")
                             ret = 1
                     
-                else:
-                    # no executions
-                    ret = 1
 
             else:
                 # no executions
                 ret = 1
-
 
         print("")
         print (data.data_output(False))

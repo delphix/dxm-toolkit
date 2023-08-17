@@ -30,6 +30,9 @@ from dxm.lib.masking_api.api.execution_api import ExecutionApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
 from dxm.lib.DxJobs.DxExecution import DxExecution
+from dxm.lib.masking_api.api.execution_component_api import ExecutionComponentApi
+from dxm.lib.DxTools.DxTools import paginator
+from dxm.lib.DxJobs.DxExecutionComponent import DxExecutionComponent
 
 class DxProfileJob(object):
 
@@ -84,17 +87,19 @@ class DxProfileJob(object):
         self.__monitor = False
 
         self.__execList = []
+        self.__eventList = None
 
         if execList is not None:
             for exe in execList:
                 newexe = DxExecution(exe.job_id)
-                newexe.from_exec(exe)
+                newexe.load_object(exe)
                 self.__execList.append(newexe)
 
 
         self.__api = ProfileJobApi
         self.__apiexec = ExecutionApi
         self.__apiexc = ApiException
+        self.__apicomponent = ExecutionComponentApi
         self.__obj = None
 
     @property
@@ -481,5 +486,53 @@ class DxProfileJob(object):
         exec_api = self.__apiexec(self.__engine.api_client)
         exec_obj = exec_api.get_execution_by_id(exec_id)
         exec = DxExecution(exec_obj.job_id)
-        exec.from_exec(exec_obj)
+        exec.load_object(exec_obj)
         return exec
+    
+    def list_execution_component(self, execid):
+        """
+        List an execution detalis ( tables, rows, etc)
+        :param1 execid: execution id to display
+        return a None if non error
+        return 1 in case of error
+        """
+
+        if (execid is None):
+            print_error("Execution id is required")
+            self.__logger.error("Execution id is required")
+            return 1
+
+        try:
+
+            execcomp = []
+
+            self.__logger.debug("execute component")
+            api_instance = self.__apicomponent(self.__engine.api_client)
+            execomponents = paginator(
+                            api_instance,
+                            "get_all_execution_components",
+                            execution_id=execid,
+                            _request_timeout=self.__engine.get_timeout())
+
+            if execomponents.response_list is not None:
+                for exe in execomponents.response_list:
+                    newexecomp = DxExecutionComponent()
+                    newexecomp.load_object(exe)
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList and \
+                       ('UNMASKED_DATA', newexecomp.execution_component_id) in map(lambda x: (x.event_type, x.execution_component_id), self.__eventList[newexecomp.execution_id]):
+                        newexecomp.status = 'WARNING'
+
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList:
+                        event = [ x for x in self.__eventList[newexecomp.execution_id] if x.execution_component_id == newexecomp.execution_component_id ]
+                    else:
+                        event = list()
+                    execcomp.append((newexecomp, event))
+
+
+            return execcomp
+
+
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return None

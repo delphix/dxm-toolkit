@@ -54,7 +54,7 @@ class DxJob(MaskingJob_mixin):
         if execList is not None:
             for exe in execList:
                 newexe = DxExecution(exe.job_id)
-                newexe.from_exec(exe)
+                newexe.load_object(exe)
 
                 if eventList is not None and newexe.execution_id in eventList:
                     if 'UNMASKED_DATA' in map(lambda x: x.event_type, eventList[newexe.execution_id]):
@@ -195,7 +195,7 @@ class DxJob(MaskingJob_mixin):
             api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("API instance created")
             response = api_instance.create_masking_job(self.obj)
-            self.from_job(response)
+            self.load_obj(response)
 
             self.__logger.debug("job response %s"
                                 % str(response))
@@ -490,13 +490,9 @@ class DxJob(MaskingJob_mixin):
                 for exe in execomponents.response_list:
                     newexecomp = DxExecutionComponent()
                     newexecomp.load_object(exe)
-                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList:
-                        if ('UNMASKED_DATA', newexecomp.execution_component_id) \
-                            in map(lambda x: (x.event_type, x.execution_component_id), self.__eventList[newexecomp.execution_id]):
-    
-                        # if self.__eventList[newexecomp.execution_id].event_type == 'UNMASKED_DATA' and \
-                        #    self.__eventList[newexecomp.execution_id].execution_component_id == newexecomp.execution_component_id:
-                            newexecomp.status = 'WARNING'
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList and \
+                       ('UNMASKED_DATA', newexecomp.execution_component_id) in map(lambda x: (x.event_type, x.execution_component_id), self.__eventList[newexecomp.execution_id]):
+                        newexecomp.status = 'WARNING'
 
                     if self.__eventList is not None and newexecomp.execution_id in self.__eventList:
                         event = [ x for x in self.__eventList[newexecomp.execution_id] if x.execution_component_id == newexecomp.execution_component_id ]
@@ -522,5 +518,5 @@ class DxJob(MaskingJob_mixin):
         exec_api = self.__apiexec(self.__engine.api_client)
         exec_obj = exec_api.get_execution_by_id(exec_id)
         exec = DxExecution(exec_obj.job_id)
-        exec.from_exec(exec_obj)
+        exec.load_object(exec_obj)
         return exec

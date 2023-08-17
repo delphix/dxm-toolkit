@@ -71,8 +71,11 @@ class DxJobsList(object):
 
     @classmethod
     def get_events_per_job(self, jobExecList):
-        exec_list = [ x.execution_id for x in jobExecList]
-        return { k:v for k,v in self.__eventList.items() if k in exec_list }
+        if jobExecList:
+            exec_list = [ x.execution_id for x in jobExecList]
+            return { k:v for k,v in self.__eventList.items() if k in exec_list }
+        else:
+            return None
 
     @classmethod
     def LoadJobs(self, environment_name=None):

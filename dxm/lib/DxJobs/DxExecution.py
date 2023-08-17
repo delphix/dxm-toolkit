@@ -44,7 +44,7 @@ class DxExecution(Execution_mixin):
         self._obj.job_id = job_id
 
 
-    def from_exec(self, exe):
+    def load_object(self, exe):
         self._obj = exe
         self._obj.swagger_types = self.swagger_types
         self._obj.swagger_map = self.swagger_map
