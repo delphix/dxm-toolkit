@@ -29,91 +29,20 @@ from dxm.lib.masking_api.api.execution_component_api import ExecutionComponentAp
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
 from dateutil.parser import parse
+from dxm.lib.DxJobs.ExecutionComponent_mixin import ExecutionComponent_mixin
 
 
-
-class DxExecutionComponent(object):
-
-    swagger_types = {
-        'execution_component_id': 'int',
-        'component_name': 'str',
-        'execution_id': 'int',
-        'status': 'str',
-        'rows_masked': 'int',
-        'rows_total': 'int',
-        'start_time': 'datetime',
-        'end_time': 'datetime'
-    }
-
-    swagger_map = {
-        'execution_component_id': 'executionComponentId',
-        'component_name': 'componentName',
-        'execution_id': 'executionId',
-        'status': 'status',
-        'rows_masked': 'rowsMasked',
-        'rows_total': 'rowsTotal',
-        'start_time': 'startTime',
-        'end_time': 'endTime'
-    }
+class DxExecutionComponent(ExecutionComponent_mixin):
 
 
     def __init__(self):
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
 
 
-    def from_exec(self, exe):
-        self.__obj = exe
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
-
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
-
-    @property
-    def execution_id(self):
-        if self.obj is not None and hasattr(self.obj, 'execution_id'):
-            return self.obj.execution_id
-        else:
-            return None
-
-    @property
-    def execution_component_id(self):
-        if self.obj is not None and hasattr(self.obj, 'execution_component_id'):
-            return self.obj.execution_component_id
-        else:
-            return None
-
-    @property
-    def component_name(self):
-        if self.obj is not None and hasattr(self.obj, 'component_name'):
-            return self.obj.component_name
-        else:
-            return None
-
-    @property
-    def status(self):
-        if self.obj is not None and hasattr(self.obj, 'status'):
-            return self.obj.status
-        else:
-            return None
-
-    @property
-    def rows_masked(self):
-        if self.obj is not None and hasattr(self.obj, 'rows_masked'):
-            return self.obj.rows_masked
-        else:
-            return None
-
-    @property
-    def rows_total(self):
-        if self.obj is not None and hasattr(self.obj, 'rows_total'):
-            return self.obj.rows_total
-        else:
-            return None
+    def load_object(self, exe):
+        self._obj = exe
+        self._obj.swagger_types = self.swagger_types
+        self._obj.swagger_map = self.swagger_map
 
 
     @property

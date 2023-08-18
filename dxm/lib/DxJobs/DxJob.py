@@ -36,51 +36,12 @@ from dxm.lib.DxJobs.DxJobOptions import DxMaskingScriptJob
 from dxm.lib.DxJobs.DxJobOptions import DxOnTheFlyJob
 from dxm.lib.DxJobs.DxExecution import DxExecution
 from dxm.lib.DxJobs.DxExecutionComponent import DxExecutionComponent
+from dxm.lib.DxJobs.MaskingJob_mixin import MaskingJob_mixin
 
-class DxJob(object):
-
-    swagger_types = {
-        'masking_job_id': 'int',
-        'job_name': 'str',
-        'ruleset_id': 'int',
-        'ruleset_type': 'str',
-        'created_by': 'str',
-        'created_time': 'datetime',
-        'email': 'str',
-        'feedback_size': 'int',
-        'job_description': 'str',
-        'max_memory': 'int',
-        'min_memory': 'int',
-        'multi_tenant': 'bool',
-        'num_input_streams': 'int',
-        'on_the_fly_masking': 'bool',
-        'database_masking_options': 'dict',
-        'on_the_fly_masking_source': 'dict',
-        'fail_immediately': 'bool'
-    }
-
-    swagger_map = {
-        'masking_job_id': 'maskingJobId',
-        'job_name': 'jobName',
-        'ruleset_id': 'rulesetId',
-        'ruleset_type': 'rulesetType',
-        'created_by': 'createdBy',
-        'created_time': 'createdTime',
-        'email': 'email',
-        'feedback_size': 'feedbackSize',
-        'job_description': 'jobDescription',
-        'max_memory': 'maxMemory',
-        'min_memory': 'minMemory',
-        'multi_tenant': 'multiTenant',
-        'num_input_streams': 'numInputStreams',
-        'on_the_fly_masking': 'onTheFlyMasking',
-        'database_masking_options': 'databaseMaskingOptions',
-        'on_the_fly_masking_source': 'onTheFlyMaskingSource',
-        'fail_immediately': 'failImmediately'
-    }
+class DxJob(MaskingJob_mixin):
 
 
-    def __init__(self, engine, execList):
+    def __init__(self, engine, execList, eventList):
         """
         Constructor
         :param1 engine: DxMaskingEngine object
@@ -93,7 +54,12 @@ class DxJob(object):
         if execList is not None:
             for exe in execList:
                 newexe = DxExecution(exe.job_id)
-                newexe.from_exec(exe)
+                newexe.load_object(exe)
+
+                if eventList is not None and newexe.execution_id in eventList:
+                    if 'UNMASKED_DATA' in map(lambda x: x.event_type, eventList[newexe.execution_id]):
+                        newexe.status = 'WARNING'
+
                 self.__execList.append(newexe)
 
 
@@ -101,12 +67,13 @@ class DxJob(object):
         self.__logger.debug("creating DxJob object")
         self.__monitor = False
 
-
+        self.__eventList = eventList
         self.__api = MaskingJobApi
         self.__apiexec = ExecutionApi
         self.__apicomponent = ExecutionComponentApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
+
 
     @property
     def monitor(self):
@@ -127,223 +94,13 @@ class DxJob(object):
     def execList(self):
         return self.__execList
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
 
+    def load_obj(self, job):
+        self._obj = job
+        self._obj.swagger_types = self.swagger_types
+        self._obj.swagger_map = self.swagger_map
 
-    @property
-    def email(self):
-        if self.obj is not None:
-            return self.obj.email
-        else:
-            return None
-
-    @email.setter
-    def email(self, email):
-        if self.__obj is not None:
-            self.__obj.email = email
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def max_memory(self):
-        if self.obj is not None:
-            return self.obj.max_memory
-        else:
-            return None
-
-    @max_memory.setter
-    def max_memory(self, max_memory):
-        if self.__obj is not None:
-            self.__obj.max_memory = max_memory
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def min_memory(self):
-        if self.obj is not None:
-            return self.obj.min_memory
-        else:
-            return None
-
-    @min_memory.setter
-    def min_memory(self, min_memory):
-        if self.__obj is not None:
-            self.__obj.min_memory = min_memory
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def num_input_streams(self):
-        if self.obj is not None:
-            return self.obj.num_input_streams
-        else:
-            return None
-
-    @num_input_streams.setter
-    def num_input_streams(self, num_input_streams):
-        if self.__obj is not None:
-            self.__obj.num_input_streams = num_input_streams
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def multi_tenant(self):
-        if self.obj is not None:
-            return self.obj.multi_tenant
-        else:
-            return None
-
-    @multi_tenant.setter
-    def multi_tenant(self, multi_tenant):
-        if self.__obj is not None:
-            self.__obj.multi_tenant = multi_tenant
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def feedback_size(self):
-        if self.obj is not None:
-            return self.obj.feedback_size
-        else:
-            return None
-
-    @feedback_size.setter
-    def feedback_size(self, feedback_size):
-        if self.__obj is not None:
-            self.__obj.feedback_size = feedback_size
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def on_the_fly_masking(self):
-        if self.obj is not None:
-            return self.obj.on_the_fly_masking
-        else:
-            return None
-
-    @on_the_fly_masking.setter
-    def on_the_fly_masking(self, on_the_fly_masking):
-        if self.__obj is not None:
-            self.__obj.on_the_fly_masking = on_the_fly_masking
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def on_the_fly_masking_source(self):
-        if self.obj is not None:
-            return self.obj.on_the_fly_masking_source
-        else:
-            return None
-
-    @on_the_fly_masking_source.setter
-    def on_the_fly_masking_source(self, on_the_fly_masking_source):
-        if self.__obj is not None:
-            self.__obj.on_the_fly_masking_source = on_the_fly_masking_source
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def database_masking_options(self):
-        if self.obj is not None:
-            return self.obj.database_masking_options
-        else:
-            return None
-
-    @database_masking_options.setter
-    def database_masking_options(self, database_masking_options):
-        if self.__obj is not None:
-            self.__obj.database_masking_options = database_masking_options
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def job_description(self):
-        if self.obj is not None:
-            return self.obj.job_description
-        else:
-            return None
-
-    @job_description.setter
-    def job_description(self, job_description):
-        if self.__obj is not None:
-            self.__obj.job_description = job_description
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def job_name(self):
-        if self.obj is not None:
-            return self.obj.job_name
-        else:
-            return None
-
-    @job_name.setter
-    def job_name(self, job_name):
-        if self.__obj is not None:
-            self.__obj.job_name = job_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def ruleset_id(self):
-        if self.obj is not None:
-            return self.obj.ruleset_id
-        else:
-            return None
-
-    @ruleset_id.setter
-    def ruleset_id(self, ruleset_id):
-        if self.__obj is not None:
-            self.__obj.ruleset_id = ruleset_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def ruleset_type(self):
-        if self.obj is not None:
-            if hasattr(self.obj, "ruleset_type"):
-                return self.obj.ruleset_type
-            else:
-                return "N/A"
-        else:
-            return None
-
-    @ruleset_type.setter
-    def ruleset_type(self, ruleset_type):
-        if self.__obj is not None:
-            self.__obj.ruleset_type = ruleset_type
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def masking_job_id(self):
-        if self.obj is not None:
-            return self.obj.masking_job_id
-        else:
-            return None
-
-    @masking_job_id.setter
-    def masking_job_id(self, masking_job_id):
-        if self.__obj is not None:
-            self.__obj.masking_job_id = masking_job_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    def from_job(self, job):
-        self.__obj = job
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
-
-        if hasattr(self.__obj,'database_masking_options') and self.__obj.database_masking_options is not None:
+        if hasattr(self._obj,'database_masking_options') and self._obj.database_masking_options is not None:
 
             opt_swagger_types = {
                 'batch_update': 'bool',
@@ -369,8 +126,8 @@ class DxJob(object):
                 'postscript': 'postscript'
             }
 
-            self.__obj.database_masking_options.swagger_map = opt_swagger_map
-            self.__obj.database_masking_options.swagger_types = opt_swagger_types
+            self._obj.database_masking_options.swagger_map = opt_swagger_map
+            self._obj.database_masking_options.swagger_types = opt_swagger_types
 
 
             script_swagger_types = {
@@ -383,20 +140,20 @@ class DxJob(object):
                 'connector_type': 'connectorType'
             }
 
-            if hasattr(self.__obj.database_masking_options,'prescript') and self.__obj.database_masking_options.prescript is not None:
-                self.__obj.database_masking_options.prescript.swagger_map = script_swagger_map
-                self.__obj.database_masking_options.prescript.swagger_types = script_swagger_types
+            if hasattr(self._obj.database_masking_options,'prescript') and self._obj.database_masking_options.prescript is not None:
+                self._obj.database_masking_options.prescript.swagger_map = script_swagger_map
+                self._obj.database_masking_options.prescript.swagger_types = script_swagger_types
 
-            if hasattr(self.__obj.database_masking_options,'postscript') and self.__obj.database_masking_options.postscript is not None:
-                self.__obj.database_masking_options.postscript.swagger_map = script_swagger_map
-                self.__obj.database_masking_options.postscript.swagger_types = script_swagger_types
+            if hasattr(self._obj.database_masking_options,'postscript') and self._obj.database_masking_options.postscript is not None:
+                self._obj.database_masking_options.postscript.swagger_map = script_swagger_map
+                self._obj.database_masking_options.postscript.swagger_types = script_swagger_types
 
-        if hasattr(self.__obj,'on_the_fly_masking_source') and self.__obj.on_the_fly_masking_source is not None:
-            self.__obj.on_the_fly_masking_source.swagger_map = {
+        if hasattr(self._obj,'on_the_fly_masking_source') and self._obj.on_the_fly_masking_source is not None:
+            self._obj.on_the_fly_masking_source.swagger_map = {
                                                                     'name': 'name',
                                                                     'contents': 'contents'
                                                                 }
-            self.__obj.on_the_fly_masking_source.swagger_types = {
+            self._obj.on_the_fly_masking_source.swagger_types = {
                                                                     'name': 'str',
                                                                     'contents': 'str'
                                                                 }
@@ -411,7 +168,7 @@ class DxJob(object):
         :param environment_id
         """  
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.job_name = job_name
         self.obj.ruleset_id = ruleset_id
 
@@ -438,7 +195,7 @@ class DxJob(object):
             api_instance = self.__api(self.__engine.api_client)
             self.__logger.debug("API instance created")
             response = api_instance.create_masking_job(self.obj)
-            self.from_job(response)
+            self.load_obj(response)
 
             self.__logger.debug("job response %s"
                                 % str(response))
@@ -732,8 +489,16 @@ class DxJob(object):
             if execomponents.response_list is not None:
                 for exe in execomponents.response_list:
                     newexecomp = DxExecutionComponent()
-                    newexecomp.from_exec(exe)
-                    execcomp.append(newexecomp)
+                    newexecomp.load_object(exe)
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList and \
+                       ('UNMASKED_DATA', newexecomp.execution_component_id) in map(lambda x: (x.event_type, x.execution_component_id), self.__eventList[newexecomp.execution_id]):
+                        newexecomp.status = 'WARNING'
+
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList:
+                        event = [ x for x in self.__eventList[newexecomp.execution_id] if x.execution_component_id == newexecomp.execution_component_id ]
+                    else:
+                        event = list()
+                    execcomp.append((newexecomp, event))
 
 
             return execcomp
@@ -753,5 +518,5 @@ class DxJob(object):
         exec_api = self.__apiexec(self.__engine.api_client)
         exec_obj = exec_api.get_execution_by_id(exec_id)
         exec = DxExecution(exec_obj.job_id)
-        exec.from_exec(exec_obj)
+        exec.load_object(exec_obj)
         return exec
