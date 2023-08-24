@@ -1411,8 +1411,6 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     except FileNotFoundError:
         print_error("File {} not found".format(prescript))
         DxConfig(dxm_state.configfile)
-    exit(1)
-
 
     params = {
         "rulesetname": rulesetname,

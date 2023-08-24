@@ -155,7 +155,7 @@ type_file_mapping = {
     # ,'ProfileExpression'
     # ,'ProfileTypeExpression'
     # ,'ProfileExpressionList'
-    # ,'ProfileJob'
+    ,'ProfileJob' : 'DxJobs/ProfileJob_mixin.py'
     # ,'ProfileJobList'
     # ,'ProfileSet'
     # ,'ProfileSetList'
