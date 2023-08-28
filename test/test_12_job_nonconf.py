@@ -258,7 +258,7 @@ def test_job_report_error_details_single(capsys):
         error_details=True
     )
 
-    output = "\n#Engine name,Environment name,Job name,ExecId,Ruleset name,Meta name,Masked Rows,Started,Status,Algorithm name,Column name,Event type,Severity,Cause,Count,Exception type,Exception details\n" + \
+    output = "\n#Engine name,Environment name,Job name,Job Id,ExecId,Ruleset name,Meta name,Masked Rows,Started,Status,Algorithm name,Column name,Event type,Severity,Cause,Count,Exception type,Exception details\n" + \
              "test_eng,env1,{},rs_test_1,EMPLOYEES,101,WARNING,dlpx-core:CM Digits,FIRST_NAME,UNMASKED_DATA,WARNING,PATTERN_MATCH_FAILURE,100,NonConformantDataException,Only 0 characters masked in value (at least 1 required)\n".format(JOBNAME) + \
              "test_eng,env1,{},rs_test_1,EMPLOYEES,101,WARNING,dlpx-core:CM Digits,LAST_NAME,UNMASKED_DATA,WARNING,PATTERN_MATCH_FAILURE,100,NonConformantDataException,Only 0 characters masked in value (at least 1 required)\n\n".format(JOBNAME)
 
@@ -270,7 +270,7 @@ def test_job_report_error_details_single(capsys):
     for line in captured.out.splitlines():
         if "test_eng" in line:
             line_list = line.split(',')
-            output_from_command.append(",".join(line_list[0:3])+','+",".join(line_list[4:7])+','+",".join(line_list[8:]))
+            output_from_command.append(",".join(line_list[0:3])+','+",".join(line_list[5:8])+','+",".join(line_list[9:]))
         else:
             output_from_command.append(line.replace("\r",""))
 

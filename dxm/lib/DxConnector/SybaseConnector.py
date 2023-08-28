@@ -53,17 +53,28 @@ class SybaseConnector(DxConnector):
         Return dict with properties required for connector type
         """
 
-        props = {
-            'port': self.port,
-            'host': self.host,
-            'username': self.username,
-            'schema_name': self.schema_name,
-            'connector_name': self.connector_name,
-            'password': self.password,
-            'database_type': self.database_type,
-            'environment_id': self.environment_id,
-            'database_name': self.database_name
-        }
+        if self.jdbc:
+            props = {
+                'jdbc': self.jdbc,
+                'username': self.username,
+                'schema_name': self.schema_name,
+                'connector_name': self.connector_name,
+                'password': self.password,
+                'database_type': self.database_type,
+                'environment_id': self.environment_id
+            }       
+        else:
+            props = {
+                'port': self.port,
+                'host': self.host,
+                'username': self.username,
+                'schema_name': self.schema_name,
+                'connector_name': self.connector_name,
+                'password': self.password,
+                'database_type': self.database_type,
+                'environment_id': self.environment_id,
+                'database_name': self.database_name
+            }
 
         empty = 0
         for k in props.keys():

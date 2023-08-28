@@ -115,7 +115,7 @@ from dxm.lib.DxLogging import print_message
 
 from dxm.lib.DxEngine.DxConfig import DxConfig
 
-__version__ = "0.9.6.0-rc1"
+__version__ = "0.9.6.0-rc2"
 
 class dxm_state(object):
 
@@ -1411,8 +1411,6 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     except FileNotFoundError:
         print_error("File {} not found".format(prescript))
         DxConfig(dxm_state.configfile)
-    exit(1)
-
 
     params = {
         "rulesetname": rulesetname,

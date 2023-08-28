@@ -25,26 +25,9 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.profile_set_api import ProfileSetApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxProfile.ProfileSet_mixin import ProfileSet_mixin
 
-class DxProfile(object):
-
-    swagger_types = {
-        'profile_set_id': 'int',
-        'profile_set_name': 'str',
-        'profile_expression_ids': 'list[int]',
-        'created_by': 'str',
-        'created_time': 'datetime',
-        'description': 'str'
-    }
-
-    swagger_map = {
-        'profile_set_id': 'profileSetId',
-        'profile_set_name': 'profileSetName',
-        'profile_expression_ids': 'profileExpressionIds',
-        'created_by': 'createdBy',
-        'created_time': 'createdTime',
-        'description': 'description'
-    }
+class DxProfile(ProfileSet_mixin):
 
     def __init__(self):
         """
@@ -57,75 +40,22 @@ class DxProfile(object):
 
         self.__api = ProfileSetApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
-
-    @property
-    def profile_set_id(self):
-        if self.obj is not None:
-            return self.obj.profile_set_id
-        else:
-            return None
-
-    @property
-    def profile_set_name(self):
-        if self.obj is not None:
-            return self.obj.profile_set_name
-        else:
-            return None
-
-    @property
-    def profile_expression_ids(self):
-        if self.obj is not None:
-            return self.obj.profile_expression_ids
-        else:
-            return None
-
-    @profile_expression_ids.setter
-    def profile_expression_ids(self, value):
-        self.obj.profile_expression_ids = value
-
-    @property
-    def description(self):
-        if self.obj is not None and hasattr(self.obj,'description'):
-            return self.obj.description
-        else:
-            return None
-
-    @property
-    def created_by(self):
-        if self.obj is not None:
-            return self.obj.created_by
-        else:
-            return None
-
-    @property
-    def created_time(self):
-        if self.obj is not None:
-            return self.obj.created_time
-        else:
-            return None
-
-
+ 
     def create_profile(self, profile_set_name, profile_expression_ids, created_by, description):
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.profile_set_name = profile_set_name
         self.obj.profile_expression_ids = profile_expression_ids
         self.obj.created_by = created_by
         self.obj.description = description
 
 
-    def from_profileset(self, profile):
-        self.__obj = profile
-        self.__obj.swagger_map = self.swagger_map
-        self.__obj.swagger_types = self.swagger_types
+    def load_obj(self, profile):
+        self._obj = profile
+        self._obj.swagger_map = self.swagger_map
+        self._obj.swagger_types = self.swagger_types
 
     def set_expressions_using_names(self, expression_list):
         """
@@ -167,7 +97,7 @@ class DxProfile(object):
             self.__logger.debug("create profile input %s" % str(self))
             api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_profile_set(self.obj)
-            self.from_profileset(response)
+            self.load_obj(response)
             self.__logger.debug("profile response %s"
                                 % str(response))
             print_message("Profile %s added" % self.obj.profile_set_name)

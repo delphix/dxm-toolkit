@@ -58,15 +58,6 @@ class DxProfilesList(object):
 
             api_instance = self.__api(self.__engine.api_client)
 
-            # execapi = ExecutionApi(self.__engine.api_client)
-            # execList = paginator(
-            #             execapi,
-            #             "get_all_executions")
-            #
-            # if execList.response_list:
-            #     for e in execList.response_list:
-            #         self.__executionList[e.job_id] = e
-
             profileset = paginator(
                             api_instance,
                             "get_all_profile_sets",
@@ -75,7 +66,7 @@ class DxProfilesList(object):
             if profileset.response_list:
                 for ps in profileset.response_list:
                     profile = DxProfile()
-                    profile.from_profileset(ps)
+                    profile.load_obj(ps)
                     self.__profileset_list[ps.profile_set_id] = profile
             else:
                 print_error("No Profile sets found")
@@ -140,10 +131,10 @@ class DxProfilesList(object):
         return None if OK
         """
 
-        if (profile.add() is None):
+        if (profile.add() == 0):
             self.__logger.debug("Adding profile %s to list" % profile)
             self.__profileset_list[profile.profile_set_id] = profile
-            return None
+            return 0
         else:
             return 1
 
@@ -157,10 +148,7 @@ class DxProfilesList(object):
 
         profile = self.get_by_ref(profile_set_id)
         if profile is not None:
-            if profile.delete() is None:
-                return None
-            else:
-                return 1
+            return profile.delete()
         else:
             print_error("Profile with id %s not found" % profile_set_id)
             return 1

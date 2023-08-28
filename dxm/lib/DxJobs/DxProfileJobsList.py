@@ -109,7 +109,7 @@ class DxProfileJobsList(object):
                         execution_list = None
 
                     job = DxProfileJob(self.__engine, execution_list)
-                    job.from_job(c)
+                    job.load_obj(c)
                     self.__jobsList[c.profile_job_id] = job
             else:
                 if environment_name is None:
@@ -200,10 +200,10 @@ class DxProfileJobsList(object):
         return None if OK
         """
 
-        if (job.add() is None):
+        if (job.add() == 0):
             self.__logger.debug("Adding job %s to list" % job)
             self.__jobsList[job.profile_job_id] = job
-            return None
+            return 0
         else:
             return 1
 
@@ -217,10 +217,7 @@ class DxProfileJobsList(object):
 
         job = self.get_by_ref(profile_job_id)
         if job is not None:
-            if job.delete() is None:
-                return None
-            else:
-                return 1
+            return job.delete()
         else:
             print_error("Job with id %s not found" % profile_job_id)
             return 1

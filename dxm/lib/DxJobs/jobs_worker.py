@@ -343,6 +343,7 @@ def do_update(**kwargs):
             update = True
             jobobj.ruleset_id = rulesetref
 
+
     if type(jobobj) == dxm.lib.DxJobs.DxJob.DxJob:
 
         for p in optional_params_list:
@@ -383,7 +384,6 @@ def do_update(**kwargs):
             postscript = DxMaskingScriptJob(name=scriptname, contents = ''.join(params["postscript"].readlines()))
             dmo.postscript = postscript
     else:
-
         if "profilename" in params and params['rulesetname'] != None:
             profilename = params['profilename']
 
@@ -418,9 +418,18 @@ def do_copy(**kwargs):
     jobref = kwargs.get('jobref')
     joblist = kwargs.get('joblist')
     newjobname = kwargs.get('newjobname')
+    engine_obj = kwargs.get('engine_obj')
+    job_type = kwargs.get('joblist_class')
+    if kwargs.get('joblist_class') == "DxJobsList":
+        job = DxJob(engine_obj, None, None)
+    else:
+        job = DxProfileJob(engine_obj, None)
+
     jobobj = joblist.get_by_ref(jobref)
-    jobobj.job_name = newjobname
-    return joblist.add(jobobj)
+
+    job.load_obj(jobobj)
+    job.job_name = newjobname
+    return joblist.add(job)
 
 
 def do_delete(**kwargs):
@@ -550,15 +559,18 @@ def job_selector(**kwargs):
                 engine_obj=engine_obj,
                 joblist=joblist, **kwargs)
 
-
         else:
             if lock:
                 lock.acquire()
+
             dxm.lib.DxJobs.DxJobCounter.ret = \
                 dxm.lib.DxJobs.DxJobCounter.ret + 1
 
             if lock:
                 lock.release()
+
+            # for delete / update / copy global counter is not used
+            ret = ret + 1
             continue
 
     return ret
