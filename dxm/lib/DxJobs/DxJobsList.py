@@ -22,12 +22,16 @@ import sys
 from dxm.lib.DxEnvironment.DxEnvironmentList import DxEnvironmentList
 from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.DxJobs.DxJob import DxJob
+from dxm.lib.DxJobs.DxExecutionEvent import DxExecutionEvent
 from dxm.lib.DxTools.DxTools import get_objref_by_val_and_attribute
 from dxm.lib.DxLogging import print_error
 from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.masking_api.api.masking_job_api import MaskingJobApi
 from dxm.lib.masking_api.api.execution_api import ExecutionApi
+from dxm.lib.masking_api.api.execution_event_api import ExecutionEventApi
 from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
+from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 
 class DxJobsList(object):
 
@@ -45,8 +49,35 @@ class DxJobsList(object):
         self.__engine = DxMaskingEngine
         self.__jobsList = {}
         self.__executionList = {}
+        self.__eventList = {}
         self.__logger = logging.getLogger()
         self.__logger.debug("creating DxJobsList object")
+
+
+    @classmethod
+    def LoadEvents(self):
+
+        eventApi = ExecutionEventApi(self.__engine.api_client)
+        eventList = paginator(
+                    eventApi,
+                    "get_all_execution_events")
+
+        if eventList.response_list:
+            for e in eventList.response_list:
+                event = DxExecutionEvent()
+                event.load_object(e)
+                if event.execution_id not in self.__eventList:
+                    self.__eventList[event.execution_id] = list()
+                self.__eventList[event.execution_id].append(event)
+
+
+    @classmethod
+    def get_events_per_job(self, jobExecList):
+        if jobExecList:
+            exec_list = [ x.execution_id for x in jobExecList]
+            return { k:v for k,v in self.__eventList.items() if k in exec_list }
+        else:
+            return None
 
     @classmethod
     def LoadJobs(self, environment_name=None):
@@ -75,6 +106,9 @@ class DxJobsList(object):
                     else:
                         self.__executionList[e.job_id] = [e]
 
+
+            self.LoadEvents()
+
             if environment_name:
                 environment_id = DxEnvironmentList.get_environmentId_by_name(
                                  environment_name)
@@ -101,8 +135,8 @@ class DxJobsList(object):
                     else:
                         jobExecList = None
 
-                    job = DxJob(self.__engine, jobExecList)
-                    job.from_job(c)
+                    job = DxJob(self.__engine, jobExecList, self.get_events_per_job(jobExecList))
+                    job.load_obj(c)
                     self.__jobsList[c.masking_job_id] = job
             else:
                 if environment_name is None:
@@ -219,3 +253,247 @@ class DxJobsList(object):
         else:
             print_error("Job with id %s not found" % masking_job_id)
             return 1
+
+
+    @classmethod
+    def set_report_headers(self, details):
+    
+        if details:
+            if details == 'jobdetails':
+                data_header = [
+                        ("Engine name", 30),
+                        ("Environment name", 30),
+                        ("Job name", 30),  
+                        ("ExecId", 6),               
+                        ("Meta name", 12),
+                        ("Masked Rows", 10),   
+                        ("Started", 20),                                                              
+                        ("Completed", 20),
+                        ("Status", 20),
+                        ("Runtime", 20)                  
+                        ]
+            if details == 'errordetails':
+                data_header = [
+                        ("Engine name", 30),
+                        ("Environment name", 30),
+                        ("Job name", 30), 
+                        ("Job Id", 6),  
+                        ("ExecId", 6), 
+                        ("Ruleset name",20),              
+                        ("Meta name", 12),
+                        ("Masked Rows", 11),   
+                        ("Started", 20),                                                              
+                        ("Status", 20),
+                        ("Algorithm name", 20),
+                        ("Column name", 20),
+                        ("Event type", 20),
+                        ("Severity", 20),
+                        ("Cause", 20),
+                        ("Count", 20),
+                        ("Exception type", 20),
+                        ("Exception details", 20),
+                        ] 
+        else:
+            data_header = [
+                            ("Engine name", 30),
+                            ("Environment name", 30),
+                            ("Job name", 30),
+                            ("Job Id", 6),                    
+                            ("Min Memory", 10),
+                            ("Max Memory", 10), 
+                            ("Streams", 7),                                              
+                            ("On The Fly", 10),
+                            ("Ruleset Type", 12),
+                            ("ExecId", 6),
+                            ("Total Rows", 10),
+                            ("Masked Rows", 10),   
+                            ("Started", 20),                                                              
+                            ("Completed", 20),
+                            ("Status", 20),
+                            ("Runtime", 20)                  
+                        ]
+            
+        return data_header
+    
+
+    @classmethod
+    def set_report_output(self, output, engine_name, jobobj, jobexec, details):
+
+        rulesetlist = DxRulesetList
+        connectorlist = DxConnectorsList
+        envlist = DxEnvironmentList
+
+        rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
+        # those test are requierd for 5.X engies where API is not showing all types of connectors
+        if rulesetobj is not None:
+            ruleset_type = rulesetobj.type
+            rulename = rulesetobj.ruleset_name
+            connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
+            if connectorobj is not None:
+                connectorname = connectorobj.connector_name
+                envobj = envlist.get_by_ref(connectorobj.environment_id)
+                if envobj is not None:
+                    envobjname = envobj.environment_name
+                else:
+                    envobjname = "N/A"   
+            else:
+                connectorname = "N/A"
+                envobjname = "N/A"
+        else:
+            rulename = "N/A"
+            connectorname = "N/A"
+            envobjname = "N/A"
+            ruleset_type = "N/A"
+
+        if details is None:
+            if jobexec is not None:
+                status = jobexec.status
+                execid = jobexec.execution_id
+                rowsmasked = jobexec.rows_masked
+                rowstotal = jobexec.rows_total
+                if jobexec.start_time is not None:
+                    starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                else:
+                    starttime = 'N/A'
+                if (jobexec.end_time is not None) and \
+                (jobexec.start_time is not None):
+                    endtime = jobexec.end_time \
+                        .strftime("%Y-%m-%d %H:%M:%S")
+                    runtimetemp = jobexec.end_time \
+                        - jobexec.start_time
+                    runtime = str(runtimetemp)
+                else:
+                    endtime = 'N/A'
+                    runtime = 'N/A'
+            else:
+                status = 'N/A'
+                endtime = 'N/A'
+                starttime = 'N/A'
+                runtime = 'N/A'
+                execid = 'N/A'
+                rowsmasked = 'N/A'
+                rowstotal = 'N/A'
+
+            output.data_insert(
+                            engine_name,
+                            envobjname,
+                            jobobj.job_name,
+                            jobobj.masking_job_id,
+                            jobobj.min_memory,
+                            jobobj.max_memory,
+                            jobobj.num_input_streams,
+                            jobobj.on_the_fly_masking,
+                            ruleset_type,
+                            execid,
+                            rowstotal,
+                            rowsmasked,
+                            starttime,
+                            endtime,
+                            status,
+                            runtime
+                            )
+        
+        else:
+            if jobexec is not None:         
+                execid = jobexec.execution_id
+                complist = jobobj.list_execution_component(execid)
+
+                if complist is not None:
+                    for comp, event_list in complist:    
+                        status = comp.status
+                        rowsmasked = comp.rows_masked
+                        metaname = comp.component_name
+                        if comp.start_time is not None:
+                            starttime = comp.start_time.strftime("%Y-%m-%d %H:%M:%S")
+                        else:
+                            starttime = 'N/A'
+                        if (comp.end_time is not None) and \
+                        (comp.start_time is not None):
+                            endtime = comp.end_time \
+                                .strftime("%Y-%m-%d %H:%M:%S")
+                            runtimetemp = comp.end_time \
+                                - comp.start_time
+                            runtime = str(runtimetemp)
+                        else:
+                            endtime = 'N/A'
+                            runtime = 'N/A'
+
+                        if details == 'jobdetails': 
+                            output.data_insert(
+                                            engine_name,
+                                            envobjname,
+                                            jobobj.job_name,
+                                            execid,
+                                            metaname,
+                                            rowsmasked,
+                                            starttime,
+                                            endtime,
+                                            status,
+                                            runtime
+                                            )
+                        elif details == 'errordetails':
+                            if len(event_list) > 0:
+
+                                for event in event_list:
+                                    alg_name = event.algorithm_name
+                                    column_name = event.masked_object_name
+                                    event_type = event.event_type
+                                    severity = event.severity
+                                    cause = event.cause
+                                    count = event.count
+                                    exp_type = event.exception_type
+                                    exp_details = event.exception_detail
+                                    output.data_insert(
+                                                    engine_name,
+                                                    envobjname,
+                                                    jobobj.job_name,
+                                                    jobobj.masking_job_id,
+                                                    execid,
+                                                    rulename,
+                                                    metaname,
+                                                    rowsmasked,
+                                                    starttime,
+                                                    status,
+                                                    alg_name,
+                                                    column_name,
+                                                    event_type,
+                                                    severity,
+                                                    cause,
+                                                    count,
+                                                    exp_type,
+                                                    exp_details
+                                                    )
+
+
+                            else:
+                                alg_name = 'N/A'
+                                column_name = 'N/A'
+                                event_type = 'N/A'
+                                severity = 'N/A'
+                                cause = 'N/A'
+                                count = 0
+                                exp_type = 'N/A'
+                                exp_details = 'N/A' 
+
+                            
+
+                                output.data_insert(
+                                                engine_name,
+                                                envobjname,
+                                                jobobj.job_name,
+                                                jobobj.masking_job_id,
+                                                execid,
+                                                rulename,
+                                                metaname,
+                                                rowsmasked,
+                                                starttime,
+                                                status,
+                                                alg_name,
+                                                column_name,
+                                                event_type,
+                                                severity,
+                                                cause,
+                                                count,
+                                                exp_type,
+                                                exp_details
+                                                )

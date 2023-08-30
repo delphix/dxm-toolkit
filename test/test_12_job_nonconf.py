@@ -7,13 +7,13 @@ from dxm.lib.DxLogging import logging_est
 
 
 CONFIGPATH='./test/testdb.db'
-ALGNAME1="dlpx-core:FirstName"
 RULESETNAME="rs_test_1"
 ENVNAME="env1"
-JOBNAME="job1"
+JOBNAME="job2"
 METANAME3="EMPLOYEES"
 COLUMNNAME1="FIRST_NAME"
-ALGNAME1="dlpx-core:FirstName"
+COLUMNNAME2="LAST_NAME"
+ALGNAME1="dlpx-core:CM Digits"
 DOMAINNAME="FIRST_NAME"
 
 #logging_est('dxm.log', True)
@@ -38,7 +38,25 @@ def test_column_set_masking(capsys):
     )
 
     output = "Column FIRST_NAME updated\n" + \
-        "Algorithm dlpx-core:FirstName domain FIRST_NAME updated for ruleset rs_test_1 meta EMPLOYEES column FIRST_NAME\n"
+        "Algorithm dlpx-core:CM Digits domain FIRST_NAME updated for ruleset rs_test_1 meta EMPLOYEES column FIRST_NAME\n"
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)    
+
+    rc = column_worker.column_setmasking(
+        p_engine="test_eng",
+        p_username=None,
+        rulesetname=RULESETNAME,
+        envname=None,
+        metaname=METANAME3,
+        columnname=COLUMNNAME2,
+        algname=ALGNAME1,
+        domainname=DOMAINNAME,
+        dateformat=None,
+        idmethod=None
+    )
+
+    output = "Column LAST_NAME updated\n" + \
+        "Algorithm dlpx-core:CM Digits domain FIRST_NAME updated for ruleset rs_test_1 meta EMPLOYEES column LAST_NAME\n"
     captured = capsys.readouterr()
     assert (rc, captured.out.replace('\r','')) == (0, output)    
 
@@ -146,7 +164,7 @@ def test_start_job_single(capsys):
     )
 
 
-    output = "Waiting for job job1 to start processing rows\n" + \
+    output = "Waiting for job {} to start processing rows\n".format(JOBNAME) + \
              "Job {} is processing rows\n".format(JOBNAME) + \
              "Masking job {} finished.\n".format(JOBNAME) + \
              "101 rows masked\n\n\n\n"
@@ -173,7 +191,7 @@ def test_job_report_single(capsys):
     )
 
     output = "\n#Engine name,Environment name,Job name,Job Id,Min Memory,Max Memory,Streams,On The Fly,Ruleset Type,ExecId,Total Rows,Masked Rows,Started,Completed,Status,Runtime\n" + \
-             "test_eng,env1,{},1024,1024,1,False,Database,101,101,SUCCEEDED\n\n".format(JOBNAME)
+             "test_eng,env1,{},1024,1024,1,False,Database,101,101,WARNING\n\n".format(JOBNAME)
 
     captured = capsys.readouterr()
 
@@ -207,7 +225,7 @@ def test_job_report_details_single(capsys):
     )
 
     output = "\n#Engine name,Environment name,Job name,ExecId,Meta name,Masked Rows,Started,Completed,Status,Runtime\n" + \
-             "test_eng,env1,{},EMPLOYEES,101,SUCCEEDED\n\n".format(JOBNAME)
+             "test_eng,env1,{},EMPLOYEES,101,WARNING\n\n".format(JOBNAME)
 
     captured = capsys.readouterr()
 
@@ -225,6 +243,44 @@ def test_job_report_details_single(capsys):
     assert (rc, "\n".join(output_from_command)) == (0, output)
 
 
+def test_job_report_error_details_single(capsys):
+
+    rc = jobs_worker.jobs_report(
+        p_engine="test_eng",
+        p_username=None,
+        p_format="csv",
+        envname=ENVNAME,
+        jobname=JOBNAME,
+        last=False,
+        startdate=None,
+        enddate=None,
+        details=False,
+        error_details=True
+    )
+
+    output = "\n#Engine name,Environment name,Job name,Job Id,ExecId,Ruleset name,Meta name,Masked Rows,Started,Status,Algorithm name,Column name,Event type,Severity,Cause,Count,Exception type,Exception details\n" + \
+             "test_eng,env1,{},rs_test_1,EMPLOYEES,101,WARNING,dlpx-core:CM Digits,FIRST_NAME,UNMASKED_DATA,WARNING,PATTERN_MATCH_FAILURE,100,NonConformantDataException\n".format(JOBNAME) + \
+             "test_eng,env1,{},rs_test_1,EMPLOYEES,101,WARNING,dlpx-core:CM Digits,LAST_NAME,UNMASKED_DATA,WARNING,PATTERN_MATCH_FAILURE,100,NonConformantDataException\n\n".format(JOBNAME)
+
+    captured = capsys.readouterr()
+
+
+    output_from_command = []
+
+    for line in captured.out.splitlines():
+        if "test_eng" in line:
+            line_list = line.split(',')
+            output_from_command.append(",".join(line_list[0:3])+','+",".join(line_list[5:8])+','+",".join(line_list[9:17]))
+        else:
+            output_from_command.append(line.replace("\r",""))
+
+
+    assert (rc, "\n".join(output_from_command)) == (0, output)
+
+
+
+
+
 def test_column_set_unmasking(capsys):
     rc = column_worker.column_unsetmasking(
         p_engine="test_eng",
@@ -237,5 +293,19 @@ def test_column_set_unmasking(capsys):
 
     output = "Column FIRST_NAME updated\n" + \
         "Algorithm None domain None updated for ruleset rs_test_1 meta EMPLOYEES column FIRST_NAME\n"
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)
+
+    rc = column_worker.column_unsetmasking(
+        p_engine="test_eng",
+        p_username=None,
+        rulesetname=RULESETNAME,
+        envname=None,
+        metaname=METANAME3,
+        columnname=COLUMNNAME2
+    )
+
+    output = "Column LAST_NAME updated\n" + \
+        "Algorithm None domain None updated for ruleset rs_test_1 meta EMPLOYEES column LAST_NAME\n"
     captured = capsys.readouterr()
     assert (rc, captured.out.replace('\r','')) == (0, output)

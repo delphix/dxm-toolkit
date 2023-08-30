@@ -115,7 +115,7 @@ from dxm.lib.DxLogging import print_message
 
 from dxm.lib.DxEngine.DxConfig import DxConfig
 
-__version__ = "0.9.5.0"
+__version__ = "0.9.6"
 
 class dxm_state(object):
 
@@ -1182,11 +1182,12 @@ def list(dxm_state, jobname, envname):
 @click.option('--envname', help='Filter jobs belongs to one environment')
 @click.option('--last', help='Display only last execution', is_flag=True)
 @click.option('--details', help='Display execution details', is_flag=True, default=False)
+@click.option('--error_details', help='Display details of jobs warnings and errors', is_flag=True, default=False)
 @click.option('--startdate', help='Display jobs started after startdate', type=click.DateTime())
 @click.option('--enddate', help='Display jobs finished before enddate', type=click.DateTime())
 @common_options
 @pass_state
-def report(dxm_state, jobname, envname, last, startdate, enddate, details):
+def report(dxm_state, jobname, envname, last, startdate, enddate, details, error_details):
     """
     Display report of jobs defined in Masking Engine
 
@@ -1197,7 +1198,7 @@ def report(dxm_state, jobname, envname, last, startdate, enddate, details):
     """
     DxConfig(dxm_state.configfile)
     exit(jobs_report(dxm_state.engine, dxm_state.engineuser, jobname, envname, dxm_state.format, 
-                     last, startdate, enddate, details))
+                     last, startdate, enddate, details, error_details))
 
 @job.command()
 @click.option(
@@ -1410,8 +1411,6 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     except FileNotFoundError:
         print_error("File {} not found".format(prescript))
         DxConfig(dxm_state.configfile)
-    exit(1)
-
 
     params = {
         "rulesetname": rulesetname,
@@ -1932,7 +1931,7 @@ def list(dxm_state, profilename):
     """
     DxConfig(dxm_state.configfile)
     exit(profile_list(
-            dxm_state.engine, profilename, None, dxm_state.format, None))
+            dxm_state.engine, dxm_state.engineuser, profilename, None, dxm_state.format, None))
 
 
 @profileset.command()

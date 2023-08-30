@@ -28,6 +28,8 @@ from dxm.lib.DxTools.DxTools import paginator
 from dxm.lib.masking_api.api.profile_job_api import ProfileJobApi
 from dxm.lib.masking_api.api.execution_api import ExecutionApi
 from dxm.lib.masking_api.rest import ApiException
+from dxm.lib.DxRuleset.DxRulesetList import DxRulesetList
+from dxm.lib.DxConnector.DxConnectorsList import DxConnectorsList
 
 class DxProfileJobsList(object):
 
@@ -107,7 +109,7 @@ class DxProfileJobsList(object):
                         execution_list = None
 
                     job = DxProfileJob(self.__engine, execution_list)
-                    job.from_job(c)
+                    job.load_obj(c)
                     self.__jobsList[c.profile_job_id] = job
             else:
                 if environment_name is None:
@@ -198,10 +200,10 @@ class DxProfileJobsList(object):
         return None if OK
         """
 
-        if (job.add() is None):
+        if (job.add() == 0):
             self.__logger.debug("Adding job %s to list" % job)
             self.__jobsList[job.profile_job_id] = job
-            return None
+            return 0
         else:
             return 1
 
@@ -215,10 +217,90 @@ class DxProfileJobsList(object):
 
         job = self.get_by_ref(profile_job_id)
         if job is not None:
-            if job.delete() is None:
-                return None
-            else:
-                return 1
+            return job.delete()
         else:
             print_error("Job with id %s not found" % profile_job_id)
             return 1
+
+
+    @classmethod
+    def set_report_headers(self, details):
+        data_header = [
+                ("Engine name", 30),
+                ("Environment name", 30),
+                ("Job name", 30),  
+                ("Ruleset Type", 12),
+                ("ExecId", 6),                 
+                ("Started", 20),                                                              
+                ("Completed", 20),
+                ("Status", 20),
+                ("Runtime", 20)                  
+                ]
+        return data_header
+    
+
+    @classmethod
+    def set_report_output(self, output, engine_name, jobobj, jobexec, details):
+
+        rulesetlist = DxRulesetList
+        connectorlist = DxConnectorsList
+        envlist = DxEnvironmentList
+
+        rulesetobj = rulesetlist.get_by_ref(jobobj.ruleset_id)
+        # those test are requierd for 5.X engies where API is not showing all types of connectors
+        if rulesetobj is not None:
+            ruleset_type = rulesetobj.type
+            rulename = rulesetobj.ruleset_name
+            connectorobj = connectorlist.get_by_ref(rulesetobj.connectorId)
+            if connectorobj is not None:
+                connectorname = connectorobj.connector_name
+                envobj = envlist.get_by_ref(connectorobj.environment_id)
+                if envobj is not None:
+                    envobjname = envobj.environment_name
+                else:
+                    envobjname = "N/A"   
+            else:
+                connectorname = "N/A"
+                envobjname = "N/A"
+        else:
+            rulename = "N/A"
+            connectorname = "N/A"
+            envobjname = "N/A"
+            ruleset_type = "N/A"
+
+        if jobexec is not None:
+            status = jobexec.status
+            execid = jobexec.execution_id
+            if jobexec.start_time is not None:
+                starttime = jobexec.start_time.strftime("%Y-%m-%d %H:%M:%S")
+            else:
+                starttime = 'N/A'
+            if (jobexec.end_time is not None) and \
+            (jobexec.start_time is not None):
+                endtime = jobexec.end_time \
+                    .strftime("%Y-%m-%d %H:%M:%S")
+                runtimetemp = jobexec.end_time \
+                    - jobexec.start_time
+                runtime = str(runtimetemp)
+            else:
+                endtime = 'N/A'
+                runtime = 'N/A'
+        else:
+            status = 'N/A'
+            endtime = 'N/A'
+            starttime = 'N/A'
+            runtime = 'N/A'
+            execid = 'N/A'
+
+
+        output.data_insert(
+                        engine_name,
+                        envobjname,
+                        jobobj.job_name,
+                        ruleset_type,
+                        execid,
+                        starttime,
+                        endtime,
+                        status,
+                        runtime
+                        )

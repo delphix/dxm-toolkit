@@ -30,45 +30,12 @@ from dxm.lib.masking_api.api.execution_api import ExecutionApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
 from dxm.lib.DxJobs.DxExecution import DxExecution
+from dxm.lib.masking_api.api.execution_component_api import ExecutionComponentApi
+from dxm.lib.DxTools.DxTools import paginator
+from dxm.lib.DxJobs.DxExecutionComponent import DxExecutionComponent
+from dxm.lib.DxJobs.ProfileJob_mixin import ProfileJob_mixin
 
-class DxProfileJob(object):
-
-    swagger_types = {
-        'profile_job_id': 'int',
-        'job_name': 'str',
-        'profile_set_id': 'int',
-        'ruleset_id': 'int',
-        'ruleset_type': 'str',
-        'created_by': 'str',
-        'created_time': 'datetime',
-        'email': 'str',
-        'feedback_size': 'int',
-        'job_description': 'str',
-        'max_memory': 'int',
-        'min_memory': 'int',
-        'multi_tenant': 'bool',
-        'num_input_streams': 'int',
-        'multiple_profiler_check': 'bool'
-    }
-
-    swagger_map = {
-        'profile_job_id': 'profileJobId',
-        'job_name': 'jobName',
-        'profile_set_id': 'profileSetId',
-        'ruleset_id': 'rulesetId',
-        'ruleset_type': 'rulesetType',
-        'created_by': 'createdBy',
-        'created_time': 'createdTime',
-        'email': 'email',
-        'feedback_size': 'feedbackSize',
-        'job_description': 'jobDescription',
-        'max_memory': 'maxMemory',
-        'min_memory': 'minMemory',
-        'multi_tenant': 'multiTenant',
-        'num_input_streams': 'numInputStreams',
-        'multiple_profiler_check': 'multipleProfilerCheck'
-    }
-
+class DxProfileJob(ProfileJob_mixin):
 
     def __init__(self, engine, execList):
         """
@@ -84,18 +51,20 @@ class DxProfileJob(object):
         self.__monitor = False
 
         self.__execList = []
+        self.__eventList = None
 
         if execList is not None:
             for exe in execList:
                 newexe = DxExecution(exe.job_id)
-                newexe.from_exec(exe)
+                newexe.load_object(exe)
                 self.__execList.append(newexe)
 
 
         self.__api = ProfileJobApi
         self.__apiexec = ExecutionApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self.__apicomponent = ExecutionComponentApi
+        self._obj = None
 
     @property
     def monitor(self):
@@ -116,158 +85,9 @@ class DxProfileJob(object):
     def execList(self):
         return self.__execList
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
 
-    @property
-    def job_name(self):
-        if self.obj is not None:
-            return self.obj.job_name
-        else:
-            return None
-
-    @job_name.setter
-    def job_name(self, job_name):
-        if self.__obj is not None:
-            self.__obj.job_name = job_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def ruleset_id(self):
-        if self.obj is not None:
-            return self.obj.ruleset_id
-        else:
-            return None
-
-    @ruleset_id.setter
-    def ruleset_id(self, ruleset_id):
-        if self.__obj is not None:
-            self.__obj.ruleset_id = ruleset_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def profile_job_id(self):
-        if self.obj is not None:
-            return self.obj.profile_job_id
-        else:
-            return None
-
-    @profile_job_id.setter
-    def profile_job_id(self, profile_job_id):
-        if self.__obj is not None:
-            self.__obj.profile_job_id = profile_job_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def profile_set_id(self):
-        if self.obj is not None:
-            return self.obj.profile_set_id
-        else:
-            return None
-
-    @profile_set_id.setter
-    def profile_set_id(self, profile_set_id):
-        if self.__obj is not None:
-            self.__obj.profile_set_id = profile_set_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def email(self):
-        if self.obj is not None:
-            return self.obj.email
-        else:
-            return None
-
-    @email.setter
-    def email(self, email):
-        if self.__obj is not None:
-            self.__obj.email = email
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def max_memory(self):
-        if self.obj is not None:
-            return self.obj.max_memory
-        else:
-            return None
-
-    @max_memory.setter
-    def max_memory(self, max_memory):
-        if self.__obj is not None:
-            self.__obj.max_memory = max_memory
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def min_memory(self):
-        if self.obj is not None:
-            return self.obj.min_memory
-        else:
-            return None
-
-    @min_memory.setter
-    def min_memory(self, min_memory):
-        if self.__obj is not None:
-            self.__obj.min_memory = min_memory
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def num_input_streams(self):
-        if self.obj is not None:
-            return self.obj.num_input_streams
-        else:
-            return None
-
-    @num_input_streams.setter
-    def num_input_streams(self, num_input_streams):
-        if self.__obj is not None:
-            self.__obj.num_input_streams = num_input_streams
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def multi_tenant(self):
-        if self.obj is not None:
-            return self.obj.multi_tenant
-        else:
-            return None
-
-    @multi_tenant.setter
-    def multi_tenant(self, multi_tenant):
-        if self.__obj is not None:
-            self.__obj.multi_tenant = multi_tenant
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-
-    @property
-    def feedback_size(self):
-        if self.obj is not None:
-            return self.obj.feedback_size
-        else:
-            return None
-
-    @feedback_size.setter
-    def feedback_size(self, feedback_size):
-        if self.__obj is not None:
-            self.__obj.feedback_size = feedback_size
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    def from_job(self, job):
-        self.__obj = job
+    def load_obj(self, job):
+        self._obj = job
 
     def create_job(self, job_name, ruleset_id, profile_set_id) :
         """
@@ -277,7 +97,7 @@ class DxProfileJob(object):
         :param environment_id
         """  
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.job_name = job_name
         self.obj.ruleset_id = ruleset_id
         self.obj.profile_set_id = profile_set_id
@@ -304,7 +124,7 @@ class DxProfileJob(object):
             api_instance = self.__api(self.__engine.api_client)
             response = api_instance.create_profile_job(
                         self.obj, _request_timeout=self.__engine.get_timeout())
-            self.from_job(response)
+            self.load_obj(response)
 
             self.__logger.debug("profile job response %s"
                                 % str(response))
@@ -350,7 +170,7 @@ class DxProfileJob(object):
                                 % str(self))
             response = api_instance.update_profile_job(
                 self.profile_job_id,
-                self.obj,
+                self,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("Profile job response %s"
                                 % str(response))
@@ -481,5 +301,53 @@ class DxProfileJob(object):
         exec_api = self.__apiexec(self.__engine.api_client)
         exec_obj = exec_api.get_execution_by_id(exec_id)
         exec = DxExecution(exec_obj.job_id)
-        exec.from_exec(exec_obj)
+        exec.load_object(exec_obj)
         return exec
+    
+    def list_execution_component(self, execid):
+        """
+        List an execution detalis ( tables, rows, etc)
+        :param1 execid: execution id to display
+        return a None if non error
+        return 1 in case of error
+        """
+
+        if (execid is None):
+            print_error("Execution id is required")
+            self.__logger.error("Execution id is required")
+            return 1
+
+        try:
+
+            execcomp = []
+
+            self.__logger.debug("execute component")
+            api_instance = self.__apicomponent(self.__engine.api_client)
+            execomponents = paginator(
+                            api_instance,
+                            "get_all_execution_components",
+                            execution_id=execid,
+                            _request_timeout=self.__engine.get_timeout())
+
+            if execomponents.response_list is not None:
+                for exe in execomponents.response_list:
+                    newexecomp = DxExecutionComponent()
+                    newexecomp.load_object(exe)
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList and \
+                       ('UNMASKED_DATA', newexecomp.execution_component_id) in map(lambda x: (x.event_type, x.execution_component_id), self.__eventList[newexecomp.execution_id]):
+                        newexecomp.status = 'WARNING'
+
+                    if self.__eventList is not None and newexecomp.execution_id in self.__eventList:
+                        event = [ x for x in self.__eventList[newexecomp.execution_id] if x.execution_component_id == newexecomp.execution_component_id ]
+                    else:
+                        event = list()
+                    execcomp.append((newexecomp, event))
+
+
+            return execcomp
+
+
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return None
