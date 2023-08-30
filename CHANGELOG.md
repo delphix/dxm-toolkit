@@ -1,3 +1,23 @@
+## Version 0.9.6
+Tested with engines 6.0.15 and above
+
+### Added:
+- dxmc job report --error_details to print detailed information about job failurs or warnings
+
+### Changed:
+- masking jobs with non-conforming data are now displayed with WARNING status
+- Fix for advenced JDBC config for MS SQL connector
+- Various bugs
+
+## Version 0.9.5
+Tested with engines 6.0.12 and above
+
+### Added:
+- timeout is now configurable in the engine menu
+
+### Changed:
+ - Various bugs
+
 ## Version 0.9.1
 
 Support for many engine versions added. Since version 0.9.1 dxm-toolkit should support all versions
