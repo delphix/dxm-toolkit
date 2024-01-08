@@ -107,7 +107,7 @@ type_file_mapping = {
     # ,'FreeTextRedactionExtension'
     # ,'Installation'
     # ,'IntegerIdentifier'
-    # ,'JdbcDriver'
+    ,'JdbcDriver' : 'DxJDBC/jdbcdriver_mixin.py'
     # ,'JdbcDriversList'
     # ,'KeyIdentifier'
     # ,'KnowledgeBaseInfo'
