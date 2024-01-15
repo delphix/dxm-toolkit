@@ -20,6 +20,7 @@ import click
 from sys import exit
 from dxm.lib.DxApplication.app_worker import application_list
 from dxm.lib.DxApplication.app_worker import application_add
+from dxm.lib.DxApplication.app_worker import application_delete
 from dxm.lib.DxEnvironment.env_worker import environment_list
 from dxm.lib.DxEnvironment.env_worker import environment_add
 from dxm.lib.DxEnvironment.env_worker import environment_delete
@@ -569,6 +570,21 @@ def add(dxm_state, appname):
     """
     DxConfig(dxm_state.configfile)
     exit(application_add(dxm_state.engine, dxm_state.engineuser, appname))
+
+
+@application.command()
+@click.option(
+    '--appname', required=True, help='Application name to delete')
+@common_options
+@pass_state
+def delete(dxm_state, appname):
+    """
+    Delete command will delete application to Masking Engine.
+    Option --appname is required. Exit code will be set to 0
+    if application was added and to non-zero value if there was an error
+    """
+    DxConfig(dxm_state.configfile)
+    exit(application_delete(dxm_state.engine, dxm_state.engineuser, appname))
 
 
 @environment.command()
@@ -2495,7 +2511,7 @@ def add(dxm_state, username, firstname, lastname, email, password, user_type,
                   password, user_type, user_environments, user_role))
 
 @user.command()
-@click.option('--username', help="Filter users using a name")
+@click.option('--username', help="Filter users using a name", required=True)
 @click.option('--force', is_flag=True, help="Force user deletion for admin users")
 @common_options
 @pass_state
