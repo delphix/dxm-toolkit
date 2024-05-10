@@ -79,7 +79,7 @@ def columns_copy(engine_obj, meta_id, new_meta_id):
     return ret
 
 def column_setmasking(p_engine, p_username,  rulesetname, envname, metaname, columnname,
-                      algname, domainname, dateformat, idmethod):
+                      algname, domainname, dateformat, idmethod, groupno, field):
     """
     Set masking for column
     :param1 p_engine: masking engine
@@ -91,12 +91,31 @@ def column_setmasking(p_engine, p_username,  rulesetname, envname, metaname, col
     :param7 domainname: domain name
     :param8 dateformat: date format for date algorithms
     :param8 idmethod: can column be overwritten by profiler
+    :param9 groupno: algorithm group
+    :param10 field: logical field
     """
+
+
+    lineobj = namedtuple("linetype", "algname domain_name is_masked_YN dateformat idmethod" + \
+                                     "notes fieldid groupid")
+    
+    lineobj.is_masked_YN = 'Y'
+    lineobj.algname = algname
+    lineobj.domain_name = domainname
+    lineobj.dateformat = dateformat
+    lineobj.fieldid = field
+    lineobj.groupid = groupno
+
+    if idmethod is not None:
+        if idmethod == 'Y':
+            lineobj.idmethod = "Auto"
+        else:
+            lineobj.idmethod = "User"
+
 
     return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, algname, True, domainname,
-                         'update_algorithm', dateformat=dateformat,
-                         idmethod=idmethod)
+                         'update_algorithm', lineobj=lineobj)
 
 
 def column_unsetmasking(p_engine, p_username,  rulesetname, envname, metaname, columnname):
@@ -111,9 +130,15 @@ def column_unsetmasking(p_engine, p_username,  rulesetname, envname, metaname, c
     :param7 domainname: domain name
     """
 
+    lineobj = namedtuple("linetype", "algname domain_name is_masked_YN dateformat idmethod" + \
+                                     "notes fieldid groupid")
+    
+    lineobj.is_masked_YN = 'N'
+
+
     return column_worker(p_engine, p_username,  None, rulesetname, envname, metaname,
                          columnname, None, None, None, False, None,
-                         'update_algorithm')
+                         'update_algorithm',lineobj=lineobj)
 
 
 def column_replace(p_engine, p_username,  rulesetname, envname, metaname, columnname,
@@ -332,20 +357,35 @@ def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, c
                         ("Column Name", 32),
                         ("Data Type", 32),
                         ("Domain", 32),
-                        ("Algorithm", 32),
+                        ("Algorithm", 32)
+        ]
+
+        if engine_obj.version_ge("10.0.0.0"):
+            data_header = data_header + [("Document Store Type", 10),
+                                         ("File Format", 10)]    
+        data_header = data_header + \
+                      [
                         ("Is Masked", 32),
                         ("ID Method", 32),
                         ("Row Type", 32),
-                        ("Date Format", 32)
+                        ("Date Format", 32),
+                        ("Notes",30)
                       ]
         worker = "do_save_database"
 
-        if inventory is True:
-            data_header = data_header + [("Notes",30)]
+
+        print ( " a kuku ")
+        print (engine_obj.get_version())
+        print (engine_obj.version_ge("10.0.0.0"))
 
         if engine_obj.version_ge("6.0.8"):
             data_header = data_header + [("Multi-Column Logical Field", 10),
                                          ("Group Number", 10)]      
+
+
+        if inventory is True and engine_obj.version_ge("10.0.0.0"):
+            data_header = data_header + [("SQL Type Code", 10)]
+
 
     else:
         data = DataFormatter()
@@ -362,6 +402,11 @@ def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, c
                         ("Date Format", 32)
                       ]
         worker = "do_save_file"
+
+        print ( " a kuku 2")
+        print (engine_obj.get_version())
+        print (engine_obj.version_ge("10.0.0.0"))
+
 
         if inventory is True:
             data_header = data_header + [("Notes",30)]
@@ -383,6 +428,10 @@ def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, c
         p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
         None, worker, data=data, inventory=inventory)
+
+    print(" moj ret ")
+    print(ret)
+    print(data_header)
 
     if ret == 0:
         output = data.data_output(False, sortby)
@@ -554,7 +603,7 @@ def do_save_database(**kwargs):
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
         print_domain = colobj.domain_name
-        print_ismasked = 'Y'
+        print_ismasked = 'true'
         if mapping is not None:
             # if algorithm is in mapping - change name if not - well leave a name 
             if colobj.algorithm_name in mapping:
@@ -562,9 +611,9 @@ def do_save_database(**kwargs):
             else:
                 print_algname = colobj.algorithm_name
     else:
-        print_algname = ''
-        print_domain = ''
-        print_ismasked = 'N'
+        print_algname = '-'
+        print_domain = '-'
+        print_ismasked = 'false'
 
     if colobj.is_profiler_writable:
         print_idmethod = 'Auto'
@@ -592,7 +641,47 @@ def do_save_database(**kwargs):
             field = '-'
             group = '-'
 
-        if engine_obj.version_ge("6.0.8"):
+        if colobj.notes is None:
+            print_notes = '-'
+        else:
+            print_notes = colobj.notes
+
+        if engine_obj.version_ge("10.0.0.0"):
+
+            if colobj.document_store_type is None:
+                print_document_store_type = '-'
+            else:
+                print_document_store_type = colobj.document_store_type
+
+            if colobj.file_format_id is None:
+                print_file_format_id = '-'
+            else:
+                print_file_format_id = colobj.file_format_id
+
+
+            data.data_insert(
+                            envobj.environment_name,
+                            ruleobj.ruleset_name,
+                            metaobj.meta_name,
+                            colobj.cf_meta_column_role,
+                            "-",
+                            colobj.cf_meta_name,
+                            colobj.cf_meta_type,
+                            print_domain,
+                            print_algname,
+                            print_document_store_type,
+                            print_file_format_id,
+                            print_ismasked,
+                            print_idmethod,
+                            "All Row",
+                            print_dateformat,
+                            print_notes,
+                            field,
+                            group,
+                            '-'
+                            )
+
+        elif engine_obj.version_ge("6.0.8"):
 
             data.data_insert(
                             envobj.environment_name,
@@ -608,7 +697,7 @@ def do_save_database(**kwargs):
                             print_idmethod,
                             "All Row",
                             print_dateformat,
-                            colobj.notes,
+                            print_notes,
                             field,
                             group
                             )
@@ -629,7 +718,47 @@ def do_save_database(**kwargs):
                             print_dateformat
                             )
     else:
-        if engine_obj.version_ge("6.0.8"):
+        if field == '':
+            field = '-'
+            group = '-'
+
+        if colobj.notes is None:
+            print_notes = '-'
+        else:
+            print_notes = colobj.notes
+
+        if engine_obj.version_ge("10.0.0.0"):
+
+            if colobj.document_store_type is None:
+                print_document_store_type = '-'
+            else:
+                print_document_store_type = colobj.document_store_type
+
+            if colobj.file_format_id is None:
+                print_file_format_id = '-'
+            else:
+                print_file_format_id = colobj.file_format_id
+
+
+            data.data_insert(
+                            metaobj.meta_name,
+                            colobj.cf_meta_column_role,
+                            "-",
+                            colobj.cf_meta_name,
+                            colobj.cf_meta_type,
+                            print_domain,
+                            print_algname,
+                            print_document_store_type,
+                            print_file_format_id,
+                            print_ismasked,
+                            print_idmethod,
+                            "All Row",
+                            print_dateformat,
+                            print_notes,
+                            field,
+                            group
+                            )
+        elif engine_obj.version_ge("6.0.8"):
             data.data_insert(
                             metaobj.meta_name,
                             colobj.cf_meta_column_role,
@@ -674,6 +803,8 @@ def do_save_file(**kwargs):
     inventory = kwargs.get('inventory')
     envobj = kwargs.get('envobj')
     ruleobj = kwargs.get('ruleobj')
+    alg_list = kwargs.get('alg_list')
+    engine_obj = kwargs.get('engine_obj')
 
     if inventory is True:
         mapping = algname_mapping_export()
@@ -683,35 +814,72 @@ def do_save_file(**kwargs):
     if colobj.is_masked:
         print_algname = colobj.algorithm_name
         print_domain = colobj.domain_name
-        print_ismasked = 'Y'
+        print_ismasked = 'true'
         if mapping is not None:
             print_algname = mapping[colobj.algorithm_name]
     else:
-        print_algname = ''
-        print_domain = ''
-        print_ismasked = 'N'
+        print_algname = '-'
+        print_domain = '-'
+        print_ismasked = 'false'
 
     if colobj.date_format is None:
         print_dateformat = '-'
     else:
         print_dateformat = colobj.date_format
 
+    if colobj.algorithm_group_no is not None:
+        algobj = alg_list.get_by_ref(colobj.algorithm_name)
+        group = colobj.algorithm_group_no
+        field = [ x.name for x in algobj.fields if x.field_id == colobj.algorithm_field_id ][0]
+
+    else:
+        field = ''
+        group = ''
+
+
+
 
     if inventory is True:
-        data.data_insert(
-                          envobj.environment_name,
-                          ruleobj.ruleset_name,
-                          metaobj.meta_name,
-                          colobj.cf_meta_name,
-                          print_domain,
-                          print_algname,
-                          print_ismasked,
-                          "-",
-                          "All Records",
-                          colobj.field_position_number,
-                          colobj.field_length,
-                          print_dateformat
-                        )
+        print("tu jestem")
+        if field == '':
+            field = '-'
+            group = '-'
+        
+
+        if engine_obj.version_ge("6.0.8"):
+            data.data_insert(
+                            envobj.environment_name,
+                            ruleobj.ruleset_name,
+                            metaobj.meta_name,
+                            colobj.cf_meta_name,
+                            print_domain,
+                            print_algname,
+                            print_ismasked,
+                            "-",
+                            "All Records",
+                            colobj.field_position_number,
+                            colobj.field_length,
+                            print_dateformat,
+                            colobj.notes,
+                            field,
+                            group
+                            )     
+        else:
+            data.data_insert(
+                            envobj.environment_name,
+                            ruleobj.ruleset_name,
+                            metaobj.meta_name,
+                            colobj.cf_meta_name,
+                            print_domain,
+                            print_algname,
+                            print_ismasked,
+                            "-",
+                            "All Records",
+                            colobj.field_position_number,
+                            colobj.field_length,
+                            print_dateformat
+                            )
+        print("tu jestem2")
     else:
         data.data_insert(
                           metaobj.meta_name,
@@ -862,32 +1030,100 @@ def update_algorithm(**kwargs):
     """
 
     colobj = kwargs.get('colobj')
-    algname = kwargs.get('algname')
-    domainname = kwargs.get('domainname')
+    lineobj = kwargs.get('lineobj')
+    alg_list = kwargs.get('alg_list')
     ruleobj = kwargs.get('ruleobj')
     metaobj = kwargs.get('metaobj')
-    is_masked = kwargs.get('is_masked')
-    dateformat = kwargs.get('dateformat')
-    idmethod = kwargs.get('idmethod')
+    mapping = kwargs.get('mapping')
+
+    logger = logging.getLogger()
+
+    if lineobj.is_masked_YN == 'Y' or lineobj.is_masked_YN.lower() == 'true':
+        is_masked = True
+    else:
+        is_masked = False
+        algname = "None"
+        domainname = "None"
+        colobj.algorithm_name = None
+        colobj.domain_name = None
 
     colobj.is_masked = is_masked
 
-    if dateformat is not None:
-        colobj.date_format = dateformat
 
-    if idmethod is not None:
-        if idmethod == 'Y':
-            colobj.is_profiler_writable = True
+    if is_masked:
+
+        if lineobj.domain_name == '' or lineobj.domain_name == '-':
+            domainname = None
         else:
-            colobj.is_profiler_writable = False
+            domainname = lineobj.domain_name 
 
-    if algname == 'None':
-        algname = None
-        domainname = None
-        colobj.is_masked = False
+        if lineobj.algname == '' or lineobj.algname == '-':
+            algname = None
+            domainname = None
+            colobj.is_masked = False
+        else:
+            algname = lineobj.algname
 
-    colobj.algorithm_name = algname
-    colobj.domain_name = domainname
+        if mapping is not None and algname != 'None' and algname in mapping:
+            logger.debug("changing a name of algorithm for inventory import: from {} to {}".format(algname, mapping[algname]))
+            algname = mapping[algname]
+
+        colobj.algorithm_name = algname
+        colobj.domain_name = domainname
+
+        if hasattr(lineobj, 'fieldid'):
+            if lineobj.fieldid == '' or lineobj.fieldid == '-' or lineobj.fieldid is None:
+                colobj.algorithm_field_id = None
+                colobj.algorithm_group_no = None
+            else:
+                fieldid = lineobj.fieldid 
+                algobj = alg_list.get_by_ref(lineobj.algname)
+                colobj.algorithm_field_id = [ x.field_id for x in algobj.fields if x.name == fieldid ][0]
+                colobj.algorithm_group_no = lineobj.groupid
+
+
+        if ruleobj.type == "Database":
+            if lineobj.idmethod == 'Auto':
+                colobj.is_profiler_writable = True
+            elif lineobj.idmethod == 'User':
+                colobj.is_profiler_writable = False
+            else:
+                print_error("Wrong id method")
+                return 1
+
+        if lineobj.dateformat == '-':
+            colobj.date_format = None
+        else:
+            colobj.date_format = lineobj.dateformat
+
+
+        if hasattr(lineobj, 'notes'):
+            if (lineobj.notes != '-'):
+                colobj.notes = lineobj.notes
+            else:
+                colobj.notes = None
+
+        if hasattr(lineobj, 'document_store_type'):
+            if (lineobj.document_store_type != '-'):
+                colobj.document_store_type = lineobj.document_store_type
+            else:
+                colobj.document_store_type = None
+
+        if hasattr(lineobj, 'file_format'):
+            if (lineobj.file_format != '-'):
+                colobj.file_format_id = lineobj.file_format
+            else:
+                colobj.file_format_id = None
+
+
+        if hasattr(lineobj, 'idmethod'):
+            if lineobj.idmethod is not None:
+                if lineobj.idmethod == 'Y':
+                    colobj.is_profiler_writable = True
+                else:
+                    colobj.is_profiler_writable = False
+
+
     if colobj.update():
         print_error("Problem with updating column for "
                     "ruleset %s meta %s column %s"
@@ -928,8 +1164,9 @@ def column_batch(p_engine, p_username,  rulesetname, envname, inputfile, invento
         mapping = None
 
 
-    database_list = "metaname column_role parent_column column_name \
-                     type domain_name algname is_masked_YN idmethod rowtype dateformat"
+    database_list_1 = "metaname column_role parent_column column_name \
+                     type domain_name algname"
+    database_list_2 = "is_masked_YN idmethod rowtype dateformat notes"
 
     file_list = "metaname column_name domain_name algname \
                  is_masked_YN priority recordtype position \
@@ -971,24 +1208,33 @@ def column_batch(p_engine, p_username,  rulesetname, envname, inputfile, invento
                 setversion = True
                 
                 if ruleobj.type == "Database":  
-                    collist = database_list
+                    collist = database_list_1
+                    if "Document Store Type" in line:
+                        collist = collist + " document_store_type file_format "
+
+                    collist = collist + database_list_2
                 else:
                     collist = file_list
+
 
                 if inventory is True:
                     collist = inventory_addition + " " + collist
 
                 if "Multi-Column" in line:
                     # we have a 6.0.8 or higher inventory 
-                    if inventory is True:
-                        collist = collist + " notes " + multicolumn_addition
-                    else:
-                        collist = collist + " " + multicolumn_addition
+                    collist = collist + " " + multicolumn_addition
+
+                if "SQL Type Code" in line:
+                    collist = collist + " sql_type_code"
 
                 linetype = namedtuple("linetype", collist)
 
             if line.startswith('#'):
                 continue
+
+            if "Table Name" in line or "File Name" in line:
+                continue
+
             try:
                 logger.debug("readling line %s" % line)
                 lineobj = linetype(*line.strip().split(','))
@@ -1031,65 +1277,13 @@ def column_batch(p_engine, p_username,  rulesetname, envname, inputfile, invento
 
             if colref:
                 colobj = metacolumn_list[metaref].get_by_ref(colref)
-                if lineobj.is_masked_YN == 'Y' or lineobj.is_masked_YN == 'true':
-                    is_masked = True
-                else:
-                    is_masked = False
-
-                if lineobj.algname == '' or lineobj.algname == '-':
-                    algname = 'None'
-                else:
-                    algname = lineobj.algname
-
-                if lineobj.domain_name == '' or lineobj.domain_name == '-':
-                    domain_name = 'None'
-                else:
-                    domain_name = lineobj.domain_name 
-
-
-                if hasattr(lineobj, 'fieldid'):
-                    if lineobj.fieldid == '' or lineobj.fieldid == '-':
-                        fieldid = None
-                    else:
-                        fieldid = lineobj.fieldid 
-                else:
-                    fieldid = None
-
-                if ruleobj.type == "Database":
-                    if lineobj.idmethod == 'Auto':
-                        colobj.is_profiler_writable = True
-                    elif lineobj.idmethod == 'User':
-                        colobj.is_profiler_writable = False
-                    else:
-                        print_error("Wrong id method")
-                        return 1
-
-                if lineobj.dateformat == '-':
-                    colobj.date_format = None
-                else:
-                    colobj.date_format = lineobj.dateformat
-
-                if fieldid is not None:
-                    algobj = alg_list.get_by_ref(lineobj.algname)
-                    field_id = [ x.field_id for x in algobj.fields if x.name == fieldid ][0]
-                    group_id = lineobj.groupid
-                else:
-                    field_id = None
-                    group_id = None
-
-
-                if mapping is not None and algname != 'None' and algname in mapping:
-                    logger.debug("changing a name of algorithm for inventory import: from {} to {}".format(algname, mapping[algname]))
-                    algname = mapping[algname]
 
                 ret = ret + update_algorithm(colobj=colobj,
-                                             algname=algname,
-                                             domainname=domain_name,
-                                             metaobj=metaobj,
+                                             lineobj=lineobj,
+                                             mapping=mapping,
+                                             alg_list=alg_list,
                                              ruleobj=ruleobj,
-                                             is_masked=is_masked,
-                                             algorithm_field_id=field_id,
-                                             algorithm_group_no=group_id)
+                                             metaobj=metaobj)
             else:
                 ret = ret + 1
                 continue

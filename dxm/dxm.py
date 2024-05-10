@@ -1660,12 +1660,19 @@ def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
     '--dateformat',
     help="Date format for DATE algorithms")
 @click.option(
+    '--groupno',
+    help="Algorithm group")
+@click.option(
+    '--field',
+    help="Logical field")
+@click.option(
     '--idmethod', type=click.Choice(['Y', 'N']),
-    help="Can a column be overwrite by profiler")
+    help="Can a column be overwrite by profiler",
+    default='Y')
 @common_options
 @pass_state
 def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
-               domainname, dateformat, idmethod):
+               domainname, dateformat, idmethod, groupno, field):
     """
     Setting a masking algorithm for defined column and flagging column as
     masked.
@@ -1673,7 +1680,7 @@ def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
     """
     DxConfig(dxm_state.configfile)
     exit(column_setmasking(dxm_state.engine, dxm_state.engineuser, rulesetname, envname,
-         metaname, columnname, algname, domainname, dateformat, idmethod))
+         metaname, columnname, algname, domainname, dateformat, idmethod, groupno, field))
 
 
 @column.command()
