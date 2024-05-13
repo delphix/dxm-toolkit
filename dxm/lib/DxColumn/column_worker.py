@@ -373,11 +373,6 @@ def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, c
                       ]
         worker = "do_save_database"
 
-
-        print ( " a kuku ")
-        print (engine_obj.get_version())
-        print (engine_obj.version_ge("10.0.0.0"))
-
         if engine_obj.version_ge("6.0.8"):
             data_header = data_header + [("Multi-Column Logical Field", 10),
                                          ("Group Number", 10)]      
@@ -403,11 +398,6 @@ def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, c
                       ]
         worker = "do_save_file"
 
-        print ( " a kuku 2")
-        print (engine_obj.get_version())
-        print (engine_obj.version_ge("10.0.0.0"))
-
-
         if inventory is True:
             data_header = data_header + [("Notes",30)]
 
@@ -428,10 +418,6 @@ def column_save(p_engine, p_username,  sortby, rulesetname, envname, metaname, c
         p_engine, p_username, sortby, rulesetname, envname, metaname, columnname,
         algname, is_masked, None, None,
         None, worker, data=data, inventory=inventory)
-
-    print(" moj ret ")
-    print(ret)
-    print(data_header)
 
     if ret == 0:
         output = data.data_output(False, sortby)
