@@ -106,6 +106,34 @@ def test_connector_list(capsys):
     assert (rc, captured.out.replace('\r','')) == (0, output)
 
 
+def test_connector_update(capsys):
+
+    params = {
+        'username'      : 'HR',
+        'password'      : 'hr',
+        'connname'      : CONNNAME,
+        'envname'       : ENVNAME,
+        'schemaName'    : None,
+        'jdbc'          : None,
+        'host'          : None,
+        'port'          : None,
+        'sid'           : None,
+        'instancename'  : None,
+        'databasename'  : None       
+    }
+
+
+    rc = conn_worker.connector_update(
+        p_engine="test_eng",
+        p_username=None,
+        params=params
+    )
+
+    output = "Connector {} updated\n".format(CONNNAME)
+    captured = capsys.readouterr()
+    assert (rc, captured.out.replace('\r','')) == (0, output)
+
+
 def test_connector_test(capsys):
     rc = conn_worker.connector_test(
         p_engine="test_eng",
