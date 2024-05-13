@@ -42,7 +42,7 @@ class DxConnector(DatabaseConnector_mixin):
         self.__logger.debug("creating DxConnector object")
         self.__api = DatabaseConnectorApi
         self.__apiexc = ApiException
-        self._obj = None
+        self.obj = None
 
         if existing_object is not None:
             self.load_object(existing_object)  
@@ -90,6 +90,8 @@ class DxConnector(DatabaseConnector_mixin):
         """
 
         self.obj = con
+        self.obj.swagger_types = self.swagger_types
+        self.obj.swagger_map = self.swagger_map
 
 
     def create_connector(self, connector_name, database_type, environment_id):
