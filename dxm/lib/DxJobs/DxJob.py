@@ -283,7 +283,7 @@ class DxJob(MaskingJob_mixin):
 
 
     def start(self, target_connector_id, source_connector_id, nowait, posno,
-              lock):
+              lock, ignore_warning):
         """
         Start masking job
         :param1 target_connector_id: target connector id for multinentant
@@ -324,7 +324,7 @@ class DxJob(MaskingJob_mixin):
                 print_message("Job {} started without monitoring".format(self.job_name))
                 return 0
             else:
-                return self.wait_for_job(response, posno, lock)
+                return self.wait_for_job(response, posno, lock, ignore_warning)
 
         except self.__apiexc as e:
             print_error(e.body)
@@ -349,10 +349,13 @@ class DxJob(MaskingJob_mixin):
                                 % dxm.lib.DxJobs.DxJobCounter.ret)
             return 1
 
-    def wait_for_job(self, execjob, posno, lock):
+    def wait_for_job(self, execjob, posno, lock, ignore_warning):
         """
         Wait for job to finish execution
         :param1 execjob: Execution job response
+        :param2 posno: position to display
+        :param3 lock: lock 
+        :param4 ignore_warning: treat warning as error or not 
         Return 0 finished OK
         Return 1 if errors
         """
@@ -369,6 +372,24 @@ class DxJob(MaskingJob_mixin):
         if not self.monitor:
             print_message('Waiting for job %s to start processing rows'
                           % self.job_name)
+            
+
+
+        if self.__engine.version_le('21.0.0.0'):
+            # non conf data always finish as SUCCEEDED
+            results_succesful = [ "SUCCEEDED" ]
+        else:
+
+            if ignore_warning.lower() == 'default':
+                if self.__engine.is_ignore_warning_set():
+                    ignore_warning = 'Y'
+                else:
+                    ignore_warning = 'N'
+
+            if ignore_warning.upper() == 'Y':
+                results_succesful = [ "SUCCEEDED", "WARNING" ]
+            else:
+                results_succesful = [ "SUCCEEDED" ]
 
         while execjob.status == 'RUNNING' or execjob.status == 'QUEUED':
             time.sleep(10)
@@ -397,7 +418,7 @@ class DxJob(MaskingJob_mixin):
                     bar.update(step)
                     last = execjob.rows_masked
 
-        if execjob.status == 'SUCCEEDED':
+        if execjob.status in results_succesful:
             if not self.monitor:
                 print_message('Masking job %s finished.' % self.job_name)
                 print_message('%s rows masked' % (execjob.rows_masked or 0))

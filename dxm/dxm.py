@@ -407,12 +407,14 @@ def jdbc(dxm_state):
     'If you want to hide input put '' as value and you will be propted')
 @click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
 @click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
+@click.option('--ignore_warning', help='Ignore warning for engines 22 and higher', type=click.Choice(['Y', 'N']), default='N')
 @logfile_option
 @debug_options
 @configfile_option
 @pass_state
 def add(dxm_state, engine, ip, port, protocol, username, password, default,
-        proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout):
+        proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout,
+        ignore_warning):
     """
     Add engine entry to configuration database
     """
@@ -422,7 +424,7 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
     DxConfig(dxm_state.configfile)
     exit(engine_add(engine, ip, username, password,
          protocol, port, default, proxyurl, proxyuser, proxypassword,
-         connection_timeout, api_timeout))
+         connection_timeout, api_timeout, ignore_warning))
 
 
 @engine.command()
@@ -455,11 +457,12 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
     'If you want to hide input put '' as value and you will be propted')
 @click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
 @click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
+@click.option('--ignore_warning', help='Ignore warning for engines 22 and higher', type=click.Choice(['Y', 'N']), default='N')
 @debug_options
 @configfile_option
 @pass_state
 def update(dxm_state, engine, ip, port, protocol, username, password, default,
-           proxyurl, proxyuser, proxypassword, engineuser, connection_timeout, api_timeout):
+           proxyurl, proxyuser, proxypassword, engineuser, connection_timeout, api_timeout, ignore_warning):
     """
     Update engine entry in configuration database
     """
@@ -471,7 +474,7 @@ def update(dxm_state, engine, ip, port, protocol, username, password, default,
                                 confirmation_prompt=True)
     DxConfig(dxm_state.configfile)
     exit(engine_update(engine, engineuser, ip, username, password,
-         protocol, port, default, proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout))
+         protocol, port, default, proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout, ignore_warning))
 
 
 @engine.command()
@@ -1470,10 +1473,11 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     default=1
 )
 @click.option('--monitor', is_flag=True, help="Display progress bars")
+@click.option('--ignore_warning', default='default', type=click.Choice(['Y', 'N', 'default']), help="For engines 22 or higher - treat warnings as succeeded jobs")
 @common_options
 @pass_state
 def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
-          nowait, parallel, monitor):
+          nowait, parallel, monitor, ignore_warning):
     """
     Start masking job. By default control is returned when job is finished.
     If --nowait flag is specified script doesn't monitor job and release
@@ -1481,7 +1485,7 @@ def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
     """
     DxConfig(dxm_state.configfile)
     exit(job_start(dxm_state.engine, dxm_state.engineuser, jobname, envname, tgt_connector,
-                   tgt_connector_env, nowait, parallel, monitor))
+                   tgt_connector_env, nowait, parallel, monitor, ignore_warning))
 
 
 @job.command()

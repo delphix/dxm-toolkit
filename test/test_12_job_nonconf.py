@@ -164,7 +164,8 @@ def test_start_job_single(capsys):
         tgt_connector_env = None,
         nowait = None,
         monitor= None,
-        parallel= 1
+        parallel= 1,
+        ignore_warning = 'default'
     )
 
 

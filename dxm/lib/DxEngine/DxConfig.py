@@ -120,6 +120,11 @@ class DxConfig(object):
                         self.__cursor.execute('alter table dxm_engine_info add connection_timeout integer')
                         self.__cursor.execute('alter table dxm_engine_info add api_timeout integer')
                         self.set_database_version(2)
+                    if self.get_database_version()==2:
+                        # we need to timeout info
+                        self.__logger.debug("Adding ignore warning to the table")
+                        self.__cursor.execute('alter table dxm_engine_info add ignore_warning char')
+                        self.set_database_version(3)
                 else:
                     self.__cursor.execute(sql_dxm_engine_info)
                     self.set_database_version(2)
@@ -131,7 +136,7 @@ class DxConfig(object):
 
     @classmethod
     def insert_engine_info(self, p_engine, p_ip, p_username, p_password, p_protocol, p_port,
-                           p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout):
+                           p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout, p_ignore_warning):
         """
         insert engine data into sqllite database
                      engine_name
@@ -143,7 +148,10 @@ class DxConfig(object):
                      default
                      proxy_url,
                      proxy_username,
-                     proxy_password
+                     proxy_password,
+                     connection_timeout, 
+                     api_timeout, 
+                     ignore_warning
         """
 
         password = self.encrypt_password(p_password)
@@ -154,7 +162,7 @@ class DxConfig(object):
             self.__logger.error("Some arguments are empty {}".format(mandatory_data))
             return -1
 
-        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_connection_timeout, p_api_timeout]
+        insert_data = [p_engine, p_ip, p_username, password, p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_connection_timeout, p_api_timeout, p_ignore_warning]
 
         if self.__conn:
             try:
@@ -165,7 +173,7 @@ class DxConfig(object):
                 sql = "INSERT INTO dxm_engine_info(engine_name," \
                       "ip_address, username, password, protocol," \
                       "port, defengine, proxy_url, proxy_user, " \
-                      "connection_timeout, api_timeout) VALUES (?,?,?,?,?,?,?,?,?,?,?)"
+                      "connection_timeout, api_timeout, ignore_warning) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)"
                 self.__cursor.execute(sql, insert_data)
                 if p_proxyuser:
                     self.set_proxy_password(p_proxyuser, p_proxypassword)
@@ -198,7 +206,7 @@ class DxConfig(object):
                 sql = "SELECT engine_name," \
                       "ip_address, username, password, protocol," \
                       "port, defengine, auth_id, proxy_url, proxy_user," \
-                      "connection_timeout, api_timeout from dxm_engine_info " \
+                      "connection_timeout, api_timeout, ignore_warning from dxm_engine_info " \
                       "where 1=1 "
 
                 data = []
@@ -322,7 +330,9 @@ class DxConfig(object):
                       proxyurl, 
                       proxyuser, 
                       proxypassword,
-                      connection_timeout, api_timeout):
+                      connection_timeout, 
+                      api_timeout,
+                      ignore_warning):
         """
         update an engine entry
         :param1 engine_name: engine name
@@ -424,6 +434,11 @@ class DxConfig(object):
                 if api_timeout:
                     sql = sql + ' api_timeout = ?, '
                     data.append(api_timeout)
+                    update = 1
+
+                if ignore_warning:
+                    sql = sql + ' ignore_warning = ?, '
+                    data.append(ignore_warning)
                     update = 1
 
                 if update:

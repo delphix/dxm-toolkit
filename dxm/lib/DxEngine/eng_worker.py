@@ -28,7 +28,7 @@ from dxm.lib.DxEngine.DxEngineFiles import DxEngineFiles
 
 def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
                p_default, p_proxyurl, p_proxyuser, p_proxypassword, 
-               p_connection_timeout, p_api_timeout):
+               p_connection_timeout, p_api_timeout, p_ignore_warning):
     """
     Add engine to a configuration
     param1: p_engine: name of Masking engine
@@ -41,6 +41,9 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     param8: p_proxyurl: Proxy URL
     param9: p_proxyuser: proxy username
     param10: p_proxypassword: proxy password
+    param11: p_connection_timeout: connection timeout
+    param12: p_api_timeout: call timeout
+    param13: p_ignore_warning: ignore warning in 22 and above 
 
     return None if OK or integer with error
     """
@@ -48,7 +51,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
     config.init_metadata()
     if config.insert_engine_info(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
                                  p_default, p_proxyurl, p_proxyuser, p_proxypassword,
-                                 p_connection_timeout, p_api_timeout):
+                                 p_connection_timeout, p_api_timeout, p_ignore_warning):
         print_error("Problem with adding engine to database")
         config.close()
         return -1
@@ -58,7 +61,7 @@ def engine_add(p_engine, p_ip, p_username, p_password, p_protocol, p_port,
         return 0
 
 def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protocol, p_port,
-                  p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout):
+                  p_default, p_proxyurl, p_proxyuser, p_proxypassword, p_connection_timeout, p_api_timeout, p_ignore_warning):
     """
     Update engine in configuration
     param1: p_engine: name of Masking engine
@@ -68,13 +71,19 @@ def engine_update(p_engine, p_engineuser, p_ip, p_username, p_password, p_protoc
     param5: p_protocol: protocol (http/https)
     param6: p_port: port
     param7: p_default: is engine default - Y/N - default value N
+    param8: p_proxyurl: Proxy URL
+    param9: p_proxyuser: proxy username
+    param10: p_proxypassword: proxy password
+    param11: p_connection_timeout: connection timeout
+    param12: p_api_timeout: call timeout
+    param13: p_ignore_warning: ignore warning in 22 and above 
     return None if OK or integer with error
     """
     config = DxConfig
     config.init_metadata()
     return config.update_engine(p_engine, p_engineuser, p_ip, p_username, p_password,
                          p_protocol, p_port, p_default, p_proxyurl, p_proxyuser, p_proxypassword,
-                         p_connection_timeout, p_api_timeout)
+                         p_connection_timeout, p_api_timeout, p_ignore_warning)
 
 def engine_logout(p_engine, p_engineuser):
     """
@@ -128,7 +137,8 @@ def engine_list(p_engine, p_username, p_format):
                     ("port", 5),
                     ("default", 7),
                     ("proxy URL", 30),
-                    ("proxy user", 30)
+                    ("proxy user", 30),
+                    ("ignore warning", 2)
                   ]
     data.create_header(data_header)
     data.format_type = p_format
@@ -151,7 +161,8 @@ def engine_list(p_engine, p_username, p_format):
                           row[5],
                           row[6],
                           row[8],
-                          row[9]
+                          row[9],
+                          row[12]
                         )
     print("")
     print (data.data_output(False))
