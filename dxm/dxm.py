@@ -115,7 +115,7 @@ from dxm.lib.DxLogging import print_message
 
 from dxm.lib.DxEngine.DxConfig import DxConfig
 
-__version__ = "0.9.6"
+__version__ = "0.9.7"
 
 class dxm_state(object):
 
