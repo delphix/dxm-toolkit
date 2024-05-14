@@ -89,7 +89,7 @@ jobs:
 
     - name: Install OpenSSL
       run: |
-        choco install openssl --no-progress
+        choco install openssl 
         echo "INCLUDE=C:\\Program Files\\OpenSSL-Win64\\include;%INCLUDE%" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
         echo "LIB=C:\\Program Files\\OpenSSL-Win64\\lib;%LIB%" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
         
