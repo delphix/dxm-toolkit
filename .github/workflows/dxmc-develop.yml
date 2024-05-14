@@ -155,12 +155,11 @@ jobs:
 
     - name: run python
       run: |
-          CELL=`brew --prefix perl`
-          OPENLIB=`brew --prefix openssl`
+          # OPENLIB=`brew --prefix openssl`
+          # CDIR=`pwd`
+          # export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
+          # echo $LIBS
           CDIR=`pwd`
-          export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
-          echo $LIBS
-          
           pip3 install --upgrade 'setuptools==65.5.0'
           pip3 install pyparsing==3.0.7
           pip3 install pyinstaller==5.13.0
