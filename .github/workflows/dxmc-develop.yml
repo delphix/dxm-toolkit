@@ -155,11 +155,14 @@ jobs:
 
     - name: run python
       run: |
-          # OPENLIB=`brew --prefix openssl`
-          # CDIR=`pwd`
-          # export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
-          # echo $LIBS
+          OPENLIB=`brew --prefix openssl`
           CDIR=`pwd`
+          export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
+          echo $LIBS
+
+          python3 -m venv /tmp/dxmc
+          source /tmp/dxmc/bin/activate
+
           pip3 install --upgrade 'setuptools==65.5.0'
           pip3 install pyparsing==3.0.7
           pip3 install pyinstaller==5.13.0
