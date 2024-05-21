@@ -826,7 +826,6 @@ def do_save_file(**kwargs):
 
 
     if inventory is True:
-        print("tu jestem")
         if field == '':
             field = '-'
             group = '-'
@@ -865,7 +864,6 @@ def do_save_file(**kwargs):
                             colobj.field_length,
                             print_dateformat
                             )
-        print("tu jestem2")
     else:
         data.data_insert(
                           metaobj.meta_name,
