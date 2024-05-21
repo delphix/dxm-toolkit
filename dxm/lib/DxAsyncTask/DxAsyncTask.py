@@ -73,7 +73,7 @@ class DxAsyncTask(object):
             return None
 
 
-    def from_asynctask(self, task):
+    def load_obj(self, task):
         """
         Set a obj property using a AsyncTask
         :param con: DatabaseConnector object

@@ -26,21 +26,10 @@ from dxm.lib.DxEngine.DxMaskingEngine import DxMaskingEngine
 from dxm.lib.masking_api.api.application_api import ApplicationApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxApplication.Application_mixin import Application_mixin
 
 
-
-class DxApplication(object):
-
-    swagger_types = {
-        'application_id': 'int',
-        'application_name': 'str'
-    }
-
-    swagger_map = {
-        'application_id': 'applicationId',
-        'application_name': 'applicationName'
-    }
-
+class DxApplication(Application_mixin):
 
     def __init__(self, engine):
         """
@@ -54,21 +43,7 @@ class DxApplication(object):
 
         self.__api = ApplicationApi
         self.__apiexc = ApiException
-        self.__obj = None
-
-    @property
-    def application_name(self):
-        if self.__obj is not None:
-            return self.__obj.application_name
-        else:
-            return None
-
-    @application_name.setter
-    def application_name(self, application_name):
-        if self.__obj is not None:
-            self.__obj.application_name = application_name
-        else:
-            raise ValueError("Object needs to be initialized first")
+        self._obj = None
 
 
     def create_application(self, application_name):
@@ -76,18 +51,18 @@ class DxApplication(object):
         Copy properties from application object into DxApplication
         :param app: Application object
         """  
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.application_name = application_name
 
 
-    def from_obj(self, obj):
+    def load_obj(self, obj):
         """
-        Assign a SDK object to __obj
+        Assign a SDK object to _obj
         :param app: Application object
         """
-        self.__obj = obj
-        self.__obj.swagger_types = self.swagger_types
-        self.__obj.swagger_map = self.swagger_map
+        self._obj = obj
+        self._obj.swagger_types = self.swagger_types
+        self._obj.swagger_map = self.swagger_map
 
     def add(self):
         """
@@ -106,12 +81,37 @@ class DxApplication(object):
         try:
             self.__logger.debug("create application input %s" % str(self))
             response = api_instance.create_application(
-                self.__obj,
+                self._obj,
                 _request_timeout=self.__engine.get_timeout())
             self.__logger.debug("create application response %s"
                                 % str(response))
 
             print_message("Application %s added" % self.application_name)
+        except self.__apiexc as e:
+            print_error(e.body)
+            self.__logger.error(e)
+            return 1
+
+
+    def delete(self):
+        """
+        Delete application
+        return a 0 if non error
+        return 1 in case of error
+        """
+
+        api_instance = self.__api(self.__engine.api_client)
+
+        try:
+            self.__logger.debug("delete application name %s"
+                                % self.obj.application_name)
+            response = api_instance.delete_application(
+                self.obj.application_id,
+                _request_timeout=self.__engine.get_timeout()
+            )
+            self.__logger.debug("delete application name response %s"
+                                % str(response))
+            print_message("Application %s deleted" % self.obj.application_name)
         except self.__apiexc as e:
             print_error(e.body)
             self.__logger.error(e)

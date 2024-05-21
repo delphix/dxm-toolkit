@@ -23,22 +23,10 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.domain_api import DomainApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
+from dxm.lib.DxDomain.Domain_mixin import Domain_mixin
 
-class DxDomain(object):
+class DxDomain(Domain_mixin):
 
-    swagger_types = {
-        'domain_name': 'str',
-        'created_by': 'str',
-        'default_algorithm_code': 'str',
-        'default_tokenization_code': 'str'
-    }
-
-    swagger_map = {
-        'domain_name': 'domainName',
-        'created_by': 'createdBy',
-        'default_algorithm_code': 'defaultAlgorithmCode',
-        'default_tokenization_code': 'defaultTokenizationCode'
-    }
 
     def __init__(self, engine):
         """
@@ -54,65 +42,23 @@ class DxDomain(object):
 
         self.__api = DomainApi
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
 
-    def from_domain(self, dom):
+    def load_obj(self, dom):
         """
         Set obj properties with a Domain object
         :param column: Domain object
         """
-        self.__obj = dom
-        self.__obj.swagger_map = self.swagger_map
-        self.__obj.swagger_types = self.swagger_types
+        self._obj = dom
+        self._obj.swagger_map = self.swagger_map
+        self._obj.swagger_types = self.swagger_types
 
 
-
-
-    @property
-    def domain_name(self):
-        if self.obj is not None:
-            return self.obj.domain_name
-        else:
-            return None
-
-    @property
-    def classification(self):
-        if self.obj is not None:
-            return self.obj.classification
-        else:
-            return None
-
-    @property
-    def default_algorithm_code(self):
-        if self.obj is not None:
-            return self.obj.default_algorithm_code
-        else:
-            return None
-
-    @default_algorithm_code.setter
-    def default_algorithm_code(self, default_algorithm_code):
-        if self.__obj is not None:
-            self.__obj.default_algorithm_code = default_algorithm_code
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def default_tokenization_code(self):
-        if self.obj is not None:
-            return self.obj.default_tokenization_code
-        else:
-            return None
 
 
     def create_domain(self, domain_name, domain_classification, default_algorithm_code):
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.domain_name = domain_name
         self.obj.domain_classification = domain_classification
         self.obj.default_algorithm_code = default_algorithm_code
@@ -144,7 +90,7 @@ class DxDomain(object):
                 self.obj,
                 _request_timeout=self.__engine.get_timeout()
             )
-            self.from_domain(response)
+            self.load_obj(response)
             self.__logger.debug("domain response %s"
                                 % str(response))
 

@@ -65,6 +65,8 @@ def user_delete(p_engine, p_username,  username, force):
             print_error("User %s not found" % username)
             logger.debug("User %s not found" % username)
 
+    return ret
+
 def user_update(p_engine, p_username,  username, firstname, lastname, email, password,
              user_type, user_environments, user_role):
     """
@@ -162,6 +164,45 @@ def user_update(p_engine, p_username,  username, firstname, lastname, email, pas
                 ret = ret + 1
                 return ret
 
+
+        envreflist = []
+
+        if user_environments is not None:
+            update = 1
+            envlist = DxEnvironmentList()
+            if user_environments != "":
+                envnamelist = user_environments.split(',')
+                for envname in envnamelist:
+                    envref = envlist.get_environmentId_by_name(envname)
+                    if envref is None:
+                        ret = ret + 1
+                        return 1
+                    else:
+                        envreflist.append(envref)
+
+            if userobj.non_admin_properties is None:
+                current_role_id = None
+            else:
+                current_role_id = userobj.non_admin_properties.role_id
+
+
+            nap = DxUserNonAdmin(role_id=current_role_id, environment_ids=envreflist)
+            userobj.non_admin_properties = nap
+
+        if user_role is not None:
+            update = 1
+            rolelist = DxRoleList()
+            roleref = rolelist.get_roleId_by_name(user_role)
+            if roleref is None:
+                print_error("Role name %s not found" % user_role)
+                logger.debug("Role name %s not found" % user_role)
+                ret = ret + 1
+                continue
+
+            nap = DxUserNonAdmin(role_id=roleref, environment_ids=userobj.non_admin_properties.environment_ids)
+            userobj.non_admin_properties = nap
+
+
         if update == 1:
             ret = ret + userobj.update()
         else:
@@ -202,12 +243,6 @@ def user_add(p_engine, p_username,  username, firstname, lastname, email, passwo
         engine_obj = DxMaskingEngine(engine_tuple)
         if engine_obj.get_session():
             continue
-
-        if (engine_obj.version_ge('6.0.0')):
-            from masking_api_60.models.non_admin_properties import NonAdminProperties
-        else:
-            from masking_api_53.models.non_admin_properties import NonAdminProperties
-
 
         userobj = DxUser(engine_obj)
 

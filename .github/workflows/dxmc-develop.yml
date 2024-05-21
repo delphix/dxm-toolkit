@@ -155,6 +155,7 @@ jobs:
 
     - name: run python
       run: |
+          #CELL=`brew --prefix perl`
           OPENLIB=`brew --prefix openssl`
           CDIR=`pwd`
           export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"

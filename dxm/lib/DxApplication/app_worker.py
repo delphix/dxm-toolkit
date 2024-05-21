@@ -110,3 +110,32 @@ def application_list(p_engine, p_username,  format, appname):
     
     
     return ret
+
+
+def application_delete(p_engine, p_username,  appname):
+    """
+    Delete the domain from the Masking Engine
+    param1: p_engine: engine name from configuration
+    param2: domain_name: domain name
+    return 0 if added, non 0 for error
+    """
+
+    ret = 0
+
+    enginelist = get_list_of_engines(p_engine, p_username)
+
+    if enginelist is None:
+        return 1
+
+    for engine_tuple in enginelist:
+        engine_obj = DxMaskingEngine(engine_tuple)
+
+        if engine_obj.get_session():
+            continue
+
+        applist = DxApplicationList()
+        applist.LoadApplications()
+        if applist.delete(appname):
+            ret = ret + 1
+
+    return ret

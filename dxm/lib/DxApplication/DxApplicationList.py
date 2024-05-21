@@ -67,7 +67,7 @@ class DxApplicationList(object):
             if a.response_list:
                 for c in a.response_list:
                     application = DxApplication(self.__engine)
-                    application.from_obj(c)
+                    application.load_obj(c)
                     if self.__engine.version_ge("6.0.0.0") and c.application_id is not None:
                         self.__applicationList[c.application_id] = application
                     else:
@@ -103,9 +103,11 @@ class DxApplicationList(object):
         """
         return self.__applicationList.keys()
 
+    @classmethod
     def get_applicationId_by_name(self, name):
         return get_objref_by_val_and_attribute(name, self, 'application_name')
 
+    @classmethod
     def add(self, application):
         """
         Add an application to a list and Engine
@@ -118,4 +120,22 @@ class DxApplicationList(object):
             self.__applicationList[application.application_name] = application
             return None
         else:
+            return 1
+
+    @classmethod
+    def delete(self, application):
+        """
+        Delete the application from a list and Engine
+        :param application: Application name to delete
+        return 0 if OK
+        """
+
+        appobj = self.get_by_ref(self.get_applicationId_by_name(application)[0])
+        if appobj is not None:
+            if appobj.delete() is None:
+                return 0
+            else:
+                return 1
+        else:
+            print_error("Application name %s not found" % application)
             return 1

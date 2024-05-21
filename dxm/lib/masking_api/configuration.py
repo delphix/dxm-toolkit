@@ -98,6 +98,7 @@ class Configuration(object):
 
         # Disable client side validation
         self.client_side_validation = True
+        
 
     @classmethod
     def set_default(cls, default):

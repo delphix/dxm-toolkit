@@ -64,7 +64,7 @@ class DxProfileJob(ProfileJob_mixin):
         self.__apiexec = ExecutionApi
         self.__apiexc = ApiException
         self.__apicomponent = ExecutionComponentApi
-        self._obj = None
+        self.obj = None
 
     @property
     def monitor(self):
@@ -87,7 +87,9 @@ class DxProfileJob(ProfileJob_mixin):
 
 
     def load_obj(self, job):
-        self._obj = job
+        self.obj = job
+        self._obj.swagger_types = self.swagger_types
+        self._obj.swagger_map = self.swagger_map
 
     def create_job(self, job_name, ruleset_id, profile_set_id) :
         """
@@ -97,7 +99,7 @@ class DxProfileJob(ProfileJob_mixin):
         :param environment_id
         """  
 
-        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self.obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.obj.job_name = job_name
         self.obj.ruleset_id = ruleset_id
         self.obj.profile_set_id = profile_set_id
@@ -207,7 +209,7 @@ class DxProfileJob(ProfileJob_mixin):
 
 
     def start(self, target_connector_id, source_connector_id, nowait, posno,
-              lock):
+              lock, ignore_warning):
         """
         Start masking job
         :param1 target_connector_id: target connector id for multinentant

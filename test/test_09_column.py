@@ -84,7 +84,9 @@ def test_column_set_masking(capsys):
         algname=ALGNAME1,
         domainname=DOMAINNAME,
         dateformat=None,
-        idmethod=None
+        idmethod='Y',
+        groupno=None,
+        field=None
     )
 
     output = "Column FIRST_NAME updated\n" + \

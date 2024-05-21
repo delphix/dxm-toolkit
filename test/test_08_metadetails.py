@@ -56,11 +56,36 @@ def test_table_list_all(capsys):
     assert (rc, filtered) == (0, output)
 
 
-def test_table_update_single(capsys):
+def test_table_update_single_remove_custom_sql(capsys):
     params = {
         "rulesetname": RULESETNAME,
         "metaname": METANAME2,
         "custom_sql": "",
+        "where_clause": None,
+        "having_clause": None,
+        "key_column": 'DEPARTMENT_ID',
+        "envname": None,
+        "file_format": None,
+        "file_delimiter": None,
+        "file_eor": None,
+        "file_enclosure": None,
+        "file_name_regex": None,
+        "file_eor_custom": None
+    }
+
+    rc = tab_worker.tab_update_meta(
+        p_engine="test_eng",
+        p_username=None,
+        params=params
+    )
+
+    assert (rc == 0)
+
+def test_table_update_single_set_where(capsys):
+    params = {
+        "rulesetname": RULESETNAME,
+        "metaname": METANAME2,
+        "custom_sql": None,
         "where_clause": 'MANAGER_ID<100',
         "having_clause": None,
         "key_column": 'DEPARTMENT_ID',
