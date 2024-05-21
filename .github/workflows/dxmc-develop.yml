@@ -89,7 +89,7 @@ jobs:
 
     - name: Install OpenSSL
       run: |
-        choco install openssl --no-progress
+        choco install openssl 
         echo "INCLUDE=C:\\Program Files\\OpenSSL-Win64\\include;%INCLUDE%" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
         echo "LIB=C:\\Program Files\\OpenSSL-Win64\\lib;%LIB%" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
         
@@ -155,13 +155,16 @@ jobs:
 
     - name: run python
       run: |
-          CELL=`brew --prefix perl`
+          #CELL=`brew --prefix perl`
           OPENLIB=`brew --prefix openssl`
           CDIR=`pwd`
           export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
           echo $LIBS
-          
-          pip3 install --upgrade 'setuptools==65.5.0'
+
+          python3 -m venv /tmp/dxmc
+          source /tmp/dxmc/bin/activate
+
+          #pip3 install --upgrade 'setuptools==65.5.0'
           pip3 install pyparsing==3.0.7
           pip3 install pyinstaller==5.13.0
           python3 setup.py install
