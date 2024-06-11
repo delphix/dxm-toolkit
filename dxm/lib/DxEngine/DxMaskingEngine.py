@@ -113,6 +113,11 @@ class DxMaskingEngine(object):
                 self.config.proxypass = None
 
 
+        if engine_tuple["ignore_warning"]:
+            self.__ignore_warning = engine_tuple["ignore_warning"]
+        else:
+            self.__ignore_warning = 'N'
+
         # to disable certs
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.config.verify_ssl = False
@@ -133,6 +138,10 @@ class DxMaskingEngine(object):
         else:
             self.__api_timeout = 60
 
+
+    @classmethod
+    def is_ignore_warning_set(self):
+        return self.__ignore_warning == 'Y'
 
     @classmethod
     def get_config(self):

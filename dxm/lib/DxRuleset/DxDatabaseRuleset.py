@@ -322,7 +322,7 @@ class DxDatabaseRuleset(DatabaseRuleset_mixin):
             print_message("Ruleset %s update started" % self.ruleset_name)
 
             task = DxAsyncTask()
-            task.from_asynctask(response)
+            task.load_obj(response)
             return task.wait_for_task()
         except self.__apiexc as e:
             print_error(e.body)
@@ -349,7 +349,7 @@ class DxDatabaseRuleset(DatabaseRuleset_mixin):
             print_message("Ruleset %s refresh started" % self.ruleset_name)
 
             task = DxAsyncTask()
-            task.from_asynctask(response)
+            task.load_obj(response)
             return task.wait_for_task()
         except self.__apiexc as e:
             print_error(e.body)
@@ -378,7 +378,7 @@ class DxDatabaseRuleset(DatabaseRuleset_mixin):
             print_message("Ruleset %s refresh started" % self.ruleset_name)
 
             task = DxAsyncTask()
-            task.from_asynctask(response)
+            task.load_obj(response)
             return task.wait_for_task()
         except self.__apiexc as e:
             print_error(e.body)

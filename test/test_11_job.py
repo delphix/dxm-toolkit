@@ -34,7 +34,9 @@ def test_column_set_masking(capsys):
         algname=ALGNAME1,
         domainname=DOMAINNAME,
         dateformat=None,
-        idmethod=None
+        idmethod='Y',
+        groupno=None,
+        field=None
     )
 
     output = "Column FIRST_NAME updated\n" + \
@@ -142,7 +144,8 @@ def test_start_job_single(capsys):
         tgt_connector_env = None,
         nowait = None,
         monitor= None,
-        parallel= 1
+        parallel= 1,
+        ignore_warning="default"
     )
 
 

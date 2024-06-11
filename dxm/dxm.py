@@ -20,6 +20,7 @@ import click
 from sys import exit
 from dxm.lib.DxApplication.app_worker import application_list
 from dxm.lib.DxApplication.app_worker import application_add
+from dxm.lib.DxApplication.app_worker import application_delete
 from dxm.lib.DxEnvironment.env_worker import environment_list
 from dxm.lib.DxEnvironment.env_worker import environment_add
 from dxm.lib.DxEnvironment.env_worker import environment_delete
@@ -115,7 +116,7 @@ from dxm.lib.DxLogging import print_message
 
 from dxm.lib.DxEngine.DxConfig import DxConfig
 
-__version__ = "0.9.6"
+__version__ = "0.9.7.1"
 
 class dxm_state(object):
 
@@ -406,12 +407,14 @@ def jdbc(dxm_state):
     'If you want to hide input put '' as value and you will be propted')
 @click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
 @click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
+@click.option('--ignore_warning', help='Ignore warning for engines 22 and higher', type=click.Choice(['Y', 'N']), default='N')
 @logfile_option
 @debug_options
 @configfile_option
 @pass_state
 def add(dxm_state, engine, ip, port, protocol, username, password, default,
-        proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout):
+        proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout,
+        ignore_warning):
     """
     Add engine entry to configuration database
     """
@@ -421,7 +424,7 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
     DxConfig(dxm_state.configfile)
     exit(engine_add(engine, ip, username, password,
          protocol, port, default, proxyurl, proxyuser, proxypassword,
-         connection_timeout, api_timeout))
+         connection_timeout, api_timeout, ignore_warning))
 
 
 @engine.command()
@@ -454,11 +457,12 @@ def add(dxm_state, engine, ip, port, protocol, username, password, default,
     'If you want to hide input put '' as value and you will be propted')
 @click.option('--connection_timeout', help='Connection timeout (default 15sec)', default=15)
 @click.option('--api_timeout', help='API timeout (default 60sec)', default=60)
+@click.option('--ignore_warning', help='Ignore warning for engines 22 and higher', type=click.Choice(['Y', 'N']), default='N')
 @debug_options
 @configfile_option
 @pass_state
 def update(dxm_state, engine, ip, port, protocol, username, password, default,
-           proxyurl, proxyuser, proxypassword, engineuser, connection_timeout, api_timeout):
+           proxyurl, proxyuser, proxypassword, engineuser, connection_timeout, api_timeout, ignore_warning):
     """
     Update engine entry in configuration database
     """
@@ -470,7 +474,7 @@ def update(dxm_state, engine, ip, port, protocol, username, password, default,
                                 confirmation_prompt=True)
     DxConfig(dxm_state.configfile)
     exit(engine_update(engine, engineuser, ip, username, password,
-         protocol, port, default, proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout))
+         protocol, port, default, proxyurl, proxyuser, proxypassword, connection_timeout, api_timeout, ignore_warning))
 
 
 @engine.command()
@@ -569,6 +573,21 @@ def add(dxm_state, appname):
     """
     DxConfig(dxm_state.configfile)
     exit(application_add(dxm_state.engine, dxm_state.engineuser, appname))
+
+
+@application.command()
+@click.option(
+    '--appname', required=True, help='Application name to delete')
+@common_options
+@pass_state
+def delete(dxm_state, appname):
+    """
+    Delete command will delete application to Masking Engine.
+    Option --appname is required. Exit code will be set to 0
+    if application was added and to non-zero value if there was an error
+    """
+    DxConfig(dxm_state.configfile)
+    exit(application_delete(dxm_state.engine, dxm_state.engineuser, appname))
 
 
 @environment.command()
@@ -1454,10 +1473,11 @@ def update(dxm_state, jobname, envname, rulesetname, email, feedback_size,
     default=1
 )
 @click.option('--monitor', is_flag=True, help="Display progress bars")
+@click.option('--ignore_warning', default='default', type=click.Choice(['Y', 'N', 'default']), help="For engines 22 or higher - treat warnings as succeeded jobs")
 @common_options
 @pass_state
 def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
-          nowait, parallel, monitor):
+          nowait, parallel, monitor, ignore_warning):
     """
     Start masking job. By default control is returned when job is finished.
     If --nowait flag is specified script doesn't monitor job and release
@@ -1465,7 +1485,7 @@ def start(dxm_state, jobname, envname, tgt_connector, tgt_connector_env,
     """
     DxConfig(dxm_state.configfile)
     exit(job_start(dxm_state.engine, dxm_state.engineuser, jobname, envname, tgt_connector,
-                   tgt_connector_env, nowait, parallel, monitor))
+                   tgt_connector_env, nowait, parallel, monitor, ignore_warning))
 
 
 @job.command()
@@ -1644,12 +1664,19 @@ def save(dxm_state, rulesetname, envname, metaname, columnname, algname,
     '--dateformat',
     help="Date format for DATE algorithms")
 @click.option(
+    '--groupno',
+    help="Algorithm group")
+@click.option(
+    '--field',
+    help="Logical field")
+@click.option(
     '--idmethod', type=click.Choice(['Y', 'N']),
-    help="Can a column be overwrite by profiler")
+    help="Can a column be overwrite by profiler",
+    default='Y')
 @common_options
 @pass_state
 def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
-               domainname, dateformat, idmethod):
+               domainname, dateformat, idmethod, groupno, field):
     """
     Setting a masking algorithm for defined column and flagging column as
     masked.
@@ -1657,7 +1684,7 @@ def setmasking(dxm_state, rulesetname, envname, metaname, columnname, algname,
     """
     DxConfig(dxm_state.configfile)
     exit(column_setmasking(dxm_state.engine, dxm_state.engineuser, rulesetname, envname,
-         metaname, columnname, algname, domainname, dateformat, idmethod))
+         metaname, columnname, algname, domainname, dateformat, idmethod, groupno, field))
 
 
 @column.command()
@@ -2495,7 +2522,7 @@ def add(dxm_state, username, firstname, lastname, email, password, user_type,
                   password, user_type, user_environments, user_role))
 
 @user.command()
-@click.option('--username', help="Filter users using a name")
+@click.option('--username', help="Filter users using a name", required=True)
 @click.option('--force', is_flag=True, help="Force user deletion for admin users")
 @common_options
 @pass_state

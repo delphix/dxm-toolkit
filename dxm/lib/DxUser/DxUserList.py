@@ -67,7 +67,7 @@ class DxUserList(object):
             if userlist.response_list:
                 for c in userlist.response_list:
                     user = DxUser(self.__engine)
-                    user.from_user(c)
+                    user.load_obj(c)
                     self.__userList[c.user_id] = user
             else:
                 self.__logger.error("No users found")
@@ -130,10 +130,10 @@ class DxUserList(object):
         return None if OK
         """
 
-        if (user.add() is None):
+        if (user.add() == 0):
             self.__logger.debug("Adding user %s to list" % user)
             self.__userList[user.user_id] = user
-            return None
+            return 0
         else:
             return 1
 

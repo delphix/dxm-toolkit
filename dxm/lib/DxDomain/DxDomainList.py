@@ -65,7 +65,7 @@ class DxDomainList(object):
             if domain_list.response_list:
                 for c in domain_list.response_list:
                     dom = DxDomain(self.__engine)
-                    dom.from_domain(c)
+                    dom.load_obj(c)
                     self.__domainList[c.domain_name] = dom
             else:
                 print_error("No domain found")

@@ -23,7 +23,7 @@ from dxm.lib.DxLogging import print_message
 from dxm.lib.masking_api.api.user_api import UserApi
 from dxm.lib.masking_api.rest import ApiException
 from dxm.lib.masking_api.genericmodel import GenericModel
-
+from dxm.lib.DxUser.User_mixin import User_mixin
 
 def DxUserNonAdmin(role_id, environment_ids):
     swagger_map = {
@@ -43,37 +43,7 @@ def DxUserNonAdmin(role_id, environment_ids):
     return obj
 
 
-class DxUser(object):
-
-    swagger_map = {
-        'user_id': 'userId',
-        'user_name': 'userName',
-        'password': 'password',
-        'first_name': 'firstName',
-        'last_name': 'lastName',
-        'email': 'email',
-        'is_admin': 'isAdmin',
-        'show_welcome': 'showWelcome',
-        'is_locked': 'isLocked',
-        'non_admin_properties': 'nonAdminProperties',
-        'api_access': 'apiAccess',
-        'user_status': 'userStatus'
-    }
-
-    swagger_types = {
-        'user_id': 'int',
-        'user_name': 'str',
-        'password': 'str',
-        'first_name': 'str',
-        'last_name': 'str',
-        'email': 'str',
-        'is_admin': 'bool',
-        'show_welcome': 'bool',
-        'is_locked': 'bool',
-        'non_admin_properties': 'dict1',
-        'api_access': 'bool',
-        'user_status': 'str'
-    }
+class DxUser(User_mixin):
 
     def __init__(self, engine):
         """
@@ -98,144 +68,8 @@ class DxUser(object):
         # self.__model = User
         # self.__modelnap = NonAdminProperties
         self.__apiexc = ApiException
-        self.__obj = None
+        self._obj = None
 
-    @property
-    def obj(self):
-        if self.__obj is not None:
-            return self.__obj
-        else:
-            return None
-
-
-    @property
-    def user_id(self):
-        if self.obj is not None:
-            return self.obj.user_id
-        else:
-            return None
-
-    @user_id.setter
-    def user_id(self, user_id):
-        if self.__obj is not None:
-            self.__obj.user_id = user_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def user_id(self):
-        if self.obj is not None:
-            return self.obj.user_id
-        else:
-            return None
-
-    @user_id.setter
-    def user_id(self, user_id):
-        if self.__obj is not None:
-            self.__obj.user_id = user_id
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def user_name(self):
-        if self.obj is not None:
-            return self.obj.user_name
-        else:
-            return None
-
-    @user_name.setter
-    def user_name(self, user_name):
-        if self.__obj is not None:
-            print("W sweterze 2")
-            self.__obj.user_name = user_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-            
-
-    @property
-    def password(self):
-        if self.obj is not None:
-            return 'xxxxxxxxx'
-        else:
-            return None
-
-    @password.setter
-    def password(self, password):
-        if self.__obj is not None:
-            self.__obj.password = password
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def first_name(self):
-        if self.obj is not None:
-            return self.obj.first_name
-        else:
-            return None
-
-    @first_name.setter
-    def first_name(self, first_name):
-        if self.__obj is not None:
-            self.__obj.first_name = first_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def last_name(self):
-        if self.obj is not None:
-            return self.obj.last_name
-        else:
-            return None
-
-    @last_name.setter
-    def last_name(self, last_name):
-        if self.__obj is not None:
-            self.__obj.last_name = last_name
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def email(self):
-        if self.obj is not None:
-            return self.obj.email
-        else:
-            return None
-
-    @email.setter
-    def email(self, email):
-        if self.__obj is not None:
-            self.__obj.email = email
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def is_admin(self):
-        if self.obj is not None:
-            return self.obj.is_admin
-        else:
-            return None
-
-    @is_admin.setter
-    def is_admin(self, is_admin):
-        if self.__obj is not None:
-            self.__obj.is_admin = is_admin
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    @property
-    def show_welcome(self):
-        if self.obj is not None:
-            return self.obj.show_welcome
-        else:
-            return None
-
-    @show_welcome.setter
-    def show_welcome(self, show_welcome):
-        if self.__obj is not None:
-            self.__obj.show_welcome = show_welcome
-        else:
-            raise ValueError("Object needs to be initialized first")
 
     @property
     def is_locked(self):
@@ -256,8 +90,8 @@ class DxUser(object):
     def is_locked(self, is_locked):
 
         if self.__engine.version_le("6.0.6.0"):
-            if self.__obj is not None:
-                self.__obj.is_locked = is_locked
+            if self._obj is not None:
+                self._obj.is_locked = is_locked
             else:
                 raise ValueError("Object needs to be initialized first")
         else:
@@ -265,52 +99,35 @@ class DxUser(object):
                 status = "LOCKED"
             else:
                 status = "ACTIVE"
-            if self.__obj is not None:
-                self.__obj.user_status = status
+            if self._obj is not None:
+                self._obj.user_status = status
             else:
                 raise ValueError("Object needs to be initialized first") 
 
 
-    @property
-    def non_admin_properties(self):
-        if self.obj is not None:
-            if hasattr(self.obj, 'non_admin_properties'):
-                return self.obj.non_admin_properties
-            else:
-                return None
-        else:
-            return None
+    def load_obj(self, user):
+        self._obj = user
+        self._obj.swagger_map = self.swagger_map
+        self._obj.swagger_types = self.swagger_types
 
-    @non_admin_properties.setter
-    def non_admin_properties(self, non_admin_properties):
-        if self.__obj is not None:
-            self.__obj.non_admin_properties = non_admin_properties
-        else:
-            raise ValueError("Object needs to be initialized first")
-
-    def from_user(self, user):
-        self.__obj = user
-        self.__obj.swagger_map = self.swagger_map
-        self.__obj.swagger_types = self.swagger_types
-
-        if hasattr(self.__obj,'non_admin_properties') and self.__obj.non_admin_properties is not None:
-            self.__obj.non_admin_properties.swagger_map =  {
+        if hasattr(self._obj,'non_admin_properties') and self._obj.non_admin_properties is not None:
+            self._obj.non_admin_properties.swagger_map =  {
                                                                 'role_id': 'roleId',
                                                                 'environment_ids': 'environmentIds'
                                                             }
-            self.__obj.non_admin_properties.swagger_types = {
+            self._obj.non_admin_properties.swagger_types = {
                                                                 'role_id': 'int',
                                                                 'environment_ids': 'list'
                                                             }
 
 
     def create_user(self, user_name, password, first_name, last_name, email, is_admin, non_admin_properties):
-        # self.__obj = self.__model(user_name=user_name, password=password, first_name=first_name, last_name=last_name, 
+        # self._obj = self.__model(user_name=user_name, password=password, first_name=first_name, last_name=last_name, 
         #                          email=email, is_admin=is_admin, non_admin_properties=non_admin_properties, is_locked=False)
 
 
 
-        self.__obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
+        self._obj = GenericModel({ x:None for x in self.swagger_map.values()}, self.swagger_types, self.swagger_map)
         self.user_name = user_name
         self.password = password
         self.first_name = first_name
@@ -398,7 +215,7 @@ class DxUser(object):
 
         if self.is_admin and force:
             self.is_admin = False
-            nap = self.__modelnap(environment_ids=[], role_id=1)
+            nap = DxUserNonAdmin(environment_ids=[], role_id=1)
             self.non_admin_properties = nap
             if self.update() != 0:
                 print_error("Can't switch to non-admin in force mode")

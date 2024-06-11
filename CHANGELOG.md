@@ -1,3 +1,9 @@
+## Version 0.9.7
+Tested with engines 10 and above
+
+### Changed:
+- export inventory fixes
+
 ## Version 0.9.6
 Tested with engines 6.0.15 and above
 

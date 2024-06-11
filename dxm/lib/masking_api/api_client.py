@@ -49,7 +49,6 @@ import urllib3
 from dxm.lib.masking_api.configuration import Configuration
 from dxm.lib.masking_api import rest
 
-
 class ApiClient(object):
     """Generic API client for Swagger client library builds.
 
@@ -122,6 +121,9 @@ class ApiClient(object):
                 maxsize = configuration.connection_pool_maxsize
             else:
                 maxsize = 4
+
+        # import http.client
+        # http.client.HTTPConnection.debuglevel = 5
 
         # https pool manager
         if configuration.proxy:

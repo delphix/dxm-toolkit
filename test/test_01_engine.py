@@ -28,7 +28,8 @@ def test_engine_add():
         p_proxypassword=None,
         p_proxyuser=None,
         p_api_timeout=60,
-        p_connection_timeout=15
+        p_connection_timeout=15,
+        p_ignore_warning='N'
     )
 
     assert rc == 0
@@ -45,8 +46,8 @@ def test_engine_list_initial(capsys):
     captured = capsys.readouterr()
 
     output = "\n" + \
-    "#Engine name,IP,username,protocol,port,default,proxy URL,proxy user\n" + \
-    "test_eng,wrong.dlpxdc.co,admin,http,80,Y,N/A,N/A\n\n\n"
+    "#Engine name,IP,username,protocol,port,default,proxy URL,proxy user,ignore warning\n" + \
+    "test_eng,wrong.dlpxdc.co,admin,http,80,Y,N/A,N/A,N\n\n\n"
 
     assert (rc, captured.out.replace('\r','')) == (0, output)
 
@@ -78,7 +79,8 @@ def test_engine_add_2nd():
         p_proxypassword=None,
         p_proxyuser=None,
         p_api_timeout=60,
-        p_connection_timeout=15
+        p_connection_timeout=15,
+        p_ignore_warning='N'
     )
 
     assert rc == 0
@@ -98,7 +100,8 @@ def test_engine_update(capsys, engine):
         p_proxypassword=None,
         p_proxyuser=None,
         p_api_timeout=None,
-        p_connection_timeout=None
+        p_connection_timeout=None,
+        p_ignore_warning='Y'
     )
 
     captured = capsys.readouterr()
@@ -117,8 +120,8 @@ def test_engine_list(capsys, engine):
     )
 
     output = "\n" + \
-    "#Engine name,IP,username,protocol,port,default,proxy URL,proxy user\n" + \
-    "test_eng,{},admin,http,80,Y,N/A,N/A\n\n\n".format(engine)
+    "#Engine name,IP,username,protocol,port,default,proxy URL,proxy user,ignore warning\n" + \
+    "test_eng,{},admin,http,80,Y,N/A,N/A,Y\n\n\n".format(engine)
 
     captured = capsys.readouterr()
 
