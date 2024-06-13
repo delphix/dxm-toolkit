@@ -137,7 +137,7 @@ jobs:
         else
           exit 1
         fi
-        FILENAME="dxmc-${SOURCE_TAG}-osx.tar.gz"
+        FILENAME="dxmc-${SOURCE_TAG}-osx-intel.tar.gz"
         echo SOURCE_TAG=$SOURCE_TAG >> $GITHUB_ENV
         echo FILENAME=$FILENAME >> $GITHUB_ENV
 
@@ -182,3 +182,68 @@ jobs:
         name: osxbuild
         path: ${{ env.FILENAME }}
       
+
+  osx-intel:
+    runs-on: macos-13
+
+    steps:
+    - name: checkout dxtoolkit code
+      uses: actions/checkout@master
+
+
+    - name: Get the version
+      id: get_version
+      run: |
+        if (echo ${GITHUB_REF} | grep "/tags/" > /dev/null); then
+          SOURCE_TAG=${GITHUB_REF#refs/tags/}
+        elif (echo ${GITHUB_REF} | grep "/heads/" > /dev/null); then
+          SOURCE_TAG=${GITHUB_REF#refs/heads/}
+        else
+          exit 1
+        fi
+        FILENAME="dxmc-${SOURCE_TAG}-osx.tar.gz"
+        echo SOURCE_TAG=$SOURCE_TAG >> $GITHUB_ENV
+        echo FILENAME=$FILENAME >> $GITHUB_ENV
+
+    - name: fix password
+      env:
+        ENCKEY: ${{ secrets.ENCKEY }}
+      run: |
+        cd dxm/lib/DxEngine
+        ls -l 
+        mv secret.py secret.py.orig
+        cat secret.py.orig | sed -e "s/changemechangemechagemechangemec/${ENCKEY}/" > secret.py
+        ls -l 
+        cd
+
+
+    - name: run python
+      run: |
+          #CELL=`brew --prefix perl`
+          OPENLIB=`brew --prefix openssl`
+          CDIR=`pwd`
+          export LIBS="-l ${OPENLIB}/lib/libssl.dylib -l ${OPENLIB}/lib/libcrypto.dylib"
+          echo $LIBS
+
+          python3 -m venv /tmp/dxmc
+          source /tmp/dxmc/bin/activate
+
+          #pip3 install --upgrade 'setuptools==65.5.0'
+          pip3 install pyparsing==3.0.7
+          pip3 install pyinstaller==5.13.0
+          python3 setup.py install
+          pyinstaller --onefile --clean --hidden-import pkg_resources dxmc.py
+          
+          cd ${CDIR}
+          mkdir dxmc
+          cp dist/dxmc dxmc/dxmc
+          ls -l ./dxmc
+          tar czvf ${{ env.FILENAME }} dxmc/dxmc
+
+    - name: Upload OSX
+      uses: actions/upload-artifact@v1
+      with:
+        name: osxbuild-intel
+        path: ${{ env.FILENAME }}
+
+        
