@@ -229,8 +229,8 @@ jobs:
           source /tmp/dxmc/bin/activate
 
           #pip3 install --upgrade 'setuptools==65.5.0'
-          pip3 install pyparsing==3.0.7
-          pip3 install pyinstaller==5.13.0
+          pip3 install pyparsing
+          pip3 install pyinstaller
           python3 setup.py install
           pyinstaller --onefile --clean --hidden-import pkg_resources dxmc.py
           
